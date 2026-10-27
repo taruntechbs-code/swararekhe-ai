@@ -162,6 +162,29 @@
 
 ---
 
+### 🕸️ Phase 7: Interactive Etymological Constellation Graph & Linguistic Bridge Working Sheet
+- **Interactive SVG Mind-Map Constellation Explorer**:
+  - Consumes `/api/v1/graph/constellation?query=...` to render a 2-hop ego-graph looking like a field linguist's hand-drawn mind map on taped graph paper.
+  - Distinct Sketch node styles by semantic type:
+    - `CONCEPT`: Double concentric circle center hub with yellow highlight (`#f0dfa0`).
+    - `VARIANT`: Outlined paper scrap pill showing Romanized phonetic and Kannada script.
+    - `REGION`: Stamped district tag in light red tint.
+    - `INFLUENCE_LANG`: Red-outlined substrate badge with star marker (*Marathi*, *Tulu*, *Konkani*, *Dakhni Urdu*, *Halegannada*, *Kodava*).
+    - `CULTURAL_MARKER`: Blue annotation tag (*Vachana Sahitya*, *Yakshagana*, *Deccan Court Poetry*).
+  - Directed edges with relation pills (`BORROWED_FROM`, `COGNATE_WITH`, `SPOKEN_IN`, `EXPRESSES`, `CULTURAL_TIE`).
+  - Interactive pan, zoom (`ZoomIn`, `ZoomOut`), reset (`RotateCcw`), and interactive node drag-and-drop.
+  - Stable adjacent **Field Etymology Note** panel presenting narrative travelogue, active substrate tags, and dynamic node metadata inspector without layout shifting.
+- **Linguistic Bridge & Substrate Comparator**:
+  - Dual region dropdown selector with swap icon button (`ArrowLeftRight`).
+  - Consumes `/api/v1/graph/bridge?source={r1}&target={r2}` to display:
+    - **Linguistic Similarity Index**: Large marker score (e.g. `41.8% Match`) in a hand-drawn bracket.
+    - Shared border substrates and shortest relational graph paths.
+    - **Side-by-Side Cognate Shift Ledger**: Broad horizontal comparative rows tracing canonical concepts and morphological rules between the two selected regions.
+- **NetworkX Graph Topology Centrality Strip**:
+  - Consumes `/api/v1/graph/topology` to display a compact horizontal strip of entity counts and top-ranked influence substrates and regional hubs by degree/betweenness centrality.
+
+---
+
 ## 🛠️ Installation & Setup
 
 ### 1. Backend Setup
@@ -269,6 +292,6 @@ python -m backend.verify_all_phases
 - [x] **Phase 4**: Acoustic Prosody, Pitch Contour ($F_0$), and Cadence DSP
 - [x] **Phase 5**: Geospatial IDW Isogloss, Living Crowdsource Dictionary & Master Suite
 - [x] **Phase 6**: Frontend Foundation, Interactive Karnataka Isogloss Map & Morphing Working Sheet
-- [ ] **Phase 7**: D3 Force-Directed Etymological Graph Constellation & Cognate Visualizer
+- [x] **Phase 7**: Interactive Etymological Constellation Graph & Linguistic Bridge Working Sheet
 - [ ] **Phase 8**: Real-Time Acoustic Pitch Coach Oscilloscope & Field Submission Console
 

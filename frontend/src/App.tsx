@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { WorkingSheetHeader, WorkspaceTab } from './components/WorkingSheetHeader';
 import { IsoglossMapSheet } from './components/IsoglossMapSheet';
 import { DialectMorphSheet } from './components/DialectMorphSheet';
+import { EtymologyGraphSheet } from './components/EtymologyGraphSheet';
 import {
   swararekheApi,
   FALLBACK_STATS,
@@ -10,7 +11,7 @@ import {
   GeoJSONFeatureCollection,
   IsoglossLocateResponse,
 } from './api/swararekheClient';
-import { Network, Activity, BookOpenCheck, ArrowLeft } from 'lucide-react';
+import { Activity, BookOpenCheck, ArrowLeft } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('atlas');
@@ -124,67 +125,15 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Phase 7 Preview Tab */}
+        {/* Phase 7: Interactive Etymology Knowledge Graph Tab */}
         {activeTab === 'graph' && (
-          <div
-            className="sketch-paper-sheet"
-            style={{
-              padding: '40px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '18px',
-            }}
-          >
-            <div
-              style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: 'var(--dp-radius-control)',
-                backgroundColor: 'var(--dp-accent-yellow-light)',
-                border: 'var(--dp-border-fine-stroke) solid var(--dp-ink-pencil)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Network size={32} color="var(--dp-accent-red)" />
-            </div>
-            <h2
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: '32px',
-                margin: 0,
-                color: 'var(--dp-ink-pencil)',
-              }}
-            >
-              Etymology Constellation & Cultural Knowledge Graph
-            </h2>
-            <p
-              style={{
-                maxWidth: '680px',
-                fontSize: '20px',
-                color: 'var(--dp-ink-pencil)',
-                lineHeight: 1.5,
-              }}
-            >
-              The backend Knowledge Graph Engine is active with{' '}
-              <strong>{stats.graph_nodes} nodes</strong> and{' '}
-              <strong>{stats.graph_edges} etymological & substrate edges</strong>. In Phase 7, this sheet will render
-              an interactive D3 / SVG force-directed constellation graph visualizing loanword journeys and substrate
-              influences across Halegannada, Marathi, Tulu, Beary, and Dakhni Urdu.
-            </p>
-            <button
-              type="button"
-              className="sketch-btn sketch-btn-primary"
-              onClick={() => setActiveTab('atlas')}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '18px' }}
-            >
-              <ArrowLeft size={18} />
-              <span>Return to Isogloss Atlas & Morpher</span>
-            </button>
-          </div>
+          <section aria-label="Interactive Etymological Constellation Graph">
+            <EtymologyGraphSheet
+              initialQuery="good"
+              activeRegionCode={activeRegionCode}
+              onSelectRegion={handleSelectRegion}
+            />
+          </section>
         )}
 
         {/* Phase 8 Acoustic Tab Preview */}

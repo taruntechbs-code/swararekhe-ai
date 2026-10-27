@@ -92,6 +92,84 @@ export interface MorphRulesResponse {
   rulebook: Record<string, RegionRuleProfile>;
 }
 
+// ---------------- Phase 3: Knowledge Graph Schemas ----------------
+
+export type NodeType = 'REGION' | 'CONCEPT' | 'VARIANT' | 'INFLUENCE_LANG' | 'CULTURAL_MARKER';
+
+export type EdgeRelation =
+  | 'SPOKEN_IN'
+  | 'EXPRESSES'
+  | 'BORROWED_FROM'
+  | 'COGNATE_WITH'
+  | 'PHONETIC_SHIFT_FROM'
+  | 'GEOGRAPHIC_NEIGHBOR'
+  | 'CULTURAL_TIE';
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  kannada_label?: string;
+  node_type: NodeType;
+  metadata: Record<string, any>;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  relation: EdgeRelation;
+  weight: number;
+  explanation?: string;
+}
+
+export interface ConstellationResponse {
+  query: string;
+  matched_center_node_id: string;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  etymological_narrative: string;
+  substrate_influences: string[];
+}
+
+export interface BridgeVariantDetail {
+  phonetic: string;
+  script: string;
+  ipa?: string;
+  rule?: string;
+}
+
+export interface PhoneticShiftItem {
+  concept: string;
+  region_a_variant: BridgeVariantDetail;
+  region_b_variant: BridgeVariantDetail;
+}
+
+export interface LinguisticBridgeResponse {
+  source_region: string;
+  target_region: string;
+  similarity_index: number;
+  shared_substrates: string[];
+  shortest_etymological_paths: string[][];
+  phonetic_shift_chain: PhoneticShiftItem[];
+  bridge_summary: string;
+}
+
+export interface CentralityRankItem {
+  id: string;
+  label: string;
+  node_type: string;
+  degree: number;
+  betweenness_centrality: number;
+}
+
+export interface TopologyResponse {
+  total_nodes: number;
+  total_edges: number;
+  node_type_counts: Record<string, number>;
+  influence_centrality_ranking: CentralityRankItem[];
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
 export interface PlatformStatsResponse {
   total_regions: number;
   total_lexical_concepts: number;
@@ -343,4 +421,213 @@ export const swararekheApi = {
       return null;
     }
   },
+
+  async getConstellation(query: string): Promise<ConstellationResponse> {
+    try {
+      const res = await fetch(`/api/v1/graph/constellation?query=${encodeURIComponent(query)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('API error in getConstellation, using fallback:', err);
+      return FALLBACK_CONSTELLATION;
+    }
+  },
+
+  async getLinguisticBridge(source: string, target: string): Promise<LinguisticBridgeResponse> {
+    try {
+      const res = await fetch(
+        `/api/v1/graph/bridge?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}`
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('API error in getLinguisticBridge, using fallback:', err);
+      return FALLBACK_BRIDGE;
+    }
+  },
+
+  async getGraphTopology(): Promise<TopologyResponse> {
+    try {
+      const res = await fetch('/api/v1/graph/topology');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('API error in getGraphTopology, using fallback:', err);
+      return FALLBACK_TOPOLOGY;
+    }
+  },
 };
+
+export const FALLBACK_CONSTELLATION: ConstellationResponse = {
+  query: 'good',
+  matched_center_node_id: 'concept:chennagide',
+  nodes: [
+    {
+      id: 'concept:chennagide',
+      label: 'Fine / Good',
+      kannada_label: 'ಚೆನ್ನಾಗಿದೆ',
+      node_type: 'CONCEPT',
+      metadata: { english_meaning: 'Fine / Good', standard_roman: 'chennagide', category: 'greeting' },
+    },
+    {
+      id: 'variant:chennagide:hubballi_dharwad',
+      label: 'cholo ayti',
+      kannada_label: 'ಚಲೋ ಐತಿ',
+      node_type: 'VARIANT',
+      metadata: { region: 'hubballi_dharwad', ipa: '[tʃolo ajti]', rule: 'marathi_loan_copula_ayti' },
+    },
+    {
+      id: 'variant:chennagide:kundapura_mangaluru',
+      label: 'laayk aipini',
+      kannada_label: 'ಲಾಯ್ಕ್ ಆಯ್ಪಿನಿ',
+      node_type: 'VARIANT',
+      metadata: { region: 'kundapura_mangaluru', ipa: '[laːjk ajpini]', rule: 'tulu_loan_laayk_past_participle' },
+    },
+    {
+      id: 'variant:chennagide:kalaburagi_bidar',
+      label: 'cholo ada',
+      kannada_label: 'ಚಲೋ ಅದಾ',
+      node_type: 'VARIANT',
+      metadata: { region: 'kalaburagi_bidar', ipa: '[tʃolo ada]', rule: 'deccan_copula_ada' },
+    },
+    {
+      id: 'variant:chennagide:arebhashe_kodagu',
+      label: 'cholo ulla',
+      kannada_label: 'ಚೋಲೋ ಉಳ್ಳ',
+      node_type: 'VARIANT',
+      metadata: { region: 'arebhashe_kodagu', ipa: '[tʃoːlo uɭɭa]', rule: 'arebhashe_existential_ulla' },
+    },
+    {
+      id: 'variant:chennagide:bengaluru_mysuru',
+      label: 'chennagide',
+      kannada_label: 'ಚೆನ್ನಾಗಿದೆ',
+      node_type: 'VARIANT',
+      metadata: { region: 'bengaluru_mysuru', ipa: '[tʃennaːɡide]', rule: 'standard_literary_retention' },
+    },
+    {
+      id: 'region:hubballi_dharwad',
+      label: 'Uttara Karnataka / Dharwad-Belagavi',
+      kannada_label: 'ಉತ್ತರ ಕರ್ನಾಟಕ / ಧಾರವಾಡ',
+      node_type: 'REGION',
+      metadata: { center_lat: 15.4589, center_lng: 75.0078 },
+    },
+    {
+      id: 'region:kundapura_mangaluru',
+      label: 'Karavali / Coastal Karnataka',
+      kannada_label: 'ಕರಾವಳಿ / ಕುಂದಾಪುರ-ಮಂಗಳೂರು',
+      node_type: 'REGION',
+      metadata: { center_lat: 13.6288, center_lng: 74.6920 },
+    },
+    {
+      id: 'region:kalaburagi_bidar',
+      label: 'Kalyana Karnataka / North-East',
+      kannada_label: 'ಕಲ್ಯಾಣ ಕರ್ನಾಟಕ / ಕಲಬುರಗಿ-ಬೀದರ್',
+      node_type: 'REGION',
+      metadata: { center_lat: 17.3297, center_lng: 76.8343 },
+    },
+    {
+      id: 'lang:marathi',
+      label: 'Marathi',
+      kannada_label: 'ಮರಾಠಿ',
+      node_type: 'INFLUENCE_LANG',
+      metadata: { family: 'Indo-Aryan', era: '12th-18th Century Maratha & Yadava Contact' },
+    },
+    {
+      id: 'lang:tulu',
+      label: 'Tulu',
+      kannada_label: 'ತುಳು',
+      node_type: 'INFLUENCE_LANG',
+      metadata: { family: 'South Dravidian', era: 'Alupa & Coastal Dynasties' },
+    },
+    {
+      id: 'cult:vachana_sahitya',
+      label: 'Vachana Sahitya',
+      kannada_label: 'ವಚನ ಸಾಹಿತ್ಯ',
+      node_type: 'CULTURAL_MARKER',
+      metadata: { description: '12th century egalitarian socio-religious poetry movement' },
+    },
+  ],
+  edges: [
+    { source: 'concept:chennagide', target: 'variant:chennagide:hubballi_dharwad', relation: 'EXPRESSES', weight: 1.0 },
+    { source: 'concept:chennagide', target: 'variant:chennagide:kundapura_mangaluru', relation: 'EXPRESSES', weight: 1.0 },
+    { source: 'concept:chennagide', target: 'variant:chennagide:kalaburagi_bidar', relation: 'EXPRESSES', weight: 1.0 },
+    { source: 'concept:chennagide', target: 'variant:chennagide:arebhashe_kodagu', relation: 'EXPRESSES', weight: 1.0 },
+    { source: 'concept:chennagide', target: 'variant:chennagide:bengaluru_mysuru', relation: 'EXPRESSES', weight: 1.0 },
+    { source: 'variant:chennagide:hubballi_dharwad', target: 'region:hubballi_dharwad', relation: 'SPOKEN_IN', weight: 1.0 },
+    { source: 'variant:chennagide:kundapura_mangaluru', target: 'region:kundapura_mangaluru', relation: 'SPOKEN_IN', weight: 1.0 },
+    { source: 'variant:chennagide:kalaburagi_bidar', target: 'region:kalaburagi_bidar', relation: 'SPOKEN_IN', weight: 1.0 },
+    { source: 'variant:chennagide:hubballi_dharwad', target: 'lang:marathi', relation: 'BORROWED_FROM', weight: 0.95, explanation: "Root 'cholo/chhan' adapted from Marathi contact" },
+    { source: 'variant:chennagide:kundapura_mangaluru', target: 'lang:tulu', relation: 'BORROWED_FROM', weight: 0.95, explanation: "Adjective 'laayk' shared with coastal Tulu register" },
+    { source: 'region:hubballi_dharwad', target: 'cult:vachana_sahitya', relation: 'CULTURAL_TIE', weight: 1.0 },
+  ],
+  etymological_narrative:
+    "The concept 'Fine / Good' (chennagide) forms a multi-dialectal constellation across Karnataka. In Old Mysuru, it anchors the canonical literary standard. Moving northwest to Hubballi-Dharwad, it adopts 'cholo ayti' reflecting vibrant Marathi contact and rising inflection. Along the Karavali coast, it absorbs coastal Tulu 'laayk aipini'. In Kalyana Karnataka, 'cholo ada' carries Deccan cadence, while Malnad Arebhashe uses 'cholo ulla'.",
+  substrate_influences: ['Marathi', 'Tulu', 'Halegannada', 'Dakhni Urdu'],
+};
+
+export const FALLBACK_BRIDGE: LinguisticBridgeResponse = {
+  source_region: 'hubballi_dharwad',
+  target_region: 'kalaburagi_bidar',
+  similarity_index: 0.418,
+  shared_substrates: ['Marathi'],
+  shortest_etymological_paths: [['region:hubballi_dharwad', 'lang:marathi', 'region:kalaburagi_bidar']],
+  phonetic_shift_chain: [
+    {
+      concept: 'Fine / Good',
+      region_a_variant: { phonetic: 'cholo ayti', script: 'ಚಲೋ ಐತಿ', ipa: '[tʃolo ajti]', rule: 'marathi_loan_copula_ayti' },
+      region_b_variant: { phonetic: 'cholo ada', script: 'ಚಲೋ ಅದಾ', ipa: '[tʃolo ada]', rule: 'deccan_copula_ada' },
+    },
+    {
+      concept: 'Where are you going?',
+      region_a_variant: { phonetic: 'yallig hontirre', script: 'ಎಲ್ಲಿಗ್ ಹೊಂಟಿರ್ರೀ', ipa: '[jəllɪɡ hoːŋt̪ɪrriː]', rule: 'verb_suffix_re_honorific' },
+      region_b_variant: { phonetic: 'yallig hoglikattiri', script: 'ಎಲ್ಲಿಗ್ ಹೋಗ್ಲಿಕತ್ತೀರಿ', ipa: '[jəllɪɡ hoːɡlɪkət̪t̪iːri]', rule: 'aspectual_inchoative_katthiri' },
+    },
+    {
+      concept: 'How are you?',
+      region_a_variant: { phonetic: 'hengadeeri', script: 'ಹೆಂಗದೀರಿ', ipa: '[heŋɡədiːri]', rule: 'apocope_interrogative' },
+      region_b_variant: { phonetic: 'hyangadeeri nodri', script: 'ಹ್ಯಾಂಗದೀರಿ ನೋಡ್ರಿ', ipa: '[hjaːŋɡədiːri noːɖri]', rule: 'deccan_y_glide_nodri' },
+    },
+    {
+      concept: 'Very / Much',
+      region_a_variant: { phonetic: 'bhaal', script: 'ಭಾಳ', ipa: '[bʱaːɭ]', rule: 'marathi_superlative_bhaal' },
+      region_b_variant: { phonetic: 'mast', script: 'ಮಸ್ತ್', ipa: '[məst̪]', rule: 'dakhni_urdu_superlative' },
+    },
+    {
+      concept: 'Mother',
+      region_a_variant: { phonetic: 'avva', script: 'ಅವ್ವ', ipa: '[əwːə]', rule: 'vachana_dravidian_avva' },
+      region_b_variant: { phonetic: 'aayi / amma', script: 'ಆಯಿ', ipa: '[aːji]', rule: 'marathi_cognate_aayi' },
+    },
+    {
+      concept: 'Eat / Meal',
+      region_a_variant: { phonetic: 'oota aytri', script: 'ಊಟ ಆಯ್ತ್ರೀ', ipa: '[uːt̪a ajtriː]', rule: 'honorific_ri' },
+      region_b_variant: { phonetic: 'oota aytri nodri', script: 'ಊಟ ಆಯ್ತ್ರಿ ನೋಡ್ರಿ', ipa: '[uːt̪a ajtri noːɖri]', rule: 'nodri_conversational_marker' },
+    },
+  ],
+  bridge_summary:
+    'Linguistic bridge between Uttara Karnataka (Dharwad) and Kalyana Karnataka (Kalaburagi) exhibits a 41.8% similarity index, underpinned by historical Yadava-Maratha and Bahmani-Deccan convergence. Both regions share the Marathi substrate and honorific marker -ri, while Kalyana Karnataka introduces distinctive Dakhni Urdu superlatives and the assertive conversational discourse marker nodri.',
+};
+
+export const FALLBACK_TOPOLOGY: TopologyResponse = {
+  total_nodes: 106,
+  total_edges: 259,
+  node_type_counts: {
+    REGION: 5,
+    CONCEPT: 14,
+    VARIANT: 70,
+    INFLUENCE_LANG: 9,
+    CULTURAL_MARKER: 8,
+  },
+  influence_centrality_ranking: [
+    { id: 'lang:marathi', label: 'Marathi', node_type: 'INFLUENCE_LANG', degree: 28, betweenness_centrality: 0.142 },
+    { id: 'lang:tulu', label: 'Tulu', node_type: 'INFLUENCE_LANG', degree: 24, betweenness_centrality: 0.118 },
+    { id: 'region:hubballi_dharwad', label: 'Uttara Karnataka (Dharwad)', node_type: 'REGION', degree: 22, betweenness_centrality: 0.105 },
+    { id: 'lang:dakhni_urdu', label: 'Dakhni Urdu', node_type: 'INFLUENCE_LANG', degree: 18, betweenness_centrality: 0.089 },
+    { id: 'lang:halegannada', label: 'Classical Halegannada', node_type: 'INFLUENCE_LANG', degree: 16, betweenness_centrality: 0.076 },
+    { id: 'region:kundapura_mangaluru', label: 'Karavali (Kundapura)', node_type: 'REGION', degree: 15, betweenness_centrality: 0.071 },
+    { id: 'lang:konkani', label: 'Konkani', node_type: 'INFLUENCE_LANG', degree: 14, betweenness_centrality: 0.062 },
+    { id: 'region:kalaburagi_bidar', label: 'Kalyana Karnataka (Kalaburagi)', node_type: 'REGION', degree: 13, betweenness_centrality: 0.058 },
+  ],
+  nodes: [],
+  edges: [],
+};
+

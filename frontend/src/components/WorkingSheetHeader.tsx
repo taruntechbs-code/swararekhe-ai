@@ -157,9 +157,10 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
               color: 'var(--dp-color-ink)',
               padding: '1px 6px',
               borderRadius: '4px',
+              fontWeight: 600,
             }}
           >
-            Phase 7
+            Active
           </span>
         </button>
 
@@ -218,3 +219,4 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
