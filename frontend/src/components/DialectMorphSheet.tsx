@@ -3,8 +3,8 @@ import {
   Sparkles,
   BookOpen,
   Volume2,
-  ChevronDown,
-  ChevronUp,
+  Plus,
+  Minus,
   CheckCircle2,
   X,
   ArrowRight,
@@ -22,24 +22,24 @@ interface DialectMorphSheetProps {
   externalSeedPhrase?: string;
 }
 
-const QUICK_PROMPT_CHIPS = [
-  { label: 'Where are you going?', text: 'Where are you going?', lang: 'en' as const },
-  { label: 'How are you?', text: 'How are you?', lang: 'en' as const },
-  { label: 'Very good / Fine', text: 'Very good, fine', lang: 'en' as const },
-  { label: 'Have you eaten?', text: 'Have you eaten?', lang: 'en' as const },
+const QUICK_PROMPT_KEYS = [
+  { label: 'WHERE ARE YOU GOING?', text: 'Where are you going?', lang: 'en' as const },
+  { label: 'HOW ARE YOU?', text: 'How are you?', lang: 'en' as const },
+  { label: 'VERY GOOD / FINE', text: 'Very good, fine', lang: 'en' as const },
+  { label: 'HAVE YOU EATEN?', text: 'Have you eaten?', lang: 'en' as const },
   {
-    label: 'ಎಲ್ಲಿಗೆ ಹೋಗುತ್ತಿದ್ದೀರಿ? ಊಟ ಚೆನ್ನಾಗಿದೆ...',
+    label: 'ಎಲ್ಲಿಗೆ ಹೋಗುತ್ತಿದ್ದೀರಿ? ಊಟ...',
     text: 'ನೀನು ಎಲ್ಲಿಗೆ ಹೋಗುತ್ತಿದ್ದೀಯಾ? ಊಟ ಚೆನ್ನಾಗಿದೆ, ತುಂಬಾ ಬೇಕು',
     lang: 'kn' as const,
   },
 ];
 
-const REGION_BADGES: Record<string, { kannada: string; color: string; short: string }> = {
-  hubballi_dharwad: { kannada: 'ಉತ್ತರ ಕರ್ನಾಟಕ', color: 'var(--dp-accent-red)', short: 'Dharwad-Belagavi' },
-  kundapura_mangaluru: { kannada: 'ಕರಾವಳಿ', color: '#10B981', short: 'Kundapura-Mangaluru' },
-  kalaburagi_bidar: { kannada: 'ಕಲ್ಯಾಣ ಕರ್ನಾಟಕ', color: '#D97706', short: 'Kalaburagi-Bidar' },
-  arebhashe_kodagu: { kannada: 'ಅರೆಭಾಷೆ', color: '#7C3AED', short: 'Malnad & Kodagu' },
-  bengaluru_mysuru: { kannada: 'ಹಳೆ ಮೈಸೂರು', color: 'var(--dp-accent-blue)', short: 'Bengaluru-Mysuru' },
+const REGION_BADGES: Record<string, { kannada: string; short: string }> = {
+  hubballi_dharwad: { kannada: 'ಉತ್ತರ ಕರ್ನಾಟಕ', short: 'Dharwad-Belagavi' },
+  kundapura_mangaluru: { kannada: 'ಕರಾವಳಿ', short: 'Kundapura-Mangaluru' },
+  kalaburagi_bidar: { kannada: 'ಕಲ್ಯಾಣ ಕರ್ನಾಟಕ', short: 'Kalaburagi-Bidar' },
+  arebhashe_kodagu: { kannada: 'ಅರೆಭಾಷೆ', short: 'Malnad & Kodagu' },
+  bengaluru_mysuru: { kannada: 'ಹಳೆ ಮೈಸೂರು', short: 'Bengaluru-Mysuru' },
 };
 
 export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
@@ -60,16 +60,13 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
   const [playingAudioRegion, setPlayingAudioRegion] = useState<string | null>(null);
   const [audioFeedback, setAudioFeedback] = useState<string | null>(null);
 
-  // Trigger initial morph on mount
   useEffect(() => {
     handleExecuteMorph(inputText, sourceLang);
   }, []);
 
-  // Sync when external seed phrase changes (from map selection)
   useEffect(() => {
     if (externalSeedPhrase && externalSeedPhrase !== inputText) {
       setInputText(externalSeedPhrase);
-      // Auto-detect language if contains Kannada characters
       const isKn = /[\u0C80-\u0CFF]/.test(externalSeedPhrase);
       const detectedLang = isKn ? 'kn' : 'en';
       setSourceLang(detectedLang);
@@ -105,320 +102,231 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
     }
   };
 
-  // Play audio sample or fallback oscillator cadence
   const handlePlayCadence = (regionCode: string) => {
     setPlayingAudioRegion(regionCode);
     setAudioFeedback(`Acoustic Cadence: ${regionCode.replace('_', ' ')}`);
 
-    // Try playing synthetic backend sample
     const audioUrl = `/static/audio_samples/${regionCode}.wav`;
     const audio = new Audio(audioUrl);
 
-    audio.play().then(() => {
-      audio.onended = () => {
-        setPlayingAudioRegion(null);
-        setAudioFeedback(null);
-      };
-    }).catch(() => {
-      // Audio fallback synthesizer using Web Audio API
-      try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        // Approximate regional base pitch
-        const pitches: Record<string, number> = {
-          hubballi_dharwad: 155,
-          kundapura_mangaluru: 178,
-          kalaburagi_bidar: 138,
-          arebhashe_kodagu: 182,
-          bengaluru_mysuru: 168,
-        };
-
-        const baseF = pitches[regionCode] || 160;
-        osc.frequency.setValueAtTime(baseF, audioCtx.currentTime);
-        // Add cadence pitch sweep
-        if (regionCode === 'hubballi_dharwad') {
-          osc.frequency.linearRampToValueAtTime(baseF * 1.3, audioCtx.currentTime + 0.6);
-        } else if (regionCode === 'kundapura_mangaluru') {
-          osc.frequency.setValueAtTime(baseF * 1.15, audioCtx.currentTime + 0.2);
-          osc.frequency.setValueAtTime(baseF * 0.9, audioCtx.currentTime + 0.4);
-        } else {
-          osc.frequency.linearRampToValueAtTime(baseF * 0.95, audioCtx.currentTime + 0.6);
-        }
-
-        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-
-        osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.8);
-
-        setTimeout(() => {
+    audio
+      .play()
+      .then(() => {
+        audio.onended = () => {
           setPlayingAudioRegion(null);
           setAudioFeedback(null);
-        }, 850);
-      } catch (synthErr) {
-        setPlayingAudioRegion(null);
-        setAudioFeedback(null);
-      }
-    });
+        };
+      })
+      .catch(() => {
+        try {
+          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+
+          const pitches: Record<string, number> = {
+            hubballi_dharwad: 155,
+            kundapura_mangaluru: 178,
+            kalaburagi_bidar: 138,
+            arebhashe_kodagu: 182,
+            bengaluru_mysuru: 168,
+          };
+
+          const baseF = pitches[regionCode] || 160;
+          osc.frequency.setValueAtTime(baseF, audioCtx.currentTime);
+          if (regionCode === 'hubballi_dharwad') {
+            osc.frequency.linearRampToValueAtTime(baseF * 1.3, audioCtx.currentTime + 0.6);
+          } else if (regionCode === 'kundapura_mangaluru') {
+            osc.frequency.setValueAtTime(baseF * 1.15, audioCtx.currentTime + 0.2);
+            osc.frequency.setValueAtTime(baseF * 0.9, audioCtx.currentTime + 0.4);
+          } else {
+            osc.frequency.linearRampToValueAtTime(baseF * 0.95, audioCtx.currentTime + 0.6);
+          }
+
+          gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+
+          osc.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.8);
+
+          setTimeout(() => {
+            setPlayingAudioRegion(null);
+            setAudioFeedback(null);
+          }, 850);
+        } catch {
+          setPlayingAudioRegion(null);
+          setAudioFeedback(null);
+        }
+      });
   };
 
-  const filteredResults = morphData?.results.filter((res) => {
-    if (targetRegionFilter === 'all') return true;
-    return res.region_code === targetRegionFilter;
-  }) || [];
+  const filteredResults =
+    morphData?.results.filter((res) => {
+      if (targetRegionFilter === 'all') return true;
+      return res.region_code === targetRegionFilter;
+    }) || [];
 
   return (
-    <div className="sketch-page-content" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Field Morph Header Ledger Banner */}
-      <div
-        className="sketch-paper-sheet"
-        style={{
-          padding: '18px 24px',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: 'var(--dp-radius-control)',
-              border: 'var(--dp-border-fine-stroke) solid var(--dp-ink-pencil)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'var(--dp-accent-yellow-light)',
-            }}
-          >
-            <Sparkles size={22} color="var(--dp-ink-pencil)" />
-          </div>
-          <div>
-            <h2
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: '26px',
-                margin: 0,
-                color: 'var(--dp-ink-pencil)',
-                lineHeight: 1.1,
-              }}
-            >
-              Neuro-Symbolic Dialect Morphing & Phonetic Transduction Ledger
-            </h2>
-            <div
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '17px',
-                color: 'var(--dp-ink-blue)',
-                marginTop: '2px',
-              }}
-            >
-              Cross-dialect syntactic rewriting with phonological mutation tracking and syllable stress marks.
-            </div>
-          </div>
-        </div>
-
-        {/* Action button to open Phonological Rulebook */}
-        <button
-          className="sketch-btn sketch-btn-secondary"
-          onClick={handleOpenRulebook}
-          title="Inspect the deterministic phonetic shifts, suffix rules, and lexical substitution tables"
-          style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <BookOpen size={18} />
-          <span>Inspect 5-Region Rulebook</span>
-        </button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* Bay Header */}
+      <div className="chassis-bay-header">
+        <span className="bay-indicator">
+          <span className="led-indicator active" />
+          <span>BAY 01B</span>
+        </span>
+        <span>// NEURO-SYMBOLIC PHONOLOGICAL TRANSDUCTION TRAY</span>
       </div>
 
-      {/* Input Console & Linguistic Prompt Workbench */}
-      <div
-        className="sketch-paper-sheet"
-        style={{
-          padding: '24px',
-          position: 'relative',
-        }}
-      >
-        <div className="sketch-tape-top-right" />
-
-        {/* Input Bar form */}
+      {/* Input Console Well */}
+      <div className="recessed-well" style={{ padding: '20px' }}>
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleExecuteMorph(inputText, sourceLang);
           }}
-          style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
         >
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-            {/* Language Segmented Control */}
-            <div
-              style={{
-                display: 'inline-flex',
-                border: 'var(--dp-border-fine-stroke) solid var(--dp-ink-pencil)',
-                borderRadius: 'var(--dp-radius-control)',
-                overflow: 'hidden',
-                backgroundColor: 'var(--dp-paper-scrap)',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setSourceLang('en')}
-                style={{
-                  padding: '8px 16px',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '18px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  backgroundColor: sourceLang === 'en' ? 'var(--dp-ink-pencil)' : 'transparent',
-                  color: sourceLang === 'en' ? 'var(--dp-paper-white)' : 'var(--dp-ink-pencil)',
-                  transition: 'background-color var(--dp-motion-control) ease',
-                }}
-              >
-                English Source
-              </button>
-              <button
-                type="button"
-                onClick={() => setSourceLang('kn')}
-                style={{
-                  padding: '8px 16px',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '18px',
-                  border: 'none',
-                  borderLeft: 'var(--dp-border-fine-stroke) solid var(--dp-ink-pencil)',
-                  cursor: 'pointer',
-                  backgroundColor: sourceLang === 'kn' ? 'var(--dp-ink-pencil)' : 'transparent',
-                  color: sourceLang === 'kn' ? 'var(--dp-paper-white)' : 'var(--dp-ink-pencil)',
-                  transition: 'background-color var(--dp-motion-control) ease',
-                }}
-              >
-                ಕನ್ನಡ ಪ್ರಮಾಣ (Standard)
-              </button>
-            </div>
-
-            {/* Region Filter Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Filter size={18} color="var(--dp-ink-blue)" />
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: '18px', color: 'var(--dp-ink-pencil)' }}>
-                Dialect Scope:
+          {/* Controls Bar: Source Mode Keys + Region Filter + Rulebook Trigger */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)', textTransform: 'uppercase' }}>
+                SOURCE REGISTER:
               </span>
-              <select
-                value={targetRegionFilter}
-                onChange={(e) => setTargetRegionFilter(e.target.value)}
-                className="sketch-select"
-                style={{ fontSize: '17px', padding: '6px 14px' }}
+              <button
+                type="button"
+                className={`raised-key ${sourceLang === 'en' ? 'active' : ''}`}
+                onClick={() => setSourceLang('en')}
+                style={{ fontSize: '13px', padding: '4px 12px', height: '28px' }}
               >
-                <option value="all">Compare All 5 Dialects Simultaneously</option>
-                <option value="hubballi_dharwad">Uttara Karnataka (Dharwad)</option>
-                <option value="kundapura_mangaluru">Karavali (Kundapura-Mangaluru)</option>
-                <option value="kalaburagi_bidar">Kalyana Karnataka (Kalaburagi)</option>
-                <option value="arebhashe_kodagu">Malnad & Kodagu (Arebhashe)</option>
-                <option value="bengaluru_mysuru">Old Mysuru (Bengaluru)</option>
-              </select>
+                <span className={`led-indicator ${sourceLang === 'en' ? 'active' : ''}`} />
+                <span>ENGLISH (EN)</span>
+              </button>
+              <button
+                type="button"
+                className={`raised-key ${sourceLang === 'kn' ? 'active' : ''}`}
+                onClick={() => setSourceLang('kn')}
+                style={{ fontSize: '13px', padding: '4px 12px', height: '28px' }}
+              >
+                <span className={`led-indicator ${sourceLang === 'kn' ? 'active' : ''}`} />
+                <span>ಕನ್ನಡ ಪ್ರಮಾಣ (KN)</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Filter size={14} color="var(--dp-color-label)" />
+                <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)' }}>
+                  SCOPE:
+                </span>
+                <select
+                  value={targetRegionFilter}
+                  onChange={(e) => setTargetRegionFilter(e.target.value)}
+                  className="industrial-select"
+                >
+                  <option value="all">COMPARE ALL 5 DIALECTS</option>
+                  <option value="hubballi_dharwad">UTTARA KARNATAKA (DHARWAD)</option>
+                  <option value="kundapura_mangaluru">KARAVALI (KUNDAPURA-MANGALURU)</option>
+                  <option value="kalaburagi_bidar">KALYANA KARNATAKA (KALABURAGI)</option>
+                  <option value="arebhashe_kodagu">MALNAD &amp; KODAGU (AREBHASHE)</option>
+                  <option value="bengaluru_mysuru">OLD MYSURU (BENGALURU)</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                className="raised-key"
+                onClick={handleOpenRulebook}
+                title="Inspect the 5-Region Phonological Rulebook"
+                style={{ fontSize: '13px', padding: '4px 12px', height: '28px' }}
+              >
+                <BookOpen size={14} color="var(--dp-color-ink)" />
+                <span>RULEBOOK</span>
+              </button>
             </div>
           </div>
 
-          {/* Main Phrase Input Field with Search Button */}
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>
-            <div style={{ position: 'relative', flex: 1 }}>
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder={
-                  sourceLang === 'en'
-                    ? "Enter colloquial phrase, e.g., 'Where are you going? Did you eat?'..."
-                    : "ಕನ್ನಡ ವಾಕ್ಯ ನಮೂದಿಸಿ, e.g., 'ನೀವು ಎಲ್ಲಿಗೆ ಹೋಗುತ್ತಿದ್ದೀರಿ?'..."
-                }
-                className="sketch-input"
-                style={{
-                  width: '100%',
-                  fontSize: '22px',
-                  padding: '12px 18px',
-                  backgroundColor: '#ffffff',
-                }}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="sketch-btn sketch-btn-primary"
-              title="Execute neuro-symbolic transduction across dialect phonology"
+          {/* Main Phrase Input Field with Rotary Dial Action Button */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder={
+                sourceLang === 'en'
+                  ? "Enter colloquial phrase, e.g., 'Where are you going? Did you eat?'..."
+                  : "ಕನ್ನಡ ವಾಕ್ಯ ನಮೂದಿಸಿ, e.g., 'ನೀವು ಎಲ್ಲಿಗೆ ಹೋಗುತ್ತಿದ್ದೀರಿ?'..."
+              }
+              className="industrial-input"
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                minWidth: '150px',
-                justifyContent: 'center',
+                flex: 1,
+                fontSize: '17px',
+                padding: '12px 16px',
               }}
-            >
-              {isLoading ? (
-                <span>Transducing...</span>
-              ) : (
-                <>
-                  <Sparkles size={20} />
-                  <span>Morph Phrase</span>
-                </>
-              )}
-            </button>
+            />
+
+            <div className="tooltip-wrap">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="rotary-dial-btn"
+                title="Trigger Neuro-Symbolic Phonological Morph"
+                aria-label="Morph phrase across dialects"
+              >
+                <Sparkles size={20} color={isLoading ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)'} />
+              </button>
+              <span className="tooltip-bubble">EXECUTE TRANSDUCTION</span>
+            </div>
           </div>
 
-          {/* Quick Prompt Chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+          {/* Bank of Preset Prompt Keys */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
             <span
               style={{
-                fontFamily: 'var(--font-reading)',
-                fontSize: '17px',
-                color: 'var(--dp-ink-pencil-light)',
-                marginRight: '4px',
+                fontFamily: 'var(--dp-typography-mono)',
+                fontSize: '11px',
+                color: 'var(--dp-color-label)',
+                marginRight: '2px',
               }}
             >
-              Field Notebook Samples:
+              PRESET KEYS:
             </span>
-            {QUICK_PROMPT_CHIPS.map((chip, idx) => (
+            {QUICK_PROMPT_KEYS.map((keyItem, idx) => (
               <button
                 key={idx}
                 type="button"
-                className="sketch-chip"
+                className="raised-key"
                 onClick={() => {
-                  setInputText(chip.text);
-                  setSourceLang(chip.lang);
-                  handleExecuteMorph(chip.text, chip.lang);
+                  setInputText(keyItem.text);
+                  setSourceLang(keyItem.lang);
+                  handleExecuteMorph(keyItem.text, keyItem.lang);
                 }}
-                title={`Click to analyze: "${chip.text}"`}
+                style={{ fontSize: '12px', padding: '3px 8px', height: '26px' }}
+                title={`Load and morph: "${keyItem.text}"`}
               >
-                {chip.label}
+                <span>{keyItem.label}</span>
               </button>
             ))}
           </div>
         </form>
 
-        {/* Matched Seed / Derivation Note */}
+        {/* Matched Canonical Seed Telemetry */}
         {morphData?.matched_seed_concept && (
           <div
+            className="recessed-field-screen"
             style={{
-              marginTop: '16px',
+              marginTop: '12px',
               padding: '8px 14px',
-              borderRadius: 'var(--dp-radius-control)',
-              backgroundColor: 'var(--dp-accent-yellow-light)',
-              border: 'var(--dp-border-fine-stroke) dashed var(--dp-ink-pencil)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '18px',
-              color: 'var(--dp-ink-pencil)',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
+              gap: '8px',
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '12px',
             }}
           >
-            <CheckCircle2 size={18} color="var(--dp-accent-blue)" />
+            <CheckCircle2 size={14} color="var(--dp-color-accent)" />
             <span>
-              <strong>Corpus Concept Match:</strong> Standard Canonical Anchor:{' '}
-              <em>{morphData.matched_seed_concept}</em>
+              CANONICAL ANCHOR: <strong style={{ color: 'var(--dp-color-on-field)' }}>{morphData.matched_seed_concept}</strong>
             </span>
           </div>
         )}
@@ -426,52 +334,43 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
         {audioFeedback && (
           <div
             style={{
-              marginTop: '12px',
-              padding: '6px 12px',
-              backgroundColor: 'var(--dp-accent-yellow)',
-              borderRadius: 'var(--dp-radius-control)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '16px',
-              color: 'var(--dp-ink-pencil)',
-              display: 'inline-flex',
+              marginTop: '10px',
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '12px',
+              color: 'var(--dp-color-accent)',
+              display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '6px',
             }}
           >
-            <Volume2 size={16} />
+            <Volume2 size={14} />
             <span>{audioFeedback}</span>
           </div>
         )}
       </div>
 
-      {/* 5 Broad Comparison Rows */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
-          <span
-            style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: '22px',
-              color: 'var(--dp-ink-pencil)',
-            }}
-          >
-            Regional Phonetic & Syntactic Comparison Ledger ({filteredResults.length} Regions)
-          </span>
-          <span
-            style={{
-              fontFamily: 'var(--font-reading)',
-              fontSize: '16px',
-              color: 'var(--dp-ink-blue)',
-            }}
-          >
-            * Stressed syllables indicated with uppercase & red accent underline
-          </span>
+      {/* Recessed Tray Holding the 5 Removable-Looking Comparison Modules */}
+      <div className="recessed-well" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontFamily: 'var(--dp-typography-mono)',
+            fontSize: '11px',
+            color: 'var(--dp-color-label)',
+            textTransform: 'uppercase',
+            padding: '0 4px',
+          }}
+        >
+          <span>REGIONAL COMPARISON MODULES ({filteredResults.length} ZONES MOUNTED)</span>
+          <span>STRESSED SYLLABLES HIGHLIGHTED IN ORANGE READOUT</span>
         </div>
 
         {filteredResults.map((result) => {
           const isSelected = result.region_code === activeRegionCode;
           const badge = REGION_BADGES[result.region_code] || {
             kannada: 'ಪ್ರಾದೇಶಿಕ',
-            color: 'var(--dp-ink-pencil)',
             short: result.region_name,
           };
           const isExpanded = !!expandedRegions[result.region_code];
@@ -480,89 +379,45 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
           return (
             <div
               key={result.region_code}
-              className={`sketch-dialect-row ${isSelected ? 'selected' : ''}`}
-              style={{
-                backgroundColor: isSelected ? 'var(--dp-accent-yellow-light)' : 'var(--dp-paper-scrap)',
-                border: isSelected
-                  ? '2px solid var(--dp-ink-pencil)'
-                  : 'var(--dp-border-fine-stroke) solid var(--dp-rule-erased)',
-                borderRadius: 'var(--dp-radius-control)',
-                padding: '20px 24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '14px',
-                position: 'relative',
-                boxShadow: isSelected ? '2px 3px 0px rgba(56, 53, 47, 0.15)' : 'none',
-                transition: 'all var(--dp-motion-control) ease',
-              }}
+              className={`removable-module ${isSelected ? 'selected' : ''}`}
             >
-              {isSelected && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '-12px',
-                    left: '20px',
-                    backgroundColor: 'var(--dp-accent-red)',
-                    color: '#ffffff',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '14px',
-                    padding: '2px 10px',
-                    borderRadius: '4px',
-                    letterSpacing: '0.5px',
-                  }}
-                >
-                  MAP ACTIVE DIALECT
-                </div>
-              )}
-
-              {/* Row Header: Region Title, Kannada script tag, Audio, and Selection trigger */}
+              {/* Module Header Bar: Inset Pressed Key / Region Identification & Actions */}
               <div
                 style={{
                   display: 'flex',
                   flexWrap: 'wrap',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: '12px',
-                  borderBottom: 'var(--dp-border-fine-stroke) dashed var(--dp-rule-erased)',
-                  paddingBottom: '12px',
+                  gap: '10px',
+                  borderBottom: '1px solid #cbd0d2',
+                  paddingBottom: '10px',
+                  marginBottom: '12px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  {/* Inset pressed key button to focus region on map */}
                   <button
                     type="button"
                     onClick={() => onSelectRegion(result.region_code)}
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      cursor: 'pointer',
-                      padding: 0,
-                      textAlign: 'left',
-                    }}
-                    title="Click to focus this region on the isogloss map"
+                    className={`raised-key ${isSelected ? 'active' : ''}`}
+                    style={{ fontSize: '14px', padding: '3px 10px', height: '28px' }}
+                    title="Focus region on telemetry map"
                   >
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-heading)',
-                        fontSize: '24px',
-                        color: 'var(--dp-ink-pencil)',
-                        fontWeight: 'bold',
-                        textDecoration: isSelected ? 'underline var(--dp-accent-red) 2px' : 'none',
-                      }}
-                    >
-                      {result.region_name}
-                    </span>
+                    <span className={`led-indicator ${isSelected ? 'active' : ''}`} />
+                    <span style={{ fontWeight: 700 }}>{result.region_name}</span>
                   </button>
 
                   <span
                     className="kannada-text"
                     style={{
-                      backgroundColor: 'rgba(56, 53, 47, 0.08)',
-                      padding: '3px 10px',
-                      borderRadius: 'var(--dp-radius-control)',
-                      fontSize: '18px',
-                      fontWeight: 600,
-                      color: 'var(--dp-ink-pencil)',
-                      border: '1px solid rgba(56, 53, 47, 0.15)',
+                      fontFamily: 'var(--dp-typography-kannada)',
+                      fontSize: '15px',
+                      fontWeight: 700,
+                      color: 'var(--dp-color-label)',
+                      backgroundColor: 'var(--dp-color-well)',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--dp-radius-key)',
+                      border: '1px solid #9aa3a8',
                     }}
                   >
                     {badge.kannada}
@@ -570,136 +425,115 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
 
                   <span
                     style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize: '15px',
-                      color: 'var(--dp-ink-blue)',
-                      backgroundColor: 'rgba(52, 76, 105, 0.08)',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '11px',
+                      color: 'var(--dp-color-label)',
                     }}
                   >
                     {result.engine_mode === 'deterministic_symbolic'
-                      ? 'Symbolic Rule Transduction'
-                      : 'Hybrid LLM + Symbolic'}{' '}
-                    ({Math.round(result.confidence_score * 100)}%)
+                      ? 'SYMBOLIC TRANSDUCTION'
+                      : 'HYBRID LLM'}{' '}
+                    [{Math.round(result.confidence_score * 100)}%]
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {/* Audio Cadence preview button */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {/* Cadence Playback Key */}
                   <button
                     type="button"
-                    className="sketch-btn sketch-btn-secondary"
+                    className="raised-key"
                     onClick={() => handlePlayCadence(result.region_code)}
                     title={`Play synthetic audio cadence for ${result.region_name}`}
-                    style={{
-                      padding: '5px 12px',
-                      fontSize: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      backgroundColor: isPlaying ? 'var(--dp-accent-yellow)' : undefined,
-                    }}
+                    style={{ fontSize: '13px', padding: '3px 10px', height: '28px' }}
                   >
-                    <Volume2 size={16} color={isPlaying ? 'var(--dp-accent-red)' : 'var(--dp-ink-pencil)'} />
-                    <span>{isPlaying ? 'Playing...' : 'Play Cadence'}</span>
+                    <Volume2 size={14} color={isPlaying ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)'} />
+                    <span>{isPlaying ? 'PLAYING...' : 'CADENCE'}</span>
                   </button>
 
-                  {/* Toggle Derivation Diff button */}
+                  {/* Tactile +/- Disclosure Key */}
                   <button
                     type="button"
-                    className="sketch-btn sketch-btn-secondary"
+                    className="raised-icon-key"
                     onClick={() => handleToggleExpand(result.region_code)}
-                    title="Toggle word-by-word morphological derivation breakdown"
-                    style={{
-                      padding: '5px 10px',
-                      fontSize: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
+                    title="Toggle morphological derivation chain"
+                    style={{ width: '28px', height: '28px', padding: '4px' }}
                   >
-                    <span>Derivations</span>
-                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {isExpanded ? <Minus size={14} /> : <Plus size={14} />}
                   </button>
                 </div>
               </div>
 
-              {/* Core Phonetic Display Block */}
+              {/* Core Output Readings (Kannada, Roman Phonetic, IPA, Stress) */}
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'minmax(280px, 1.2fr) minmax(240px, 1fr) minmax(220px, 0.8fr)',
-                  gap: '20px',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                  gap: '16px',
                   alignItems: 'baseline',
                 }}
               >
-                {/* 1. Kannada Script Rendering */}
+                {/* 1. Large Kannada Script */}
                 <div>
                   <div
                     style={{
-                      fontFamily: 'var(--font-reading)',
-                      fontSize: '15px',
-                      color: 'var(--dp-ink-pencil-light)',
-                      marginBottom: '4px',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '11px',
+                      color: 'var(--dp-color-label)',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
+                      marginBottom: '2px',
                     }}
                   >
-                    Morphed Kannada Script
+                    MORPhed KANNADA SCRIPT
                   </div>
                   <div
                     className="kannada-text"
                     style={{
-                      fontSize: '32px',
-                      lineHeight: '1.3',
+                      fontSize: '26px',
                       fontWeight: 700,
-                      color: 'var(--dp-ink-pencil)',
-                      wordBreak: 'break-word',
+                      color: 'var(--dp-color-ink)',
+                      lineHeight: '1.25',
                     }}
                   >
                     {result.morphed_kannada_script}
                   </div>
                 </div>
 
-                {/* 2. Roman Phonetic & Syllable Stress */}
+                {/* 2. Phonetic Roman & Syllable Stress */}
                 <div>
                   <div
                     style={{
-                      fontFamily: 'var(--font-reading)',
-                      fontSize: '15px',
-                      color: 'var(--dp-ink-pencil-light)',
-                      marginBottom: '4px',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '11px',
+                      color: 'var(--dp-color-label)',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
+                      marginBottom: '2px',
                     }}
                   >
-                    Phonetic Roman & Prosody
+                    PHONETIC ROMAN &amp; PROSODY
                   </div>
                   <div
                     style={{
-                      fontFamily: 'var(--font-heading)',
-                      fontSize: '24px',
-                      color: 'var(--dp-ink-pencil)',
-                      lineHeight: '1.2',
+                      fontFamily: 'var(--dp-typography-sans)',
+                      fontSize: '19px',
+                      fontWeight: 700,
+                      color: 'var(--dp-color-ink)',
                     }}
                   >
                     {result.morphed_phonetic_roman}
                   </div>
-                  {/* Syllable stress with hand-marked emphasis */}
+
                   <div
                     style={{
-                      marginTop: '6px',
-                      fontFamily: 'var(--font-code)',
-                      fontSize: '16px',
-                      color: 'var(--dp-ink-pencil)',
+                      marginTop: '4px',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '12px',
                       display: 'flex',
                       flexWrap: 'wrap',
-                      gap: '6px',
+                      gap: '4px',
                       alignItems: 'center',
                     }}
                   >
-                    <span style={{ color: 'var(--dp-ink-blue)', fontSize: '14px' }}>Stress:</span>
+                    <span style={{ color: 'var(--dp-color-label)' }}>STRESS:</span>
                     {result.syllable_stress_breakdown.split(/[\s-]+/).map((syl, sIdx) => {
                       const isStressed = syl === syl.toUpperCase() && syl.length > 1;
                       return (
@@ -707,11 +541,11 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                           key={sIdx}
                           style={{
                             padding: '1px 5px',
-                            borderRadius: '3px',
-                            backgroundColor: isStressed ? 'rgba(158, 58, 46, 0.12)' : 'transparent',
-                            borderBottom: isStressed ? '2px solid var(--dp-accent-red)' : 'none',
-                            color: isStressed ? 'var(--dp-accent-red)' : 'var(--dp-ink-pencil)',
-                            fontWeight: isStressed ? 'bold' : 'normal',
+                            borderRadius: '2px',
+                            backgroundColor: isStressed ? 'rgba(241, 91, 34, 0.15)' : 'transparent',
+                            color: isStressed ? 'var(--dp-color-accent)' : 'inherit',
+                            fontWeight: isStressed ? 700 : 400,
+                            border: isStressed ? '1px solid var(--dp-color-accent)' : 'none',
                           }}
                         >
                           {syl}
@@ -721,30 +555,29 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                   </div>
                 </div>
 
-                {/* 3. IPA Notation */}
+                {/* 3. IPA Pronunciation Readout */}
                 <div>
                   <div
                     style={{
-                      fontFamily: 'var(--font-reading)',
-                      fontSize: '15px',
-                      color: 'var(--dp-ink-pencil-light)',
-                      marginBottom: '4px',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '11px',
+                      color: 'var(--dp-color-label)',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
+                      marginBottom: '2px',
                     }}
                   >
-                    International Phonetic Alphabet (IPA)
+                    IPA TRANSCRIPTION
                   </div>
                   <div
                     style={{
-                      fontFamily: 'var(--font-code)',
-                      fontSize: '20px',
-                      color: 'var(--dp-ink-blue)',
-                      backgroundColor: 'rgba(52, 76, 105, 0.06)',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '14px',
+                      backgroundColor: 'var(--dp-color-field)',
+                      color: 'var(--dp-color-on-field)',
                       padding: '4px 10px',
-                      borderRadius: 'var(--dp-radius-control)',
-                      border: '1px solid rgba(52, 76, 105, 0.2)',
+                      borderRadius: 'var(--dp-radius-key)',
                       display: 'inline-block',
+                      border: '1px solid #111518',
                     }}
                   >
                     {result.ipa_approximation}
@@ -752,55 +585,49 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                 </div>
               </div>
 
-              {/* Field Linguist Handwritten Marginalia Note */}
+              {/* Cultural Context Field Note */}
               <div
                 style={{
-                  fontFamily: 'var(--font-note)',
-                  fontSize: '22px',
-                  color: 'var(--dp-ink-blue)',
-                  backgroundColor: 'rgba(52, 76, 105, 0.04)',
-                  padding: '8px 16px',
-                  borderRadius: 'var(--dp-radius-control)',
-                  borderLeft: '3px solid var(--dp-ink-blue)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
+                  marginTop: '10px',
+                  padding: '6px 12px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  borderRadius: 'var(--dp-radius-key)',
+                  borderLeft: '3px solid var(--dp-color-label)',
+                  fontFamily: 'var(--dp-typography-sans)',
+                  fontSize: '13px',
+                  color: 'var(--dp-color-ink)',
                 }}
               >
-                <span>✎</span>
-                <span>
-                  <strong>Field Note:</strong> {result.cultural_nuance_note}
-                </span>
+                <strong>FIELD NOTE:</strong> {result.cultural_nuance_note}
               </div>
 
-              {/* Expandable Hand-Marked Derivation Breakdown (WordDiff) */}
+              {/* Expanded Derivation Chain */}
               {isExpanded && (
                 <div
                   style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                    borderRadius: 'var(--dp-radius-control)',
-                    border: 'var(--dp-border-fine-stroke) solid var(--dp-rule-erased)',
-                    padding: '14px 18px',
+                    marginTop: '10px',
+                    padding: '12px 14px',
+                    backgroundColor: '#ffffff',
+                    borderRadius: 'var(--dp-radius-key)',
+                    border: '1px solid #b6bec2',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '10px',
+                    gap: '8px',
                   }}
                 >
-                  <div
+                  <span
                     style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize: '17px',
-                      color: 'var(--dp-ink-pencil)',
-                      fontWeight: 'bold',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: 'var(--dp-color-label)',
+                      textTransform: 'uppercase',
                     }}
                   >
-                    <span>Morpheme-by-Morpheme Derivation & Rules Triggered:</span>
-                  </div>
+                    MORPHEME TRANSDUCTION CHAIN:
+                  </span>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {result.word_by_word_diff.map((diff, dIdx) => (
                       <div
                         key={dIdx}
@@ -808,75 +635,37 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                           display: 'flex',
                           flexWrap: 'wrap',
                           alignItems: 'center',
-                          gap: '12px',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          backgroundColor: 'var(--dp-paper-scrap)',
-                          borderLeft: '2px solid var(--dp-accent-red)',
-                          fontFamily: 'var(--font-body)',
-                          fontSize: '18px',
+                          gap: '8px',
+                          padding: '4px 8px',
+                          backgroundColor: 'var(--dp-color-raised)',
+                          borderRadius: 'var(--dp-radius-key)',
+                          fontSize: '13px',
+                          fontFamily: 'var(--dp-typography-mono)',
                         }}
                       >
-                        {/* Strikethrough source token in pencil ink */}
-                        <span
-                          style={{
-                            textDecoration: 'line-through',
-                            color: 'var(--dp-ink-pencil-light)',
-                            fontFamily: 'var(--font-heading)',
-                            fontSize: '20px',
-                          }}
-                        >
+                        <span style={{ textDecoration: 'line-through', opacity: 0.6 }}>
                           {diff.source_token}
                         </span>
-
-                        <ArrowRight size={16} color="var(--dp-accent-red)" />
-
-                        {/* Morphed replacement token in red pencil */}
-                        <span
-                          style={{
-                            color: 'var(--dp-accent-red)',
-                            fontWeight: 'bold',
-                            fontFamily: 'var(--font-heading)',
-                            fontSize: '22px',
-                          }}
-                        >
+                        <ArrowRight size={12} color="var(--dp-color-accent)" />
+                        <span style={{ fontWeight: 700, color: 'var(--dp-color-accent)' }}>
                           {diff.target_token_roman}
                         </span>
-
-                        <span
-                          className="kannada-text"
-                          style={{
-                            color: 'var(--dp-ink-pencil)',
-                            fontSize: '20px',
-                            fontWeight: 'bold',
-                          }}
-                        >
+                        <span className="kannada-text" style={{ fontWeight: 700 }}>
                           ({diff.target_token_script})
                         </span>
-
-                        {/* Rule Name Pill */}
                         <span
                           style={{
-                            backgroundColor: 'rgba(158, 58, 46, 0.1)',
-                            color: 'var(--dp-accent-red)',
-                            padding: '2px 8px',
-                            borderRadius: '3px',
-                            fontSize: '14px',
-                            fontFamily: 'var(--font-code)',
+                            fontSize: '10px',
+                            backgroundColor: '#ffffff',
+                            padding: '1px 6px',
+                            borderRadius: '2px',
+                            border: '1px solid #b6bec2',
+                            color: 'var(--dp-color-label)',
                           }}
                         >
                           [{diff.rule_applied}]
                         </span>
-
-                        {/* Explanation */}
-                        <span
-                          style={{
-                            fontFamily: 'var(--font-reading)',
-                            fontSize: '16px',
-                            color: 'var(--dp-ink-pencil)',
-                            fontStyle: 'italic',
-                          }}
-                        >
+                        <span style={{ fontSize: '12px', fontStyle: 'italic', color: 'var(--dp-color-ink)' }}>
                           — {diff.explanation}
                         </span>
                       </div>
@@ -889,7 +678,7 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
         })}
       </div>
 
-      {/* Phonological Rulebook Modal / Drawer */}
+      {/* Hardware Chassis Rulebook Modal */}
       {isRulebookOpen && (
         <div
           style={{
@@ -898,7 +687,7 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(56, 53, 47, 0.65)',
+            backgroundColor: 'rgba(24, 30, 34, 0.75)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -908,15 +697,14 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
           onClick={() => setIsRulebookOpen(false)}
         >
           <div
-            className="sketch-paper-sheet"
+            className="chassis-housing"
             style={{
               maxWidth: '920px',
               width: '100%',
-              maxHeight: '90vh',
+              maxHeight: '88vh',
               overflowY: 'auto',
-              padding: '28px',
-              position: 'relative',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+              padding: '24px',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -926,115 +714,77 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: 'var(--dp-border-fine-stroke) solid var(--dp-ink-pencil)',
-                paddingBottom: '14px',
-                marginBottom: '20px',
+                borderBottom: '1px solid #9aa3a8',
+                paddingBottom: '12px',
+                marginBottom: '16px',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <BookOpen size={24} color="var(--dp-accent-red)" />
+                <BookOpen size={20} color="var(--dp-color-accent)" />
                 <h3
                   style={{
-                    fontFamily: 'var(--font-heading)',
-                    fontSize: '28px',
+                    fontSize: '22px',
                     margin: 0,
-                    color: 'var(--dp-ink-pencil)',
+                    color: 'var(--dp-color-ink)',
                   }}
                 >
-                  5-Region Phonological & Suffix Transduction Rulebook
+                  5-REGION PHONOLOGICAL &amp; SUFFIX TRANSDUCTION RULEBOOK
                 </h3>
               </div>
               <button
                 type="button"
-                className="sketch-btn sketch-btn-secondary"
+                className="raised-icon-key"
                 onClick={() => setIsRulebookOpen(false)}
-                style={{ padding: '6px 12px' }}
+                style={{ width: '32px', height: '32px', padding: '4px' }}
               >
-                <X size={20} />
+                <X size={16} />
               </button>
             </div>
 
             {/* Rulebook Content */}
             {!rulebook ? (
-              <div style={{ textAlign: 'center', padding: '40px', fontFamily: 'var(--font-body)', fontSize: '20px' }}>
-                Loading phonological rules from linguistic engine...
+              <div style={{ textAlign: 'center', padding: '40px', fontFamily: 'var(--dp-typography-mono)', fontSize: '14px' }}>
+                LOADING RULEBOOK FROM LINGUISTIC ENGINE...
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {Object.entries(rulebook.rulebook).map(([code, profile]) => (
-                  <div
-                    key={code}
-                    style={{
-                      border: 'var(--dp-border-fine-stroke) solid var(--dp-rule-erased)',
-                      borderRadius: 'var(--dp-radius-control)',
-                      padding: '18px',
-                      backgroundColor: 'var(--dp-paper-scrap)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <h4
-                        style={{
-                          fontFamily: 'var(--font-heading)',
-                          fontSize: '24px',
-                          margin: 0,
-                          color: 'var(--dp-ink-pencil)',
-                        }}
-                      >
+                  <div key={code} className="recessed-well" style={{ padding: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <h4 style={{ fontSize: '18px', margin: 0 }}>
                         {profile.region_name} ({profile.kannada_name})
                       </h4>
-                      <span
-                        style={{
-                          fontFamily: 'var(--font-code)',
-                          fontSize: '14px',
-                          color: 'var(--dp-ink-blue)',
-                        }}
-                      >
-                        Region ID: {code}
+                      <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)' }}>
+                        REGION_ID: {code}
                       </span>
                     </div>
 
-                    <p
-                      style={{
-                        fontFamily: 'var(--font-reading)',
-                        fontSize: '16px',
-                        color: 'var(--dp-ink-pencil)',
-                        marginBottom: '14px',
-                        fontStyle: 'italic',
-                      }}
-                    >
+                    <p style={{ fontSize: '13px', color: 'var(--dp-color-label)', marginBottom: '10px' }}>
                       Cadence: {profile.prosody_summary}
                     </p>
 
                     {/* Suffix rules */}
-                    <div style={{ marginBottom: '12px' }}>
-                      <div
-                        style={{
-                          fontFamily: 'var(--font-body)',
-                          fontSize: '16px',
-                          fontWeight: 'bold',
-                          color: 'var(--dp-accent-red)',
-                          marginBottom: '4px',
-                        }}
-                      >
-                        Suffix & Inflection Rules:
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ marginBottom: '8px' }}>
+                      <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-accent)', fontWeight: 600 }}>
+                        SUFFIX RULES:
+                      </span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                         {profile.suffix_rules.map((rule, rIdx) => (
                           <div
                             key={rIdx}
                             style={{
                               backgroundColor: '#ffffff',
-                              border: '1px solid var(--dp-rule-erased)',
-                              borderRadius: '4px',
-                              padding: '4px 10px',
-                              fontFamily: 'var(--font-code)',
-                              fontSize: '14px',
+                              border: '1px solid #9aa3a8',
+                              borderRadius: 'var(--dp-radius-key)',
+                              padding: '3px 8px',
+                              fontFamily: 'var(--dp-typography-mono)',
+                              fontSize: '11px',
                             }}
                           >
-                            <span style={{ color: 'var(--dp-ink-pencil-light)' }}>{rule.pattern}</span>
-                            <span style={{ color: 'var(--dp-accent-red)', margin: '0 4px' }}>→</span>
-                            <span style={{ fontWeight: 'bold', color: 'var(--dp-ink-pencil)' }}>{rule.replacement}</span>
-                            <span style={{ color: 'var(--dp-ink-blue)', marginLeft: '6px' }}>({rule.description})</span>
+                            <span>{rule.pattern}</span>
+                            <span style={{ color: 'var(--dp-color-accent)', margin: '0 4px' }}>➔</span>
+                            <strong>{rule.replacement}</strong>
+                            <span style={{ color: 'var(--dp-color-label)', marginLeft: '4px' }}>({rule.description})</span>
                           </div>
                         ))}
                       </div>
@@ -1042,33 +792,25 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
 
                     {/* Lexical substitutions */}
                     <div>
-                      <div
-                        style={{
-                          fontFamily: 'var(--font-body)',
-                          fontSize: '16px',
-                          fontWeight: 'bold',
-                          color: 'var(--dp-ink-blue)',
-                          marginBottom: '4px',
-                        }}
-                      >
-                        Hallmark Lexical Substitutions:
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)', fontWeight: 600 }}>
+                        LEXICAL SUBSTITUTIONS:
+                      </span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                         {profile.lexical_substitutions.map((rule, rIdx) => (
                           <div
                             key={rIdx}
                             style={{
                               backgroundColor: '#ffffff',
-                              border: '1px solid var(--dp-rule-erased)',
-                              borderRadius: '4px',
-                              padding: '4px 10px',
-                              fontFamily: 'var(--font-code)',
-                              fontSize: '14px',
+                              border: '1px solid #9aa3a8',
+                              borderRadius: 'var(--dp-radius-key)',
+                              padding: '3px 8px',
+                              fontFamily: 'var(--dp-typography-mono)',
+                              fontSize: '11px',
                             }}
                           >
-                            <span style={{ color: 'var(--dp-ink-pencil-light)' }}>{rule.pattern}</span>
-                            <span style={{ color: 'var(--dp-ink-blue)', margin: '0 4px' }}>→</span>
-                            <span style={{ fontWeight: 'bold', color: 'var(--dp-ink-pencil)' }}>{rule.replacement}</span>
+                            <span>{rule.pattern}</span>
+                            <span style={{ color: 'var(--dp-color-accent)', margin: '0 4px' }}>➔</span>
+                            <strong>{rule.replacement}</strong>
                           </div>
                         ))}
                       </div>
@@ -1083,3 +825,4 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
     </div>
   );
 };
+export default DialectMorphSheet;

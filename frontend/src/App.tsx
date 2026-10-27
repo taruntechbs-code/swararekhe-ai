@@ -11,7 +11,7 @@ import {
   GeoJSONFeatureCollection,
   IsoglossLocateResponse,
 } from './api/swararekheClient';
-import { Activity, BookOpenCheck, ArrowLeft } from 'lucide-react';
+import { Activity, BookOpenCheck, ArrowLeft, Terminal } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('atlas');
@@ -23,7 +23,6 @@ export const App: React.FC = () => {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [seedPhrase, setSeedPhrase] = useState<string>('Where are you going?');
 
-  // Load initial platform statistics and GeoJSON features
   const loadPlatformData = useCallback(async () => {
     setIsLoadingStats(true);
     try {
@@ -42,11 +41,9 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     loadPlatformData();
-    // Default initial location: Dharwad (15.4589° N, 75.0078° E)
     handleSelectCoordinate(15.4589, 75.0078);
   }, [loadPlatformData]);
 
-  // Handle clicking on coordinates in the SVG field map or quick-jump station
   const handleSelectCoordinate = async (lat: number, lng: number) => {
     setIsLoadingLocation(true);
     try {
@@ -73,219 +70,240 @@ export const App: React.FC = () => {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: 'var(--dp-color-bg)',
-        color: 'var(--dp-color-ink)',
-        fontFamily: 'var(--dp-typography-reading-face)',
+        padding: '20px 16px',
         display: 'flex',
-        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
       }}
     >
-      {/* Top Working Sheet Header */}
-      <WorkingSheetHeader
-        stats={stats}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onRefreshStats={loadPlatformData}
-        isLoadingStats={isLoadingStats}
-      />
-
-      {/* Main Workspace Sheet Content */}
-      <main
+      {/* Continuous Industrial Instrument Chassis Housing */}
+      <div
+        className="chassis-housing"
         style={{
-          flex: 1,
-          padding: '28px',
-          maxWidth: '1600px',
-          margin: '0 auto',
           width: '100%',
-          boxSizing: 'border-box',
-        }}
-      >
-        {activeTab === 'atlas' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            {/* Section 1: Interactive Karnataka Isogloss Field Map & IDW Blend Ledger */}
-            <section aria-label="Interactive Karnataka Isogloss Field Map">
-              <IsoglossMapSheet
-                geoJson={geoJson}
-                locationData={locationData}
-                isLoadingLocation={isLoadingLocation}
-                onSelectCoordinate={handleSelectCoordinate}
-                activeRegionCode={activeRegionCode}
-                onSelectRegion={handleSelectRegion}
-              />
-            </section>
-
-            {/* Section 2: Neuro-Symbolic Dialect Morphing & Phonetic Transduction Sheet */}
-            <section aria-label="Dialect Morphing Working Sheet">
-              <DialectMorphSheet
-                activeRegionCode={activeRegionCode}
-                onSelectRegion={handleSelectRegion}
-                externalSeedPhrase={seedPhrase}
-              />
-            </section>
-          </div>
-        )}
-
-        {/* Phase 7: Interactive Etymology Knowledge Graph Tab */}
-        {activeTab === 'graph' && (
-          <section aria-label="Interactive Etymological Constellation Graph">
-            <EtymologyGraphSheet
-              initialQuery="good"
-              activeRegionCode={activeRegionCode}
-              onSelectRegion={handleSelectRegion}
-            />
-          </section>
-        )}
-
-        {/* Phase 8 Acoustic Tab Preview */}
-        {activeTab === 'acoustic' && (
-          <div
-            className="sketch-paper-sheet"
-            style={{
-              padding: '40px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '18px',
-            }}
-          >
-            <div
-              style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: 'var(--dp-radius-control)',
-                backgroundColor: 'var(--dp-accent-yellow-light)',
-                border: 'var(--dp-border-fine-stroke) solid var(--dp-ink-pencil)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Activity size={32} color="var(--dp-accent-blue)" />
-            </div>
-            <h2
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: '32px',
-                margin: 0,
-                color: 'var(--dp-ink-pencil)',
-              }}
-            >
-              Acoustic Prosody & F0 Pitch Oscilloscope
-            </h2>
-            <p
-              style={{
-                maxWidth: '680px',
-                fontSize: '20px',
-                color: 'var(--dp-ink-pencil)',
-                lineHeight: 1.5,
-              }}
-            >
-              Synthetic DSP audio samples and F0 contour curves are prepared for all{' '}
-              <strong>{stats.acoustic_profiles_ready} dialect zones</strong>. Phase 8 will provide real-time audio
-              recording and dynamic pitch-contour comparison against regional prosodic templates.
-            </p>
-            <button
-              type="button"
-              className="sketch-btn sketch-btn-primary"
-              onClick={() => setActiveTab('atlas')}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '18px' }}
-            >
-              <ArrowLeft size={18} />
-              <span>Return to Isogloss Atlas & Morpher</span>
-            </button>
-          </div>
-        )}
-
-        {/* Phase 8 Archive Tab Preview */}
-        {activeTab === 'archive' && (
-          <div
-            className="sketch-paper-sheet"
-            style={{
-              padding: '40px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '18px',
-            }}
-          >
-            <div
-              style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: 'var(--dp-radius-control)',
-                backgroundColor: 'var(--dp-accent-yellow-light)',
-                border: 'var(--dp-border-fine-stroke) solid var(--dp-ink-pencil)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <BookOpenCheck size={32} color="#10B981" />
-            </div>
-            <h2
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: '32px',
-                margin: 0,
-                color: 'var(--dp-ink-pencil)',
-              }}
-            >
-              Crowdsourced Living Field Archive
-            </h2>
-            <p
-              style={{
-                maxWidth: '680px',
-                fontSize: '20px',
-                color: 'var(--dp-ink-pencil)',
-                lineHeight: 1.5,
-              }}
-            >
-              The Living Dictionary pipeline has ingested{' '}
-              <strong>{stats.community_submissions_total} community submissions</strong> with{' '}
-              <strong>{stats.approved_living_entries} peer-approved entries</strong>. Phase 8 will bring the interactive
-              field recorder submission form and community triage review table.
-            </p>
-            <button
-              type="button"
-              className="sketch-btn sketch-btn-primary"
-              onClick={() => setActiveTab('atlas')}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '18px' }}
-            >
-              <ArrowLeft size={18} />
-              <span>Return to Isogloss Atlas & Morpher</span>
-            </button>
-          </div>
-        )}
-      </main>
-
-      {/* Footer Marginalia */}
-      <footer
-        style={{
-          borderTop: 'var(--dp-border-fine-stroke) solid var(--dp-color-line)',
-          padding: '16px 28px',
-          textAlign: 'center',
-          backgroundColor: 'var(--dp-color-scrap)',
-          fontFamily: 'var(--dp-typography-reading-face)',
-          fontSize: '18px',
-          color: 'var(--dp-color-ink-muted)',
+          maxWidth: '1640px',
           display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
+          flexDirection: 'column',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>ಸ್ವರರೇಖೆ (SWARAREKHE)</span>
-          <span>&bull;</span>
-          <span>Kannada Dialectology &amp; Computational Linguistics Field Station</span>
-        </div>
-        <div>
-          <span>Inverse Distance Weighting (IDW) &bull; Neuro-Symbolic Phonology &bull; Graph Etymology</span>
-        </div>
-      </footer>
+        {/* Top Instrument Chassis Header & Navigation Bank */}
+        <WorkingSheetHeader
+          stats={stats}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onRefreshStats={loadPlatformData}
+          isLoadingStats={isLoadingStats}
+        />
+
+        {/* Chassis Narrow Seam Line */}
+        <div className="chassis-seam" />
+
+        {/* Main Operational Bay Container */}
+        <main
+          style={{
+            flex: 1,
+            padding: '0 24px 28px 24px',
+            width: '100%',
+          }}
+        >
+          {activeTab === 'atlas' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* BAY 01A: Geospatial Isogloss Telemetry Screen */}
+              <section aria-label="Bay 01A Geospatial Telemetry">
+                <IsoglossMapSheet
+                  geoJson={geoJson}
+                  locationData={locationData}
+                  isLoadingLocation={isLoadingLocation}
+                  onSelectCoordinate={handleSelectCoordinate}
+                  activeRegionCode={activeRegionCode}
+                  onSelectRegion={handleSelectRegion}
+                />
+              </section>
+
+              {/* Bay Seam */}
+              <div className="chassis-seam" style={{ margin: '8px 0' }} />
+
+              {/* BAY 01B: Neuro-Symbolic Phonological Transduction Tray */}
+              <section aria-label="Bay 01B Dialect Morphing Tray">
+                <DialectMorphSheet
+                  activeRegionCode={activeRegionCode}
+                  onSelectRegion={handleSelectRegion}
+                  externalSeedPhrase={seedPhrase}
+                />
+              </section>
+            </div>
+          )}
+
+          {/* BAY 02: Etymology Constellation Graph & Linguistic Bridge Bay */}
+          {activeTab === 'graph' && (
+            <section aria-label="Bay 02 Etymology Constellation Graph & Linguistic Bridge">
+              <EtymologyGraphSheet
+                initialQuery="good"
+                activeRegionCode={activeRegionCode}
+                onSelectRegion={handleSelectRegion}
+              />
+            </section>
+          )}
+
+          {/* BAY 03: Acoustic F0 Oscilloscope Preview Deck */}
+          {activeTab === 'acoustic' && (
+            <div className="recessed-well" style={{ padding: '36px', textAlign: 'center' }}>
+              <div
+                className="recessed-field-screen"
+                style={{
+                  maxWidth: '780px',
+                  margin: '0 auto',
+                  padding: '36px 28px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '16px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Activity size={28} color="var(--dp-color-accent)" />
+                  <span
+                    style={{
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '13px',
+                      color: 'var(--dp-color-accent)',
+                      letterSpacing: '1px',
+                    }}
+                  >
+                    // BAY 03 // ACOUSTIC PROSODY &amp; F0 OSCILLOSCOPE DECK
+                  </span>
+                </div>
+
+                <h2 style={{ fontSize: '24px', color: 'var(--dp-color-on-field)', margin: 0 }}>
+                  Acoustic Cadence DSP &amp; Harmonic Contour Analyzer
+                </h2>
+
+                <p
+                  style={{
+                    fontSize: '15px',
+                    color: 'var(--dp-color-on-field-muted)',
+                    lineHeight: '1.45',
+                    maxWidth: '620px',
+                  }}
+                >
+                  Synthetic DSP audio samples and F0 contour curves are prepared for all{' '}
+                  <strong style={{ color: 'var(--dp-color-on-field)' }}>
+                    {stats.acoustic_profiles_ready} dialect zones
+                  </strong>
+                  . Phase 8 will provide real-time audio recording and dynamic pitch-contour comparison against regional prosodic templates.
+                </p>
+
+                <button
+                  type="button"
+                  className="raised-key"
+                  onClick={() => setActiveTab('atlas')}
+                  style={{ height: '36px', fontSize: '13px', marginTop: '6px' }}
+                >
+                  <ArrowLeft size={14} />
+                  <span>RETURN TO BAY 01</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* BAY 04: Living Field Archive Preview Deck */}
+          {activeTab === 'archive' && (
+            <div className="recessed-well" style={{ padding: '36px', textAlign: 'center' }}>
+              <div
+                className="recessed-field-screen"
+                style={{
+                  maxWidth: '780px',
+                  margin: '0 auto',
+                  padding: '36px 28px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '16px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <BookOpenCheck size={28} color="var(--dp-color-accent)" />
+                  <span
+                    style={{
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '13px',
+                      color: 'var(--dp-color-accent)',
+                      letterSpacing: '1px',
+                    }}
+                  >
+                    // BAY 04 // LIVING CROWDSOURCED FIELD ARCHIVE
+                  </span>
+                </div>
+
+                <h2 style={{ fontSize: '24px', color: 'var(--dp-color-on-field)', margin: 0 }}>
+                  Community Dialect Ingestion &amp; Dravidian Phonotactic Triage
+                </h2>
+
+                <p
+                  style={{
+                    fontSize: '15px',
+                    color: 'var(--dp-color-on-field-muted)',
+                    lineHeight: '1.45',
+                    maxWidth: '620px',
+                  }}
+                >
+                  The Living Dictionary pipeline has ingested{' '}
+                  <strong style={{ color: 'var(--dp-color-on-field)' }}>
+                    {stats.community_submissions_total} community submissions
+                  </strong>{' '}
+                  with{' '}
+                  <strong style={{ color: 'var(--dp-color-on-field)' }}>
+                    {stats.approved_living_entries} peer-approved entries
+                  </strong>
+                  . Phase 8 will bring the interactive field recorder submission form and community triage review table.
+                </p>
+
+                <button
+                  type="button"
+                  className="raised-key"
+                  onClick={() => setActiveTab('atlas')}
+                  style={{ height: '36px', fontSize: '13px', marginTop: '6px' }}
+                >
+                  <ArrowLeft size={14} />
+                  <span>RETURN TO BAY 01</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* Chassis Footer Housing */}
+        <footer
+          style={{
+            borderTop: 'var(--dp-border-hairline) solid #9aa3a8',
+            padding: '14px 24px',
+            backgroundColor: 'var(--dp-color-chassis)',
+            fontFamily: 'var(--dp-typography-mono)',
+            fontSize: '11px',
+            color: 'var(--dp-color-label)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Terminal size={14} color="var(--dp-color-accent)" />
+            <span>INSTRUMENT SERIAL // SR-2026-KA</span>
+            <span>&bull;</span>
+            <span>SWARAREKHE (ಸ್ವರರೇಖೆ) SPATIO-ACOUSTIC ENGINE</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span>DSP: LIBROSA-YIN</span>
+            <span>&bull;</span>
+            <span>GRAPH: NETWORKX-MULTIDIGRAPH</span>
+            <span>&bull;</span>
+            <span>IDW: P=2.0 SPATIAL</span>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 };

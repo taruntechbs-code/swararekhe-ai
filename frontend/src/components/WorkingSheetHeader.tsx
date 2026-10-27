@@ -29,194 +29,308 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
   return (
     <header
       style={{
-        borderBottom: 'var(--dp-border-fine-stroke) solid var(--dp-color-line)',
-        padding: '24px 28px 18px 28px',
-        backgroundColor: 'var(--dp-color-scrap)',
+        borderBottom: 'var(--dp-border-hairline) solid #9aa3a8',
+        padding: '24px 28px 20px 28px',
+        backgroundColor: 'var(--dp-color-chassis)',
         position: 'relative',
       }}
     >
-      <div className="tape-strip" aria-hidden="true" />
-
+      {/* Top Header Opening: Model Designation & Brand Title vs Compact Control Assembly */}
       <div
+        className="chassis-header-opening"
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          alignItems: 'baseline',
+          alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '16px',
+          gap: '20px',
         }}
       >
-        {/* Brand & Title */}
+        {/* Left: Engraved Model Designation & Brand Heading */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Compass size={28} color="var(--dp-color-accent)" strokeWidth={2.2} />
+          <div
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: 'var(--dp-typography-label)',
+              fontWeight: 600,
+              color: 'var(--dp-color-label)',
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '4px',
+            }}
+          >
+            <span style={{ color: 'var(--dp-color-accent)' }}>●</span>
+            <span>MODEL SR-05 // SPATIO-ACOUSTIC ISOGLOSS INSTRUMENT</span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
             <h1
               style={{
-                fontSize: '36px',
-                letterSpacing: 0,
+                fontSize: '38px',
+                fontWeight: 800,
+                letterSpacing: '-0.5px',
                 color: 'var(--dp-color-ink)',
-                display: 'inline-flex',
-                alignItems: 'baseline',
-                gap: '8px',
+                margin: 0,
+                lineHeight: 1,
               }}
             >
-              <span className="hand-underline-red">SWARAREKHE</span>
-              <span
-                className="kannada-text"
-                style={{
-                  fontSize: '28px',
-                  fontWeight: 700,
-                  color: 'var(--dp-color-accent)',
-                }}
-              >
-                (ಸ್ವರರೇಖೆ)
-              </span>
+              SWARAREKHE
             </h1>
+            <span
+              className="kannada-text"
+              style={{
+                fontSize: '26px',
+                fontWeight: 700,
+                color: 'var(--dp-color-label)',
+              }}
+            >
+              (ಸ್ವರರೇಖೆ)
+            </span>
+            <span
+              style={{
+                fontFamily: 'var(--dp-typography-mono)',
+                fontSize: 'var(--dp-typography-metadata)',
+                color: 'var(--dp-color-label)',
+                backgroundColor: 'var(--dp-color-well)',
+                padding: '2px 8px',
+                borderRadius: 'var(--dp-radius-key)',
+                border: '1px solid #9aa3a8',
+              }}
+            >
+              CHASSIS VER 2.5
+            </span>
           </div>
-          <p
+
+          <div
             style={{
-              fontFamily: 'var(--dp-typography-reading-face)',
-              fontSize: '20px',
-              color: 'var(--dp-color-ink-muted)',
+              fontFamily: 'var(--dp-typography-sans)',
+              fontSize: '15px',
+              color: 'var(--dp-color-label)',
               marginTop: '4px',
             }}
           >
-            Spatio-Acoustic Dialect & Cultural Graph Working Sheet • Namma Kannada
-          </p>
+            High-Precision Linguistic Isogloss Interpolation &amp; Etymological Graph Bay
+          </div>
         </div>
 
-        {/* Live Platform Facts in a Drawn Bracket */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div className="drawn-bracket" title="Verified dialect field corpus counts">
-            <strong>{stats.total_regions}</strong> Dialect Zones &bull;{' '}
-            <strong>{stats.total_dialect_variants}</strong> Field Variants &bull;{' '}
-            <strong>{stats.graph_nodes}</strong> Graph Nodes &bull;{' '}
-            <strong>{stats.graph_edges}</strong> Etymological Edges &bull;{' '}
-            <strong>{stats.acoustic_profiles_ready}</strong> Acoustic Profiles
+        {/* Right: Compact Hardware Control Assembly (Vents + Rotary Dial + Sync Key) */}
+        <div
+          className="chassis-header-control-column"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+          }}
+        >
+          {/* Recessed Cooling Vent Slots */}
+          <div className="chassis-vent-group" aria-hidden="true" title="Chassis Exhaust Vents">
+            <div className="chassis-vent-slot" />
+            <div className="chassis-vent-slot" />
+            <div className="chassis-vent-slot" />
+            <div className="chassis-vent-slot" />
+            <div className="chassis-vent-slot" />
           </div>
 
+          {/* Rotary Dial Hardware Action Button */}
           <div className="tooltip-wrap">
             <button
               type="button"
-              className="sketch-icon-btn"
+              className="rotary-dial-btn"
+              onClick={onRefreshStats}
+              title="Calibrate & refresh platform telemetry"
+              aria-label="Calibrate platform telemetry"
+            >
+              <Compass size={22} color="var(--dp-color-ink)" />
+            </button>
+            <span className="tooltip-bubble">CALIBRATE TELEMETRY</span>
+          </div>
+
+          {/* Secondary Refresh Key */}
+          <div className="tooltip-wrap">
+            <button
+              type="button"
+              className="raised-icon-key"
               onClick={onRefreshStats}
               disabled={isLoadingStats}
-              aria-label="Refresh platform statistics"
+              aria-label="Sync live platform counts"
             >
               <RefreshCw
-                size={18}
-                className={isLoadingStats ? 'spin-anim' : ''}
+                size={16}
+                style={{
+                  animation: isLoadingStats ? 'spin 1s linear infinite' : 'none',
+                }}
               />
             </button>
-            <span className="tooltip-bubble">Sync live platform stats</span>
+            <span className="tooltip-bubble">SYNC TELEMETRY COUNTS</span>
           </div>
         </div>
       </div>
 
-      {/* Workspace Navigation Tabs */}
+      {/* Recessed Dark Facts Display Screen (#20272b) */}
+      <div
+        className="recessed-field-screen"
+        style={{
+          marginTop: '18px',
+          padding: '12px 18px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+        }}
+      >
+        <div
+          style={{
+            fontFamily: 'var(--dp-typography-mono)',
+            fontSize: 'var(--dp-typography-label)',
+            color: 'var(--dp-color-accent)',
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
+        >
+          <span className="led-indicator active" />
+          <span>LIVE TELEMETRY READOUT</span>
+        </div>
+
+        <div
+          className="chassis-facts-grid"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '18px',
+            fontFamily: 'var(--dp-typography-mono)',
+            fontSize: 'var(--dp-typography-metadata)',
+            color: 'var(--dp-color-on-field-muted)',
+          }}
+        >
+          <div>
+            <span>REGIONS: </span>
+            <strong style={{ color: 'var(--dp-color-on-field)' }}>
+              {String(stats.total_regions).padStart(2, '0')}
+            </strong>
+          </div>
+          <div>
+            <span>FIELD VARIANTS: </span>
+            <strong style={{ color: 'var(--dp-color-on-field)' }}>
+              {String(stats.total_dialect_variants).padStart(2, '0')}
+            </strong>
+          </div>
+          <div>
+            <span>GRAPH NODES: </span>
+            <strong style={{ color: 'var(--dp-color-on-field)' }}>
+              {String(stats.graph_nodes).padStart(3, '0')}
+            </strong>
+          </div>
+          <div>
+            <span>EDGES: </span>
+            <strong style={{ color: 'var(--dp-color-on-field)' }}>
+              {String(stats.graph_edges).padStart(3, '0')}
+            </strong>
+          </div>
+          <div>
+            <span>DSP CADENCE PROFILES: </span>
+            <strong style={{ color: 'var(--dp-color-on-field)' }}>
+              {String(stats.acoustic_profiles_ready).padStart(2, '0')}
+            </strong>
+          </div>
+        </div>
+      </div>
+
+      {/* Bank of Raised Hardware Navigation Keys */}
       <nav
-        aria-label="Workspace Views"
+        className="chassis-nav-bank"
+        aria-label="Instrument Navigation Bays"
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '8px',
-          marginTop: '18px',
+          marginTop: '16px',
         }}
       >
         <button
           type="button"
-          className={`sketch-button ${activeTab === 'atlas' ? 'sketch-button-red' : ''}`}
+          className={`raised-key ${activeTab === 'atlas' ? 'active' : ''}`}
           onClick={() => onTabChange('atlas')}
           style={{
-            fontSize: '19px',
-            padding: '6px 16px',
             fontWeight: activeTab === 'atlas' ? 700 : 500,
           }}
         >
-          <MapPin size={18} strokeWidth={2.2} />
-          <span>Isogloss Field Atlas &amp; Morpher</span>
+          <span className={`led-indicator ${activeTab === 'atlas' ? 'active' : ''}`} />
+          <MapPin size={16} color="var(--dp-color-ink)" />
+          <span>BAY 01 // ISOGLOSS ATLAS &amp; MORPHER</span>
         </button>
 
         <button
           type="button"
-          className={`sketch-button ${activeTab === 'graph' ? 'sketch-button-red' : ''}`}
+          className={`raised-key ${activeTab === 'graph' ? 'active' : ''}`}
           onClick={() => onTabChange('graph')}
           style={{
-            fontSize: '19px',
-            padding: '6px 16px',
             fontWeight: activeTab === 'graph' ? 700 : 500,
           }}
         >
-          <Network size={18} strokeWidth={2.2} />
-          <span>Etymology Constellation Graph</span>
-          <span
-            style={{
-              fontSize: '13px',
-              fontFamily: 'var(--dp-typography-sans-face)',
-              backgroundColor: 'var(--dp-color-highlight)',
-              color: 'var(--dp-color-ink)',
-              padding: '1px 6px',
-              borderRadius: '4px',
-              fontWeight: 600,
-            }}
-          >
-            Active
-          </span>
+          <span className={`led-indicator ${activeTab === 'graph' ? 'active' : ''}`} />
+          <Network size={16} color="var(--dp-color-ink)" />
+          <span>BAY 02 // ETYMOLOGY GRAPH &amp; BRIDGE</span>
         </button>
 
         <button
           type="button"
-          className={`sketch-button ${activeTab === 'acoustic' ? 'sketch-button-red' : ''}`}
+          className={`raised-key ${activeTab === 'acoustic' ? 'active' : ''}`}
           onClick={() => onTabChange('acoustic')}
           style={{
-            fontSize: '19px',
-            padding: '6px 16px',
             fontWeight: activeTab === 'acoustic' ? 700 : 500,
           }}
         >
-          <Activity size={18} strokeWidth={2.2} />
-          <span>Acoustic F0 Oscilloscope</span>
+          <span className={`led-indicator ${activeTab === 'acoustic' ? 'active' : ''}`} />
+          <Activity size={16} color="var(--dp-color-ink)" />
+          <span>BAY 03 // ACOUSTIC F0 OSCILLOSCOPE</span>
           <span
             style={{
-              fontSize: '13px',
-              fontFamily: 'var(--dp-typography-sans-face)',
-              backgroundColor: 'var(--dp-color-highlight)',
-              color: 'var(--dp-color-ink)',
-              padding: '1px 6px',
-              borderRadius: '4px',
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '10px',
+              color: 'var(--dp-color-label)',
+              backgroundColor: 'var(--dp-color-well)',
+              padding: '1px 5px',
+              borderRadius: '2px',
             }}
           >
-            Phase 8
+            PHASE 8
           </span>
         </button>
 
         <button
           type="button"
-          className={`sketch-button ${activeTab === 'archive' ? 'sketch-button-red' : ''}`}
+          className={`raised-key ${activeTab === 'archive' ? 'active' : ''}`}
           onClick={() => onTabChange('archive')}
           style={{
-            fontSize: '19px',
-            padding: '6px 16px',
             fontWeight: activeTab === 'archive' ? 700 : 500,
           }}
         >
-          <BookOpenCheck size={18} strokeWidth={2.2} />
-          <span>Living Field Archive</span>
+          <span className={`led-indicator ${activeTab === 'archive' ? 'active' : ''}`} />
+          <BookOpenCheck size={16} color="var(--dp-color-ink)" />
+          <span>BAY 04 // LIVING FIELD ARCHIVE</span>
           <span
             style={{
-              fontSize: '13px',
-              fontFamily: 'var(--dp-typography-sans-face)',
-              backgroundColor: 'var(--dp-color-highlight)',
-              color: 'var(--dp-color-ink)',
-              padding: '1px 6px',
-              borderRadius: '4px',
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '10px',
+              color: 'var(--dp-color-label)',
+              backgroundColor: 'var(--dp-color-well)',
+              padding: '1px 5px',
+              borderRadius: '2px',
             }}
           >
-            Phase 8
+            PHASE 8
           </span>
         </button>
       </nav>
     </header>
   );
 };
-
+export default WorkingSheetHeader;

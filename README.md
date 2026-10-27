@@ -141,47 +141,18 @@
 
 ---
 
-### 🎨 Phase 6: Frontend Foundation, Interactive Karnataka Isogloss Map & Morphing Working Sheet
-- **Linguist's Sketch Design System**:
-  - Built with React 18, TypeScript, and Vite following the authentic Sketch design aesthetic: warm paper ground (`#f7f2e7`), dark pencil ink (`#38352f`), blue notes (`#344c69`), red actions/marks (`#9e3a2e`), paper scraps, and erased-line rules.
-  - Typographic stack: **Kalam**, **Caveat**, **Patrick Hand**, and crisp **Noto Sans Kannada**.
-  - Immediate operational working sheet — no artificial marketing cards or nested containers.
-- **Interactive SVG Karnataka Isogloss Field Map**:
-  - Precision coordinate projection across Karnataka ($11.4^\circ\text{N} - 18.7^\circ\text{N}$, $73.8^\circ\text{E} - 78.8^\circ\text{E}$).
-  - Displays territorial dialect polygons and the 4 major transition corridors (*Tungabhadra, Deccan Basin, Western Ghats, Southern Kaveri*).
-  - Clickable coordinates with dynamic survey town pins (Dharwad, Kundapura, Kalaburagi, Madikeri, Bengaluru, Davanagere, Belagavi, Hassan, Shivamogga).
-  - Real-time IDW dialect blend breakdown ledger with pencil-ink progress bars and active border substrate markers.
-- **Neuro-Symbolic Morphing Working Sheet**:
-  - Dual English / Standard Kannada input bar with quick prompt chips.
-  - 5 broad horizontal comparison rows across all dialect zones with active region highlighting.
-  - Large Kannada script, Roman phonetic transcription, blue IPA pronunciation, and hand-underlined Syllable Stress notation.
-  - Expandable word-by-word morphological derivation breakdown with pencil strikethroughs and rule tags.
-  - Field notes in blue ink marginalia styling.
-  - Audio Cadence playback with fallback Web Audio API pitch sweep oscillator.
-  - 5-Region Phonological & Suffix Transduction Rulebook modal/drawer.
-
----
-
-### 🕸️ Phase 7: Interactive Etymological Constellation Graph & Linguistic Bridge Working Sheet
-- **Interactive SVG Mind-Map Constellation Explorer**:
-  - Consumes `/api/v1/graph/constellation?query=...` to render a 2-hop ego-graph looking like a field linguist's hand-drawn mind map on taped graph paper.
-  - Distinct Sketch node styles by semantic type:
-    - `CONCEPT`: Double concentric circle center hub with yellow highlight (`#f0dfa0`).
-    - `VARIANT`: Outlined paper scrap pill showing Romanized phonetic and Kannada script.
-    - `REGION`: Stamped district tag in light red tint.
-    - `INFLUENCE_LANG`: Red-outlined substrate badge with star marker (*Marathi*, *Tulu*, *Konkani*, *Dakhni Urdu*, *Halegannada*, *Kodava*).
-    - `CULTURAL_MARKER`: Blue annotation tag (*Vachana Sahitya*, *Yakshagana*, *Deccan Court Poetry*).
-  - Directed edges with relation pills (`BORROWED_FROM`, `COGNATE_WITH`, `SPOKEN_IN`, `EXPRESSES`, `CULTURAL_TIE`).
-  - Interactive pan, zoom (`ZoomIn`, `ZoomOut`), reset (`RotateCcw`), and interactive node drag-and-drop.
-  - Stable adjacent **Field Etymology Note** panel presenting narrative travelogue, active substrate tags, and dynamic node metadata inspector without layout shifting.
-- **Linguistic Bridge & Substrate Comparator**:
-  - Dual region dropdown selector with swap icon button (`ArrowLeftRight`).
-  - Consumes `/api/v1/graph/bridge?source={r1}&target={r2}` to display:
-    - **Linguistic Similarity Index**: Large marker score (e.g. `41.8% Match`) in a hand-drawn bracket.
-    - Shared border substrates and shortest relational graph paths.
-    - **Side-by-Side Cognate Shift Ledger**: Broad horizontal comparative rows tracing canonical concepts and morphological rules between the two selected regions.
-- **NetworkX Graph Topology Centrality Strip**:
-  - Consumes `/api/v1/graph/topology` to display a compact horizontal strip of entity counts and top-ranked influence substrates and regional hubs by degree/betweenness centrality.
+### 🎛️ Phase 6 & 7: "Industrial" Hardware Chassis Interface & Etymological Constellation Bay
+- **Authoritative "Industrial" Instrument Chassis Design System**:
+  - Implements a continuous cool-grey instrument housing (`#cbd0d2`) with recessed dark screens (`#20272b`), tactile raised keys (`#e7eaeb`), recessed trays (`#b6bec2`), engraved slate markings (`#414b52`), and orange LED status lamps (`#f15b22`).
+  - **Typographic Stack**: **Host Grotesk** (`"Industrial Host"`, sans-serif) for high-impact bold headings, **IBM Plex Mono** (`"Industrial Plex"`, monospace) for technical telemetry metadata, and native **Noto Sans Kannada** for Kannada script.
+  - Directional upper-left lighting highlights, knurled rotary dial button (`.rotary-dial-btn`), and exhaust vent slots.
+- **BAY 01 // Spatial Isogloss Telemetry & Neuro-Symbolic Morphing**:
+  - **Bay 01A (Geospatial Isogloss Telemetry Screen)**: Interactive SVG cartographic map of Karnataka housed inside a deep `.recessed-field-screen` (`#20272b`) with technical grid lines, high-contrast territory polygons, glowing isogloss corridors, crosshair target, and raised mechanical survey town keys.
+  - **Bay 01B (Neuro-Symbolic Morphing Tray)**: Rotary dial execution button, segmented `EN / KN` register keys, and 5 removable-looking horizontal comparison modules inside a recessed tray (`#b6bec2`) with inset pressed keys, orange LED indicator lamps, and tactile `+/-` derivation disclosure keys.
+- **BAY 02 // Etymological Constellation Graph & Linguistic Bridge**:
+  - **Panel 02A (Concept Constellation Display Well)**: Bank of raised concept selector keys (`GOOD`, `BHAAL`, `WHERE`, `EAT`, `MOTHER`, `RAIN`, `QUICKLY`, `BOY`), rotary trace trigger, and a dark CRT/OLED field screen (`#20272b`, `min-height: 460px`) rendering the 2-hop NetworkX ego-graph with vector nodes (`CONCEPT`, `VARIANT`, `REGION`, `INFLUENCE_LANG`, `CULTURAL_MARKER`), directed relation edges, and pan/zoom/drag controls. Adjacent recessed readout deck displaying etymological narrative commentary, active substrate tags, and NetworkX node inspector.
+  - **Panel 02B (Linguistic Bridge Comparator Deck)**: Source/Target dialect selector menus with an `ArrowLeftRight` swap key, digital readout with **Similarity Index** score (e.g. `41.8% COGNATE ALIGNMENT`), shared border substrates, shortest topological path, and removable-style comparison rows aligning 14 canonical concepts between regions.
+  - **NetworkX Topology Strip**: Live node/edge counts (106 nodes, 259 edges) and top betweenness centrality hubs (Marathi, Tulu, Dharwad, Dakhni Urdu, Halegannada).
 
 ---
 
