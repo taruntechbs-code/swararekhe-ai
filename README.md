@@ -6,7 +6,7 @@
 [![SQLAlchemy 2.0](https://img.shields.io/badge/SQLAlchemy-2.0-red.svg)](https://www.sqlalchemy.org/)
 [![NetworkX](https://img.shields.io/badge/NetworkX-3.2+-orange.svg)](https://networkx.org/)
 [![Librosa DSP](https://img.shields.io/badge/Librosa-0.11+-brightgreen.svg)](https://librosa.org/)
-[![Tests Passing](https://img.shields.io/badge/pytest-20%20passed-success.svg)](https://docs.pytest.org/)
+[![Tests Passing](https://img.shields.io/badge/pytest-26%20passed-success.svg)](https://docs.pytest.org/)
 
 **SWARAREKHE** (*Spatio-Acoustic Dialect & Cultural Graph Engine*) is an advanced neuro-symbolic and acoustic intelligence platform preserving, morphing, and analyzing the rich regional dialects of the Kannada language across Karnataka's diverse geographic, historical, and acoustic landscape.
 
@@ -119,6 +119,28 @@
 
 ---
 
+### 🌐 Phase 5: Geospatial Isogloss Interpolation & Living Crowdsourced Dictionary
+- **Inverse-Distance Weighting (IDW) Engine**:
+  - Implements $w_i = \frac{1}{(d_i + \epsilon)^p} / \sum \frac{1}{(d_k + \epsilon)^p}$ with power $p = 2.0$ to calculate fine-grained dialect blend percentages from any arbitrary `(lat, lng)` point in Karnataka to the 5 core epicenters.
+  - Typological Classification:
+    - `Core Dialect Heartland`: Dominant share $\ge 65\%$ (e.g. Dharwad hub $\to 100\%$).
+    - `Bi-Dialectal Isogloss Transition Belt`: Top two shares sum $\ge 70\%$ and delta $\le 30\%$ (e.g. Davanagere Tungabhadra corridor).
+    - `Multi-Dialectal Convergence Zone`: Intersecting regional transition waves.
+  - Interpolates hybrid acoustic pitch baselines ($F_{0,\text{interp}}$) and synthesizes code-switching transition notes.
+- **Cartographic GeoJSON Representation**:
+  - Standard GeoJSON `FeatureCollection` including regional hub Points, boundary territorial Polygons, and major isogloss transition corridors (*Tungabhadra Corridor, Western Ghats Escarpment, Deccan Basin Corridor, Southern Kaveri Plains*).
+- **Living Crowdsourced Dictionary & Automated Phonotactic Triage**:
+  - Evaluates user submissions using deterministic Dravidian phonotactic heuristics (vowel-consonant ratios, authentic regional markers `-ri`, `-avri`, `-likattiri`, `-aipini`, `-ulla`, `cholo`, `bhaal`, `laayk`, `mast`, coordinate checks, anti-spam filters).
+  - High-confidence submissions (score $\ge 0.70$) receive `"approved_injected"` status and are **dynamically injected into the live NetworkX Knowledge Graph as new living `VARIANT` nodes and edges in real time**!
+- **Endpoints**:
+  - `GET /api/v1/explorer/locate?lat={lat}&lng={lng}` — IDW blend weights, zone classification, and hybrid phrase morphing.
+  - `GET /api/v1/explorer/isogloss-map` — Standard GeoJSON FeatureCollection.
+  - `POST /api/v1/explorer/contribute` — Living dictionary submission with automated phonotactic evaluation.
+  - `GET /api/v1/explorer/submissions` — Chronological listing of crowdsourced dialect submissions.
+  - `GET /api/v1/explorer/stats` — Platform-wide intelligence counts across SQLite, NetworkX, and DSP engines.
+
+---
+
 ## 🛠️ Installation & Setup
 
 ### 1. Clone & Set Up Environment
@@ -148,7 +170,7 @@ Interactive API documentation will be available at:
 
 ## 🧪 Testing & Verification
 
-Run the full pytest suite across all 4 phases:
+Run the full pytest suite across all 5 phases:
 ```bash
 pytest backend/tests/ -v
 ```
@@ -175,40 +197,51 @@ backend/tests/test_phase4.py::test_get_acoustic_profile PASSED
 backend/tests/test_phase4.py::test_get_acoustic_profile_invalid PASSED
 backend/tests/test_phase4.py::test_analyze_cadence_sample_code PASSED
 backend/tests/test_phase4.py::test_analyze_cadence_file_upload PASSED
-======================== 20 passed in 1.19s ========================
+backend/tests/test_phase5.py::test_isogloss_locate_core_heartland PASSED
+backend/tests/test_phase5.py::test_isogloss_locate_transition_belt PASSED
+backend/tests/test_phase5.py::test_isogloss_geojson_map PASSED
+backend/tests/test_phase5.py::test_community_submission_living_dictionary PASSED
+backend/tests/test_phase5.py::test_community_submission_spam_rejection PASSED
+backend/tests/test_phase5.py::test_list_submissions PASSED
+======================== 26 passed in 1.15s ========================
 ```
 
-Run individual standalone phase verification scripts:
+Run master verification covering all 15 endpoints:
 ```bash
-python -m backend.verify_phase1
-python -m backend.verify_phase2
-python -m backend.verify_phase3
-python -m backend.verify_phase4
+python -m backend.verify_all_phases
 ```
 
 ---
 
-## 📡 API Reference Summary
+## 📡 API Reference Summary (15 Endpoints)
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/health` | Service health, DB connectivity, entity counts |
-| `GET` | `/api/v1/regions` | All 5 dialect regions with geo and prosody profiles |
-| `GET` | `/api/v1/lexicon` | Canonical lexicon with regional variants & query filters |
-| `POST` | `/api/v1/morph/translate` | Neuro-symbolic dialect morphing across Karnataka |
-| `GET` | `/api/v1/morph/rules` | Complete phonological & morphological transformation rulebook |
-| `GET` | `/api/v1/graph/constellation` | 2-hop concept constellation ego-graph & narrative |
-| `GET` | `/api/v1/graph/bridge` | Linguistic distance, shared substrates & cognate alignment |
-| `GET` | `/api/v1/graph/topology` | Full graph topology & centrality rankings |
-| `GET` | `/api/v1/acoustic/profile/{region}` | Benchmark $F_0$ pitch curve, energy envelope & cadence |
-| `POST` | `/api/v1/acoustic/analyze` | Audio file/sample DSP analysis, match score & coaching |
+| Method | Endpoint | Phase | Description |
+|---|---|---|---|
+| `GET` | `/health` | Phase 1 | Service health, DB connectivity, entity counts |
+| `GET` | `/api/v1/regions` | Phase 1 | All 5 dialect regions with geo and prosody profiles |
+| `GET` | `/api/v1/lexicon` | Phase 1 | Canonical lexicon with regional variants & query filters |
+| `POST` | `/api/v1/morph/translate` | Phase 2 | Neuro-symbolic dialect morphing across Karnataka |
+| `GET` | `/api/v1/morph/rules` | Phase 2 | Complete phonological & morphological transformation rulebook |
+| `GET` | `/api/v1/graph/constellation` | Phase 3 | 2-hop concept constellation ego-graph & narrative |
+| `GET` | `/api/v1/graph/bridge` | Phase 3 | Linguistic distance, shared substrates & cognate alignment |
+| `GET` | `/api/v1/graph/topology` | Phase 3 | Full graph topology & centrality rankings |
+| `GET` | `/api/v1/acoustic/profile/{region}` | Phase 4 | Benchmark $F_0$ pitch curve, energy envelope & cadence |
+| `POST` | `/api/v1/acoustic/analyze` | Phase 4 | Audio file/sample DSP analysis, match score & coaching |
+| `GET` | `/static/audio_samples/{filename}` | Phase 4 | Static audio file serving for reference recordings |
+| `GET` | `/api/v1/explorer/locate` | Phase 5 | IDW isogloss blend weights, transition belt & pitch interpolation |
+| `GET` | `/api/v1/explorer/isogloss-map` | Phase 5 | GeoJSON FeatureCollection of epicenters, zones & corridors |
+| `POST` | `/api/v1/explorer/contribute` | Phase 5 | Living dictionary crowdsourced submission with auto-triage |
+| `GET` | `/api/v1/explorer/submissions` | Phase 5 | Recent chronological crowdsourced submissions |
+| `GET` | `/api/v1/explorer/stats` | Phase 5 | Aggregated platform intelligence counts |
 
 ---
 
-## 🔮 Upcoming Phases Roadmap
+## 🔮 Roadmap
 - [x] **Phase 1**: Project Scaffolding, Async Schema & Authentic Corpus
 - [x] **Phase 2**: Neuro-Symbolic Morphing & Phonetic Transduction
 - [x] **Phase 3**: Etymological & Cultural Knowledge Graph (NetworkX)
 - [x] **Phase 4**: Acoustic Prosody, Pitch Contour ($F_0$), and Cadence DSP
-- [ ] **Phase 5**: Interactive 3D Dialect Landscape & Force-Directed Graph UI
-- [ ] **Phase 6**: Multimodal Speech-to-Speech Prosody Transfer & Real-time Visual Feedback
+- [x] **Phase 5**: Geospatial IDW Isogloss, Living Crowdsource Dictionary & Master Suite
+- [ ] **Phase 6**: Interactive Frontend UI with Mapbox/Leaflet 3D Landscape & Force-Directed Graph Visualizer
+- [ ] **Phase 7**: Multimodal Speech-to-Speech Prosody Transfer & Real-Time Pitch Overlay
+

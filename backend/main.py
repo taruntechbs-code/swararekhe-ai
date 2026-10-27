@@ -13,6 +13,7 @@ from backend.config import get_settings
 from backend.database import AsyncSessionLocal, Base, engine, get_db
 from backend.models import DialectRegion, DialectVariant, LexicalEntry
 from backend.routers.acoustic import router as acoustic_router
+from backend.routers.explorer import router as explorer_router
 from backend.routers.graph import router as graph_router
 from backend.routers.morph import router as morph_router
 from backend.schemas import (
@@ -63,6 +64,7 @@ app.add_middleware(
 app.include_router(morph_router, prefix=settings.API_V1_PREFIX)
 app.include_router(graph_router, prefix=settings.API_V1_PREFIX)
 app.include_router(acoustic_router, prefix=settings.API_V1_PREFIX)
+app.include_router(explorer_router, prefix=settings.API_V1_PREFIX)
 
 # Static audio samples serving
 os.makedirs(AUDIO_DIR, exist_ok=True)

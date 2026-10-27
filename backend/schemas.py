@@ -244,3 +244,95 @@ class AcousticAnalyzeResponse(BaseModel):
     coaching_feedback: List[str] = Field(default_factory=list, description="Linguistic prosody coaching tips")
 
 
+# ---------------- Phase 5: Geospatial Isogloss & Living Crowdsource Schemas ----------------
+
+ZoneClassification = Literal[
+    "Core Dialect Heartland",
+    "Bi-Dialectal Isogloss Transition Belt",
+    "Multi-Dialectal Convergence Zone",
+]
+
+
+class DialectBlendWeight(BaseModel):
+    region_code: str = Field(..., description="Dialect region identifier")
+    region_name: str = Field(..., description="Human-readable dialect name")
+    distance_km: float = Field(..., description="Geodesic distance to regional epicenter in kilometers")
+    blend_percentage: float = Field(..., ge=0.0, le=100.0, description="Inverse-distance weighting share percentage")
+
+
+class IsoglossLocateResponse(BaseModel):
+    latitude: float = Field(..., description="Target latitude coordinate")
+    longitude: float = Field(..., description="Target longitude coordinate")
+    zone_classification: ZoneClassification = Field(..., description="Dialectal transition zone typology")
+    dominant_region_code: str = Field(..., description="Nearest / highest-weighted dialect region")
+    secondary_region_code: Optional[str] = Field(None, description="Adjacent secondary dialect region in transition belts")
+    blend_weights: List[DialectBlendWeight] = Field(default_factory=list, description="Sorted list of regional influence blend shares")
+    active_border_substrates: List[str] = Field(default_factory=list, description="Active neighboring language substrates impacting this coordinate")
+    interpolated_greeting_local: str = Field(..., description="Contextual colloquial greeting for this geographic point")
+    interpolated_phrase_result: Dict[str, Any] = Field(default_factory=dict, description="Morphed phrase with hybrid transition notes")
+    acoustic_interpolated_pitch_hz: float = Field(..., description="Weighted target fundamental pitch baseline (Hz)")
+
+
+class GeoJSONFeature(BaseModel):
+    type: str = Field("Feature", description="GeoJSON feature type")
+    geometry: Dict[str, Any] = Field(..., description="GeoJSON geometry (Point, Polygon, LineString)")
+    properties: Dict[str, Any] = Field(default_factory=dict, description="Feature attributes, colors, and names")
+
+
+class GeoJSONFeatureCollection(BaseModel):
+    type: str = Field("FeatureCollection", description="GeoJSON FeatureCollection")
+    features: List[GeoJSONFeature] = Field(default_factory=list, description="List of geographic features")
+
+
+class CommunitySubmissionRequest(BaseModel):
+    contributor_name: str = Field(..., min_length=2, max_length=128, description="Name or handle of contributor")
+    district_name: str = Field(..., min_length=2, max_length=128, description="Karnataka district name e.g., Belagavi, Haveri, Udupi")
+    latitude: float = Field(..., ge=11.0, le=19.0, description="Latitude within Karnataka geographic bounds")
+    longitude: float = Field(..., ge=74.0, le=79.0, description="Longitude within Karnataka geographic bounds")
+    local_phrase_kannada: Optional[str] = Field("", description="Phrase in Kannada script")
+    local_phrase_roman: str = Field(..., min_length=2, description="Phrase in Romanized phonetics")
+    standard_meaning_english: str = Field(..., min_length=2, description="English definition or gloss")
+    category: str = Field("daily", description="Semantic category (greeting, food, question, emotion, daily, agrarian)")
+
+
+class CommunitySubmissionResponse(BaseModel):
+    submission_id: int
+    ai_triage_status: Literal["approved_injected", "pending_review", "rejected_spam"]
+    phonotactic_validity_score: float
+    nearest_region_code: str
+    detected_morphological_markers: List[str] = Field(default_factory=list)
+    graph_node_injected: bool
+    triage_notes: str
+
+
+class CommunitySubmissionItemResponse(BaseModel):
+    id: int
+    contributor_name: str
+    district_name: str
+    latitude: float
+    longitude: float
+    nearest_region_code: str
+    local_phrase_kannada: str
+    local_phrase_roman: str
+    standard_meaning_english: str
+    category: str
+    phonotactic_validity_score: float
+    ai_triage_status: str
+    triage_notes: Optional[str] = None
+    created_at: Any
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PlatformStatsResponse(BaseModel):
+    total_regions: int
+    total_lexical_concepts: int
+    total_dialect_variants: int
+    graph_nodes: int
+    graph_edges: int
+    acoustic_profiles_ready: int
+    community_submissions_total: int
+    approved_living_entries: int
+
+
+
