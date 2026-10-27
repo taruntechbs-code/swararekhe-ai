@@ -96,3 +96,4 @@ def test_analyze_cadence_file_upload():
     data = response.json()
     assert data["target_region_code"] == "kundapura_mangaluru"
     assert data["cadence_match_score"] >= 80.0
+
