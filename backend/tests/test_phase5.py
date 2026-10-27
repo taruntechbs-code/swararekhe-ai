@@ -111,3 +111,4 @@ def test_list_submissions():
     submissions = response.json()
     assert len(submissions) >= 1
     assert any(s["contributor_name"] == "Ramesh Patil" for s in submissions)
+

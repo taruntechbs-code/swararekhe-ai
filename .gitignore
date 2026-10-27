@@ -9,4 +9,7 @@ venv/
 *.wav
 *.mp3
 .pytest_cache/
+.npm-cache/
+node_modules/
+dist/
 

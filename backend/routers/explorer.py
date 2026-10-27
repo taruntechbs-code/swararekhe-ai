@@ -142,3 +142,4 @@ async def get_platform_stats(
         community_submissions_total=sub_count,
         approved_living_entries=appr_count,
     )
+

@@ -1,0 +1,285 @@
+:root {
+  --dp-color-ground: #f7f2e7;
+  --dp-color-ink: #38352f;
+  --dp-color-ink-muted: #514d44;
+  --dp-color-line: #b3ac9d;
+  --dp-color-accent: #9e3a2e;
+  --dp-color-annotation: #344c69;
+  --dp-color-highlight: #f0dfa0;
+  --dp-color-scrap: #fcf8ef;
+
+  --dp-typography-reading-face: "Patrick Hand", "Caveat", "Noto Sans Kannada", cursive, sans-serif;
+  --dp-typography-display-face: "Kalam", "Caveat", "Noto Sans Kannada", cursive, sans-serif;
+  --dp-typography-sans-face: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --dp-typography-body: 24px;
+  --dp-typography-reading: 23px;
+  --dp-typography-detail: 21px;
+
+  --dp-spacing-item-gap: 16px;
+  --dp-radius-control: 9px 4px 17px 5px / 4px 12px 5px 9px;
+  --dp-border-fine-stroke: 1.5px;
+  --dp-motion-control: 100ms;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  letter-spacing: 0;
+}
+
+html, body {
+  min-height: 100vh;
+  background-color: var(--dp-color-ground);
+  color: var(--dp-color-ink);
+  font-family: var(--dp-typography-reading-face);
+  font-size: var(--dp-typography-reading);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle paper texture */
+body {
+  background-image: 
+    radial-gradient(#e6decb 0.75px, transparent 0.75px),
+    linear-gradient(to right, rgba(179, 172, 157, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px, 100% 28px;
+}
+
+/* Accessible focus outlines */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px dashed var(--dp-color-annotation);
+  outline-offset: 3px;
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--dp-typography-display-face);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--dp-color-ink);
+}
+
+/* Taped Reference Mount */
+.tape-strip {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+  width: 90px;
+  height: 22px;
+  background: rgba(247, 240, 225, 0.85);
+  box-shadow: 0 1px 3px rgba(56, 53, 47, 0.12);
+  border-left: 2px dashed rgba(179, 172, 157, 0.6);
+  border-right: 2px dashed rgba(179, 172, 157, 0.6);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Sketch Buttons */
+.sketch-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--dp-typography-display-face);
+  font-size: 20px;
+  font-weight: 600;
+  padding: 6px 14px;
+  background-color: var(--dp-color-scrap);
+  color: var(--dp-color-ink);
+  border: var(--dp-border-fine-stroke) solid var(--dp-color-ink);
+  border-radius: var(--dp-radius-control);
+  box-shadow: 2px 3px 0 var(--dp-color-ink);
+  cursor: pointer;
+  transition: transform var(--dp-motion-control) ease, box-shadow var(--dp-motion-control) ease;
+  user-select: none;
+}
+
+.sketch-button:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 4px 0 var(--dp-color-ink);
+}
+
+.sketch-button:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--dp-color-ink);
+}
+
+.sketch-button.sketch-button-red {
+  background-color: #fbf0ee;
+  color: var(--dp-color-accent);
+  border-color: var(--dp-color-accent);
+  box-shadow: 2px 3px 0 var(--dp-color-accent);
+}
+
+.sketch-button.sketch-button-red:hover:not(:disabled) {
+  box-shadow: 3px 4px 0 var(--dp-color-accent);
+}
+
+.sketch-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: 1px 1px 0 var(--dp-color-ink);
+}
+
+/* Sketch Icon Button */
+.sketch-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 4px;
+  background-color: var(--dp-color-scrap);
+  color: var(--dp-color-ink);
+  border: var(--dp-border-fine-stroke) solid var(--dp-color-ink);
+  border-radius: var(--dp-radius-control);
+  box-shadow: 1.5px 2px 0 var(--dp-color-ink);
+  cursor: pointer;
+  transition: transform var(--dp-motion-control) ease, box-shadow var(--dp-motion-control) ease;
+}
+
+.sketch-icon-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2.5px 3px 0 var(--dp-color-ink);
+}
+
+.sketch-icon-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 0.5px 0.5px 0 var(--dp-color-ink);
+}
+
+/* Paper Scraps */
+.paper-scrap {
+  background-color: var(--dp-color-scrap);
+  border: var(--dp-border-fine-stroke) solid var(--dp-color-line);
+  border-radius: var(--dp-radius-control);
+  box-shadow: 2px 3px 0 rgba(56, 53, 47, 0.08);
+  padding: 16px;
+  position: relative;
+}
+
+/* Handwritten Underline */
+.hand-underline-red {
+  position: relative;
+  display: inline-block;
+}
+
+.hand-underline-red::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  bottom: -4px;
+  width: 104%;
+  height: 4px;
+  background: var(--dp-color-accent);
+  border-radius: 4px 2px 6px 1px;
+  transform: rotate(-0.5deg);
+}
+
+/* Drawn Bracket Facts */
+.drawn-bracket {
+  border-left: 3px solid var(--dp-color-annotation);
+  border-top: 1.5px solid var(--dp-color-annotation);
+  border-bottom: 1.5px solid var(--dp-color-annotation);
+  padding: 4px 12px;
+  border-radius: 4px 0 0 4px;
+  font-size: var(--dp-typography-detail);
+  color: var(--dp-color-annotation);
+}
+
+/* Yellow Highlight Span */
+.yellow-highlight {
+  background-color: var(--dp-color-highlight);
+  padding: 1px 6px;
+  border-radius: 4px 2px 5px 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Blue Annotation Text */
+.blue-note {
+  color: var(--dp-color-annotation);
+  font-family: var(--dp-typography-reading-face);
+  font-size: var(--dp-typography-detail);
+}
+
+/* Red Action / Correction Text */
+.red-action {
+  color: var(--dp-color-accent);
+  font-family: var(--dp-typography-display-face);
+  font-weight: 600;
+}
+
+/* Segmented Control */
+.sketch-segmented-control {
+  display: inline-flex;
+  background-color: var(--dp-color-ground);
+  border: var(--dp-border-fine-stroke) solid var(--dp-color-ink);
+  border-radius: var(--dp-radius-control);
+  padding: 2px;
+  gap: 2px;
+}
+
+.sketch-segmented-btn {
+  font-family: var(--dp-typography-display-face);
+  font-size: 18px;
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  color: var(--dp-color-ink-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color var(--dp-motion-control) ease, color var(--dp-motion-control) ease;
+}
+
+.sketch-segmented-btn.active {
+  background-color: var(--dp-color-highlight);
+  color: var(--dp-color-ink);
+  font-weight: 700;
+  box-shadow: 1px 1px 0 var(--dp-color-ink);
+}
+
+/* Tooltip container */
+.tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip-wrap:hover .tooltip-bubble {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.tooltip-bubble {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background-color: var(--dp-color-ink);
+  color: #fff;
+  font-family: var(--dp-typography-sans-face);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dp-motion-control) ease, transform var(--dp-motion-control) ease;
+  z-index: 50;
+}
+
+/* Kannada Script specific tuning */
+.kannada-text {
+  font-family: "Noto Sans Kannada", var(--dp-typography-reading-face);
+  line-height: 1.4;
+}

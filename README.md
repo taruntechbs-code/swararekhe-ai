@@ -141,9 +141,30 @@
 
 ---
 
+### 🎨 Phase 6: Frontend Foundation, Interactive Karnataka Isogloss Map & Morphing Working Sheet
+- **Linguist's Sketch Design System**:
+  - Built with React 18, TypeScript, and Vite following the authentic Sketch design aesthetic: warm paper ground (`#f7f2e7`), dark pencil ink (`#38352f`), blue notes (`#344c69`), red actions/marks (`#9e3a2e`), paper scraps, and erased-line rules.
+  - Typographic stack: **Kalam**, **Caveat**, **Patrick Hand**, and crisp **Noto Sans Kannada**.
+  - Immediate operational working sheet — no artificial marketing cards or nested containers.
+- **Interactive SVG Karnataka Isogloss Field Map**:
+  - Precision coordinate projection across Karnataka ($11.4^\circ\text{N} - 18.7^\circ\text{N}$, $73.8^\circ\text{E} - 78.8^\circ\text{E}$).
+  - Displays territorial dialect polygons and the 4 major transition corridors (*Tungabhadra, Deccan Basin, Western Ghats, Southern Kaveri*).
+  - Clickable coordinates with dynamic survey town pins (Dharwad, Kundapura, Kalaburagi, Madikeri, Bengaluru, Davanagere, Belagavi, Hassan, Shivamogga).
+  - Real-time IDW dialect blend breakdown ledger with pencil-ink progress bars and active border substrate markers.
+- **Neuro-Symbolic Morphing Working Sheet**:
+  - Dual English / Standard Kannada input bar with quick prompt chips.
+  - 5 broad horizontal comparison rows across all dialect zones with active region highlighting.
+  - Large Kannada script, Roman phonetic transcription, blue IPA pronunciation, and hand-underlined Syllable Stress notation.
+  - Expandable word-by-word morphological derivation breakdown with pencil strikethroughs and rule tags.
+  - Field notes in blue ink marginalia styling.
+  - Audio Cadence playback with fallback Web Audio API pitch sweep oscillator.
+  - 5-Region Phonological & Suffix Transduction Rulebook modal/drawer.
+
+---
+
 ## 🛠️ Installation & Setup
 
-### 1. Clone & Set Up Environment
+### 1. Backend Setup
 ```bash
 git clone https://github.com/taruntechbs-code/swararekhe-ai.git
 cd swararekhe-ai
@@ -151,16 +172,21 @@ cd swararekhe-ai
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
-```
-
-### 2. Seed Database
-```bash
 python -m backend.seed_data
+uvicorn backend.main:app --reload --port 8000
 ```
 
-### 3. Run Development Server
+### 2. Frontend Setup
 ```bash
-uvicorn backend.main:app --reload --port 8000
+cd frontend
+npm install
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser. Vite proxies API requests to `http://127.0.0.1:8000`.
+
+To create an optimized production build:
+```bash
+npm run build
 ```
 Interactive API documentation will be available at:
 - **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
@@ -242,6 +268,7 @@ python -m backend.verify_all_phases
 - [x] **Phase 3**: Etymological & Cultural Knowledge Graph (NetworkX)
 - [x] **Phase 4**: Acoustic Prosody, Pitch Contour ($F_0$), and Cadence DSP
 - [x] **Phase 5**: Geospatial IDW Isogloss, Living Crowdsource Dictionary & Master Suite
-- [ ] **Phase 6**: Interactive Frontend UI with Mapbox/Leaflet 3D Landscape & Force-Directed Graph Visualizer
-- [ ] **Phase 7**: Multimodal Speech-to-Speech Prosody Transfer & Real-Time Pitch Overlay
+- [x] **Phase 6**: Frontend Foundation, Interactive Karnataka Isogloss Map & Morphing Working Sheet
+- [ ] **Phase 7**: D3 Force-Directed Etymological Graph Constellation & Cognate Visualizer
+- [ ] **Phase 8**: Real-Time Acoustic Pitch Coach Oscilloscope & Field Submission Console
 
