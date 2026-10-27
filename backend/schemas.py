@@ -153,3 +153,62 @@ class RegionRuleProfile(BaseModel):
 class MorphRulesResponse(BaseModel):
     total_regions: int
     rulebook: Dict[str, RegionRuleProfile]
+
+
+# ---------------- Phase 3: Etymological & Cultural Knowledge Graph Schemas ----------------
+
+NodeType = Literal["REGION", "CONCEPT", "VARIANT", "INFLUENCE_LANG", "CULTURAL_MARKER"]
+EdgeRelation = Literal[
+    "SPOKEN_IN",
+    "EXPRESSES",
+    "BORROWED_FROM",
+    "COGNATE_WITH",
+    "PHONETIC_SHIFT_FROM",
+    "GEOGRAPHIC_NEIGHBOR",
+    "CULTURAL_TIE",
+]
+
+
+class GraphNode(BaseModel):
+    id: str = Field(..., description="Unique node identifier in knowledge graph")
+    label: str = Field(..., description="English/Roman display label")
+    kannada_label: Optional[str] = Field(None, description="Kannada script label if applicable")
+    node_type: NodeType = Field(..., description="Semantic entity category")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Arbitrary attributes, coordinates, prosody, notes")
+
+
+class GraphEdge(BaseModel):
+    source: str = Field(..., description="Source node id")
+    target: str = Field(..., description="Target node id")
+    relation: EdgeRelation = Field(..., description="Typed relationship semantics")
+    weight: float = Field(1.0, description="Edge strength or inverse distance")
+    explanation: Optional[str] = Field(None, description="Linguistic or cultural rationale")
+
+
+class ConstellationResponse(BaseModel):
+    query: str = Field(..., description="Original search term or concept")
+    matched_center_node_id: str = Field(..., description="Ego center node ID")
+    nodes: List[GraphNode] = Field(default_factory=list, description="Extracted ego-graph node set")
+    edges: List[GraphEdge] = Field(default_factory=list, description="Extracted ego-graph edge set")
+    etymological_narrative: str = Field(..., description="Narrative commentary of shifts across Karnataka")
+    substrate_influences: List[str] = Field(default_factory=list, description="Border substrate languages connected to this constellation")
+
+
+class LinguisticBridgeResponse(BaseModel):
+    source_region: str = Field(..., description="Source dialect region code")
+    target_region: str = Field(..., description="Target dialect region code")
+    similarity_index: float = Field(..., ge=0.0, le=1.0, description="Composite similarity metric between 0.0 and 1.0")
+    shared_substrates: List[str] = Field(default_factory=list, description="Common border/historical language substrates")
+    shortest_etymological_paths: List[List[str]] = Field(default_factory=list, description="Shortest relational chains in knowledge graph")
+    phonetic_shift_chain: List[Dict[str, Any]] = Field(default_factory=list, description="Side-by-side lexical variant comparison")
+    bridge_summary: str = Field(..., description="Comparative sociolinguistic summary")
+
+
+class TopologyResponse(BaseModel):
+    total_nodes: int
+    total_edges: int
+    node_type_counts: Dict[str, int]
+    influence_centrality_ranking: List[Dict[str, Any]]
+    nodes: List[GraphNode]
+    edges: List[GraphEdge]
+

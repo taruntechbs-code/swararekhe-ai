@@ -10,21 +10,28 @@ from sqlalchemy.orm import selectinload
 from backend.config import get_settings
 from backend.database import AsyncSessionLocal, Base, engine, get_db
 from backend.models import DialectRegion, DialectVariant, LexicalEntry
+from backend.routers.graph import router as graph_router
 from backend.routers.morph import router as morph_router
 from backend.schemas import (
     DialectRegionResponse,
     HealthResponse,
     LexicalEntryDetailResponse,
 )
+from backend.services.knowledge_graph import knowledge_graph_service
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Lifespan context manager to initialize database schema on startup."""
+    """Lifespan context manager to initialize database schema and graph engine on startup."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Pre-build knowledge graph
+    async with AsyncSessionLocal() as session:
+        await knowledge_graph_service.build_graph(session)
+
     yield
     await engine.dispose()
 
@@ -45,8 +52,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register Phase 2 Routers
+# Register API Routers
 app.include_router(morph_router, prefix=settings.API_V1_PREFIX)
+app.include_router(graph_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get(

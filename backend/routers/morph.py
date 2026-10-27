@@ -74,3 +74,4 @@ async def get_morphology_rules() -> MorphRulesResponse:
     and lexical mutation rulebook for all 5 dialect regions.
     """
     return DialectMorpherService.get_documented_rules()
+

@@ -148,3 +148,4 @@ def test_get_morph_rules():
     assert len(dharwad_profile["lexical_substitutions"]) > 0
     assert len(dharwad_profile["suffix_rules"]) > 0
     assert dharwad_profile["prosody_summary"] != ""
+

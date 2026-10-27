@@ -822,3 +822,4 @@ class DialectMorpherService:
             total_regions=len(rulebook),
             rulebook=rulebook,
         )
+
