@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -93,3 +93,63 @@ class HealthResponse(BaseModel):
     lexicon_count: int
     variant_count: int
 
+
+# ---------------- Phase 2: Dialect Morphing & Transduction Schemas ----------------
+
+class WordDiffItem(BaseModel):
+    source_token: str = Field(..., description="Original input word or token")
+    target_token_roman: str = Field(..., description="Transduced phonetic token in Latin/English script")
+    target_token_script: str = Field(..., description="Transduced token in Kannada script")
+    rule_applied: str = Field(..., description="Name or identifier of morphological/phonological rule applied")
+    explanation: str = Field(..., description="Linguistic description of the transformation")
+
+
+class MorphedRegionOutput(BaseModel):
+    region_code: str = Field(..., description="Identifier of target dialect region")
+    region_name: str = Field(..., description="Human-readable region name")
+    morphed_kannada_script: str = Field(..., description="Complete generated phrase in Kannada script")
+    morphed_phonetic_roman: str = Field(..., description="Romanized phonetic transcription of the morphed utterance")
+    ipa_approximation: str = Field(..., description="International Phonetic Alphabet transcription")
+    syllable_stress_breakdown: str = Field(..., description="Prosodic syllable-stress breakdown e.g. 'Yal-LIG hon-TIR-re'")
+    word_by_word_diff: List[WordDiffItem] = Field(default_factory=list, description="Token-level derivation chain")
+    morphological_rules_triggered: List[str] = Field(default_factory=list, description="List of rule tags applied")
+    cultural_nuance_note: str = Field(..., description="Sociolinguistic and regional communicative context")
+    engine_mode: Literal["hybrid_llm_symbolic", "deterministic_symbolic"] = Field(
+        ..., description="Resolution pathway: hybrid LLM or deterministic rule-based transducer"
+    )
+    confidence_score: float = Field(..., ge=0.0, le=1.0, description="Transduction confidence metric")
+
+
+class MorphTranslateRequest(BaseModel):
+    text: str = Field(..., min_length=1, description="Input phrase or sentence to morph (English or Kannada/Roman Kannada)")
+    source_lang: Literal["en", "kn"] = Field("en", description="Source language: 'en' for English or 'kn' for Kannada")
+    target_region_code: str = Field("all", description="Target region code ('all' or specific region identifier)")
+
+
+class MorphTranslateResponse(BaseModel):
+    input_text: str = Field(..., description="Original input query")
+    source_lang: str = Field(..., description="Detected or provided source language")
+    matched_seed_concept: Optional[str] = Field(None, description="Exact or fuzzy matched lexical corpus concept if detected")
+    results: List[MorphedRegionOutput] = Field(default_factory=list, description="Dialect outputs for requested region(s)")
+
+
+class MorphRuleItem(BaseModel):
+    pattern: str = Field(..., description="Trigger pattern or regex")
+    replacement: str = Field(..., description="Output substitution or suffix")
+    rule_id: str = Field(..., description="Rule identifier")
+    description: str = Field(..., description="Linguistic explanation")
+
+
+class RegionRuleProfile(BaseModel):
+    region_code: str
+    region_name: str
+    kannada_name: str
+    prosody_summary: str
+    lexical_substitutions: List[MorphRuleItem]
+    suffix_rules: List[MorphRuleItem]
+    phonological_shifts: List[MorphRuleItem]
+
+
+class MorphRulesResponse(BaseModel):
+    total_regions: int
+    rulebook: Dict[str, RegionRuleProfile]

@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 from backend.config import get_settings
 from backend.database import AsyncSessionLocal, Base, engine, get_db
 from backend.models import DialectRegion, DialectVariant, LexicalEntry
+from backend.routers.morph import router as morph_router
 from backend.schemas import (
     DialectRegionResponse,
     HealthResponse,
@@ -43,6 +44,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register Phase 2 Routers
+app.include_router(morph_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get(
