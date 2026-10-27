@@ -91,3 +91,4 @@ def test_graph_bridge_invalid_region():
     """Test 404 on invalid region in bridge query."""
     res = client.get("/api/v1/graph/bridge?source=invalid_region&target=hubballi_dharwad")
     assert res.status_code == 404
+

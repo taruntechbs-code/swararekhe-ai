@@ -701,3 +701,4 @@ class DialectKnowledgeGraph:
 
 # Global singleton instance
 knowledge_graph_service = DialectKnowledgeGraph()
+

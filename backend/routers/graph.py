@@ -83,3 +83,4 @@ async def get_graph_topology(
         await knowledge_graph_service.build_graph(db)
 
     return knowledge_graph_service.get_full_topology()
+

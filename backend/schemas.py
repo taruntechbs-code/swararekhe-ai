@@ -212,3 +212,35 @@ class TopologyResponse(BaseModel):
     nodes: List[GraphNode]
     edges: List[GraphEdge]
 
+
+# ---------------- Phase 4: Acoustic Prosody & DSP Cadence Schemas ----------------
+
+class CadenceMetrics(BaseModel):
+    pitch_mean_hz: float = Field(..., description="Average Fundamental Frequency (F0) in Hertz")
+    pitch_std_dev: float = Field(..., description="Standard deviation of pitch variation")
+    pitch_range_hz: float = Field(..., description="Peak-to-trough F0 delta in Hertz")
+    terminal_inflection_slope: float = Field(..., description="Slope of terminal 20% of F0 curve (positive = rising, negative = falling)")
+    estimated_syllable_rate_hz: float = Field(..., description="Estimated syllable onsets per second")
+    cadence_rhythm_type: str = Field(..., description="Descriptive cadence tag: staccato, syllable-timed, tripping, cascading, measured")
+
+
+class AcousticProfileResponse(BaseModel):
+    region_code: str = Field(..., description="Dialect region code")
+    region_name: str = Field(..., description="Human-readable dialect region name")
+    sample_audio_filename: str = Field(..., description="Audio sample filename in backend/static/audio_samples/")
+    cadence_metrics: CadenceMetrics = Field(..., description="Acoustic cadence profile metrics")
+    f0_pitch_curve: List[float] = Field(default_factory=list, description="Extracted pitch contour array (Hz)")
+    energy_envelope: List[float] = Field(default_factory=list, description="RMS energy amplitude envelope")
+    prosody_description: str = Field(..., description="Prosodic profile summary")
+
+
+class AcousticAnalyzeResponse(BaseModel):
+    target_region_code: str = Field(..., description="Requested regional dialect benchmark")
+    matched_region_name: str = Field(..., description="Name of reference benchmark region")
+    cadence_match_score: float = Field(..., ge=0.0, le=100.0, description="Overall cadence & prosody similarity score (0-100)")
+    user_cadence_metrics: CadenceMetrics = Field(..., description="Acoustic metrics extracted from submitted audio")
+    reference_cadence_metrics: CadenceMetrics = Field(..., description="Benchmark regional acoustic metrics")
+    pitch_contour_comparison: Dict[str, Any] = Field(default_factory=dict, description="Aligned F0 contour data for visualization")
+    coaching_feedback: List[str] = Field(default_factory=list, description="Linguistic prosody coaching tips")
+
+

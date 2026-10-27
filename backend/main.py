@@ -1,8 +1,10 @@
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -10,6 +12,7 @@ from sqlalchemy.orm import selectinload
 from backend.config import get_settings
 from backend.database import AsyncSessionLocal, Base, engine, get_db
 from backend.models import DialectRegion, DialectVariant, LexicalEntry
+from backend.routers.acoustic import router as acoustic_router
 from backend.routers.graph import router as graph_router
 from backend.routers.morph import router as morph_router
 from backend.schemas import (
@@ -17,6 +20,7 @@ from backend.schemas import (
     HealthResponse,
     LexicalEntryDetailResponse,
 )
+from backend.services.acoustic_engine import acoustic_engine_service, AUDIO_DIR
 from backend.services.knowledge_graph import knowledge_graph_service
 
 settings = get_settings()
@@ -24,13 +28,16 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Lifespan context manager to initialize database schema and graph engine on startup."""
+    """Lifespan context manager to initialize database schema, graph engine, and acoustic samples on startup."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     # Pre-build knowledge graph
     async with AsyncSessionLocal() as session:
         await knowledge_graph_service.build_graph(session)
+
+    # Ensure synthetic audio samples and DSP acoustic profiles are cached
+    acoustic_engine_service.ensure_synthetic_samples()
 
     yield
     await engine.dispose()
@@ -55,6 +62,11 @@ app.add_middleware(
 # Register API Routers
 app.include_router(morph_router, prefix=settings.API_V1_PREFIX)
 app.include_router(graph_router, prefix=settings.API_V1_PREFIX)
+app.include_router(acoustic_router, prefix=settings.API_V1_PREFIX)
+
+# Static audio samples serving
+os.makedirs(AUDIO_DIR, exist_ok=True)
+app.mount("/static/audio_samples", StaticFiles(directory=AUDIO_DIR), name="audio_samples")
 
 
 @app.get(
