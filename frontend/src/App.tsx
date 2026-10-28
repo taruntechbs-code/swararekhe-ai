@@ -3,6 +3,8 @@ import { WorkingSheetHeader, WorkspaceTab } from './components/WorkingSheetHeade
 import { IsoglossMapSheet } from './components/IsoglossMapSheet';
 import { DialectMorphSheet } from './components/DialectMorphSheet';
 import { EtymologyGraphSheet } from './components/EtymologyGraphSheet';
+import { AcousticOscilloscopeBay } from './components/AcousticOscilloscopeBay';
+import { LivingArchiveBay } from './components/LivingArchiveBay';
 import {
   swararekheApi,
   FALLBACK_STATS,
@@ -11,7 +13,7 @@ import {
   GeoJSONFeatureCollection,
   IsoglossLocateResponse,
 } from './api/swararekheClient';
-import { Activity, BookOpenCheck, ArrowLeft, Terminal } from 'lucide-react';
+import { Terminal } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('atlas');
@@ -145,129 +147,73 @@ export const App: React.FC = () => {
             </section>
           )}
 
-          {/* BAY 03: Acoustic F0 Oscilloscope Preview Deck */}
+          {/* BAY 03: Acoustic F0 Oscilloscope & Cadence Analyzer */}
           {activeTab === 'acoustic' && (
-            <div className="recessed-well" style={{ padding: '36px', textAlign: 'center' }}>
-              <div
-                className="recessed-field-screen"
-                style={{
-                  maxWidth: '780px',
-                  margin: '0 auto',
-                  padding: '36px 28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '16px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Activity size={28} color="var(--dp-color-accent)" />
-                  <span
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '13px',
-                      color: 'var(--dp-color-accent)',
-                      letterSpacing: '1px',
-                    }}
-                  >
-                    // BAY 03 // ACOUSTIC PROSODY &amp; F0 OSCILLOSCOPE DECK
-                  </span>
-                </div>
-
-                <h2 style={{ fontSize: '24px', color: 'var(--dp-color-on-field)', margin: 0 }}>
-                  Acoustic Cadence DSP &amp; Harmonic Contour Analyzer
-                </h2>
-
-                <p
-                  style={{
-                    fontSize: '15px',
-                    color: 'var(--dp-color-on-field-muted)',
-                    lineHeight: '1.45',
-                    maxWidth: '620px',
-                  }}
-                >
-                  Synthetic DSP audio samples and F0 contour curves are prepared for all{' '}
-                  <strong style={{ color: 'var(--dp-color-on-field)' }}>
-                    {stats.acoustic_profiles_ready} dialect zones
-                  </strong>
-                  . Phase 8 will provide real-time audio recording and dynamic pitch-contour comparison against regional prosodic templates.
-                </p>
-
-                <button
-                  type="button"
-                  className="raised-key"
-                  onClick={() => setActiveTab('atlas')}
-                  style={{ height: '36px', fontSize: '13px', marginTop: '6px' }}
-                >
-                  <ArrowLeft size={14} />
-                  <span>RETURN TO BAY 01</span>
-                </button>
-              </div>
-            </div>
+            <section aria-label="Bay 03 Acoustic F0 Oscilloscope & Cadence Analyzer">
+              <AcousticOscilloscopeBay
+                activeRegionCode={activeRegionCode}
+                onSelectRegion={handleSelectRegion}
+              />
+            </section>
           )}
 
-          {/* BAY 04: Living Field Archive Preview Deck */}
+          {/* BAY 04: Living Field Archive & Crowdsource Triage Deck */}
           {activeTab === 'archive' && (
-            <div className="recessed-well" style={{ padding: '36px', textAlign: 'center' }}>
-              <div
-                className="recessed-field-screen"
-                style={{
-                  maxWidth: '780px',
-                  margin: '0 auto',
-                  padding: '36px 28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '16px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <BookOpenCheck size={28} color="var(--dp-color-accent)" />
-                  <span
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '13px',
-                      color: 'var(--dp-color-accent)',
-                      letterSpacing: '1px',
-                    }}
-                  >
-                    // BAY 04 // LIVING CROWDSOURCED FIELD ARCHIVE
-                  </span>
+            <section aria-label="Bay 04 Living Field Archive & Crowdsource Triage Deck">
+              <LivingArchiveBay onContributeSuccess={loadPlatformData} />
+            </section>
+          )}
+
+          {/* ALL BAYS: Full Instrument Chassis Continuous View */}
+          {activeTab === 'all' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              {/* BAY 01: ISOGLOSS ATLAS & NEURO-SYMBOLIC MORPHER */}
+              <section aria-label="Bay 01 Geospatial Isogloss Atlas & Morpher">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <IsoglossMapSheet
+                    geoJson={geoJson}
+                    locationData={locationData}
+                    isLoadingLocation={isLoadingLocation}
+                    onSelectCoordinate={handleSelectCoordinate}
+                    activeRegionCode={activeRegionCode}
+                    onSelectRegion={handleSelectRegion}
+                  />
+                  <div className="chassis-seam" style={{ margin: '4px 0' }} />
+                  <DialectMorphSheet
+                    activeRegionCode={activeRegionCode}
+                    onSelectRegion={handleSelectRegion}
+                    externalSeedPhrase={seedPhrase}
+                  />
                 </div>
+              </section>
 
-                <h2 style={{ fontSize: '24px', color: 'var(--dp-color-on-field)', margin: 0 }}>
-                  Community Dialect Ingestion &amp; Dravidian Phonotactic Triage
-                </h2>
+              <div className="chassis-seam" />
 
-                <p
-                  style={{
-                    fontSize: '15px',
-                    color: 'var(--dp-color-on-field-muted)',
-                    lineHeight: '1.45',
-                    maxWidth: '620px',
-                  }}
-                >
-                  The Living Dictionary pipeline has ingested{' '}
-                  <strong style={{ color: 'var(--dp-color-on-field)' }}>
-                    {stats.community_submissions_total} community submissions
-                  </strong>{' '}
-                  with{' '}
-                  <strong style={{ color: 'var(--dp-color-on-field)' }}>
-                    {stats.approved_living_entries} peer-approved entries
-                  </strong>
-                  . Phase 8 will bring the interactive field recorder submission form and community triage review table.
-                </p>
+              {/* BAY 02: ETYMOLOGICAL KNOWLEDGE GRAPH & LINGUISTIC BRIDGE */}
+              <section aria-label="Bay 02 Etymological Knowledge Graph & Linguistic Bridge">
+                <EtymologyGraphSheet
+                  initialQuery="good"
+                  activeRegionCode={activeRegionCode}
+                  onSelectRegion={handleSelectRegion}
+                />
+              </section>
 
-                <button
-                  type="button"
-                  className="raised-key"
-                  onClick={() => setActiveTab('atlas')}
-                  style={{ height: '36px', fontSize: '13px', marginTop: '6px' }}
-                >
-                  <ArrowLeft size={14} />
-                  <span>RETURN TO BAY 01</span>
-                </button>
-              </div>
+              <div className="chassis-seam" />
+
+              {/* BAY 03: ACOUSTIC F0 OSCILLOSCOPE & CADENCE COACH */}
+              <section aria-label="Bay 03 Acoustic F0 Oscilloscope & Cadence Coach">
+                <AcousticOscilloscopeBay
+                  activeRegionCode={activeRegionCode}
+                  onSelectRegion={handleSelectRegion}
+                />
+              </section>
+
+              <div className="chassis-seam" />
+
+              {/* BAY 04: LIVING FIELD ARCHIVE & CROWDSOURCE TRIAGE DECK */}
+              <section aria-label="Bay 04 Living Field Archive & Crowdsource Triage Deck">
+                <LivingArchiveBay onContributeSuccess={loadPlatformData} />
+              </section>
             </div>
           )}
         </main>

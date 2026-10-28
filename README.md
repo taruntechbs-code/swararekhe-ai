@@ -22,15 +22,28 @@
         ┌──────────────────────────────┬───────────────────────┼──────────────────────────────┬──────────────────────────────┐
         ▼                              ▼                       ▼                              ▼                              ▼
  ┌───────────────┐             ┌───────────────┐       ┌───────────────┐              ┌───────────────┐              ┌───────────────┐
- │    Phase 1    │             │    Phase 2    │       │    Phase 3    │              │    Phase 4    │              │    Phase 5+   │
- │ Async Database│             │ Neuro-Symbolic│       │ Etymological  │              │ Acoustic DSP  │              │ UI & Graph    │
- │ & Seed Corpus │             │ Transduction  │       │  Graph Engine │              │Cadence Coach  │              │ Visualizer    │
+ │    Phase 1    │             │    Phase 2    │       │    Phase 3    │              │    Phase 4    │              │    Phase 5    │
+ │ Async Database│             │ Neuro-Symbolic│       │ Etymological  │              │ Acoustic DSP  │              │ Geospatial IDW│
+ │ & Seed Corpus │             │ Transduction  │       │  Graph Engine │              │Cadence Coach  │              │ Living Archive│
  └──────┬────────┘             └───────┬───────┘       └───────┬───────┘              └───────┬───────┘              └───────┬───────┘
         │                              │                       │                              │                              │
-  • 5 Core Regions              • Corpus Matcher        • NetworkX MultiDiGraph        • Synthetic Audio (.wav)       • (Upcoming)
-  • 14 Concepts (70 Variants)   • Suffix Transducer     • 105 Nodes / 258 Edges        • Librosa F0 / YIN Pitch
-  • Prosody Profiles            • Stress & IPA Rules    • Ego-Constellations           • Cadence Matching (0-100)
-  • SQLite + aiosqlite          • Hybrid Gemini Refiner • Linguistic Bridge            • Prosody Coaching Tips
+  • 5 Core Regions              • Corpus Matcher        • NetworkX MultiDiGraph        • Synthetic Audio (.wav)       • IDW Spatial (p=2.0)
+  • 14 Concepts (70 Variants)   • Suffix Transducer     • 105 Nodes / 258 Edges        • Librosa F0 / YIN Pitch       • GeoJSON Corridors
+  • Prosody Profiles            • Stress & IPA Rules    • Ego-Constellations           • Cadence Matching (0-100)     • Phonotactic Triage
+  • SQLite + aiosqlite          • Hybrid Gemini Refiner • Linguistic Bridge            • Prosody Coaching Tips        • Dynamic Graph Injection
+                                                               │
+                                                               ▼
+                                  ┌────────────────────────────────────────────────────────┐
+                                  │   SWARAREKHE INSTRUMENT CHASSIS (React 18 + TS + Vite) │
+                                  │   Industrial Hardware Design System (Model SR-05)      │
+                                  └────────────────────────────────────────────────────────┘
+                                                               │
+        ┌──────────────────────────────┬───────────────────────┴──────────────────────────────┬──────────────────────────────┐
+        ▼                              ▼                                                      ▼                              ▼
+ ┌──────────────────────────┐   ┌──────────────────────────┐                           ┌──────────────────────────┐   ┌──────────────────────────┐
+ │          BAY 01          │   │          BAY 02          │                           │          BAY 03          │   │          BAY 04          │
+ │ Isogloss Atlas & Morpher │   │ Etymology Graph & Bridge │                           │ Acoustic F0 Oscilloscope │   │ Living Archive & Triage  │
+ └──────────────────────────┘   └──────────────────────────┘                           └──────────────────────────┘   └──────────────────────────┘
 ```
 
 ---
@@ -156,6 +169,40 @@
 
 ---
 
+### 🎛️ Phase 8: Real-Time Acoustic Pitch Coach Oscilloscope, Living Field Archive & Complete 4-Bay Chassis
+- **BAY 03 // Acoustic F0 Oscilloscope & Cadence Coach**:
+  - Consumes `GET /api/v1/acoustic/profile/{region_code}` and `POST /api/v1/acoustic/analyze`.
+  - **Dual-Trace Real-Time SVG Oscilloscope**:
+    - **Target Reference Pitch Contour**: Glowing orange vector trace (`#f15b22`) representing benchmark regional $F_0$.
+    - **User Acoustic Pitch Contour**: Vivid cyan vector trace (`#00f0ff`) plotting speaker pitch curve.
+    - Synchronized time frames ($0.0\text{--}1.4\text{ s}$), energy envelope dB bars, Hz guide lines, and technical crosshair cursor.
+  - **Harmonic Web Audio Pitch Synthesizer**:
+    - Synthesizes realistic regional speech pitch sweeps via dual Web Audio oscillators (`sawtooth` fundamental + `sine` formant harmonic with low-pass biquad filtering).
+  - **Transport & Capture Controls**:
+    - Rotary dial `SYNTHESIZE / PLAY F0`
+    - `COMPARE SAMPLE` benchmarking
+    - `RECORD MIC` (browser MediaRecorder stream capture)
+    - `UPLOAD WAV` custom audio file analyzer
+  - **DSP Telemetry & Coaching Deck**:
+    - Mean Pitch ($F_0$), Pitch Standard Deviation, Dynamic Range, Syllable Velocity, and Terminal Inflection Slope ($Hz/\text{frame}$).
+    - Composite Prosody Alignment Score ($0\text{--}100\%$) and actionable linguistic coaching recommendations.
+- **BAY 04 // Living Field Archive & Crowdsource Triage Deck**:
+  - Consumes `POST /api/v1/explorer/contribute`, `GET /api/v1/explorer/submissions`, and `GET /api/v1/explorer/stats`.
+  - **Structured Field Contribution Console**:
+    - Contributor Name, District / Taluk, Lat/Lng coordinates with quick-pick presets (*Belagavi, Udupi, Bidar, Madikeri, Mysuru, Davanagere*), Category selection (*Greeting, Daily, Food, Kinship, Agriculture, Idiom*), native Kannada script phrase input, Roman phonetic transliteration, and English translation.
+    - Quick-fill preset key (`LOAD SAMPLE FIELD RECORD`) with authentic curated field entries.
+  - **AI Triage & Dynamic Knowledge Graph Injection Terminal**:
+    - Dark CRT/OLED screen (`#20272b`) displaying real-time phonotactic decision badge (`APPROVED_INJECTED`, `PENDING_REVIEW`, `REJECTED_SPAM`).
+    - Phonotactic Validity Score Meter with sub-metric breakdown (Dravidian vowel harmony, syllable onset/coda validity, morphological boundary).
+    - Nearest Dialect Heartland detection and morphological marker badge chips.
+    - **Live Knowledge Graph Injection Confirmation**: Automatically confirms when `variant:<phrase>:<region>` is dynamically injected into the active NetworkX MultiDiGraph!
+  - **Community Submissions Chronological Ledger**:
+    - Removable-style ledger table with interactive row selection, status lamps, Kannada script typography, score chips, and a server refresh sync key.
+  - **Unified Instrument Chassis View**:
+    - Raised toggle key `ALL BAYS (FULL CHASSIS VIEW)` allowing researchers to view all 4 bays concurrently in a single continuous instrument view separated by machined chassis seams (`.chassis-seam`).
+
+---
+
 ## 🛠️ Installation & Setup
 
 ### 1. Backend Setup
@@ -264,5 +311,5 @@ python -m backend.verify_all_phases
 - [x] **Phase 5**: Geospatial IDW Isogloss, Living Crowdsource Dictionary & Master Suite
 - [x] **Phase 6**: Frontend Foundation, Interactive Karnataka Isogloss Map & Morphing Working Sheet
 - [x] **Phase 7**: Interactive Etymological Constellation Graph & Linguistic Bridge Working Sheet
-- [ ] **Phase 8**: Real-Time Acoustic Pitch Coach Oscilloscope & Field Submission Console
+- [x] **Phase 8**: Real-Time Acoustic Pitch Coach Oscilloscope, Living Field Archive & Complete 4-Bay Chassis
 

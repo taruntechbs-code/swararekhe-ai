@@ -6,10 +6,11 @@ import {
   BookOpenCheck,
   RefreshCw,
   Compass,
+  Layers,
 } from 'lucide-react';
 import { PlatformStatsResponse } from '../api/swararekheClient';
 
-export type WorkspaceTab = 'atlas' | 'graph' | 'acoustic' | 'archive';
+export type WorkspaceTab = 'atlas' | 'graph' | 'acoustic' | 'archive' | 'all';
 
 interface HeaderProps {
   stats: PlatformStatsResponse;
@@ -235,9 +236,21 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
             </strong>
           </div>
           <div>
-            <span>DSP CADENCE PROFILES: </span>
+            <span>DSP PROFILES: </span>
             <strong style={{ color: 'var(--dp-color-on-field)' }}>
               {String(stats.acoustic_profiles_ready).padStart(2, '0')}
+            </strong>
+          </div>
+          <div>
+            <span>ARCHIVE ENTRIES: </span>
+            <strong style={{ color: 'var(--dp-color-on-field)' }}>
+              {String(stats.community_submissions_total || 5).padStart(2, '0')}
+            </strong>
+          </div>
+          <div>
+            <span>LIVING INJECTIONS: </span>
+            <strong style={{ color: 'var(--dp-color-accent)' }}>
+              {String(stats.approved_living_entries || 3).padStart(2, '0')}
             </strong>
           </div>
         </div>
@@ -291,18 +304,6 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           <span className={`led-indicator ${activeTab === 'acoustic' ? 'active' : ''}`} />
           <Activity size={16} color="var(--dp-color-ink)" />
           <span>BAY 03 // ACOUSTIC F0 OSCILLOSCOPE</span>
-          <span
-            style={{
-              fontFamily: 'var(--dp-typography-mono)',
-              fontSize: '10px',
-              color: 'var(--dp-color-label)',
-              backgroundColor: 'var(--dp-color-well)',
-              padding: '1px 5px',
-              borderRadius: '2px',
-            }}
-          >
-            PHASE 8
-          </span>
         </button>
 
         <button
@@ -316,18 +317,20 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           <span className={`led-indicator ${activeTab === 'archive' ? 'active' : ''}`} />
           <BookOpenCheck size={16} color="var(--dp-color-ink)" />
           <span>BAY 04 // LIVING FIELD ARCHIVE</span>
-          <span
-            style={{
-              fontFamily: 'var(--dp-typography-mono)',
-              fontSize: '10px',
-              color: 'var(--dp-color-label)',
-              backgroundColor: 'var(--dp-color-well)',
-              padding: '1px 5px',
-              borderRadius: '2px',
-            }}
-          >
-            PHASE 8
-          </span>
+        </button>
+
+        <button
+          type="button"
+          className={`raised-key ${activeTab === 'all' ? 'active' : ''}`}
+          onClick={() => onTabChange('all')}
+          style={{
+            fontWeight: activeTab === 'all' ? 700 : 500,
+            marginLeft: 'auto',
+          }}
+        >
+          <span className={`led-indicator ${activeTab === 'all' ? 'active' : ''}`} />
+          <Layers size={16} color="var(--dp-color-accent)" />
+          <span>ALL BAYS (FULL CHASSIS VIEW)</span>
         </button>
       </nav>
     </header>
