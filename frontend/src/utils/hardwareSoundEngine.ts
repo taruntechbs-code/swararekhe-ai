@@ -300,6 +300,103 @@ class HardwareSoundEngine {
   public isCarrierRunning(): boolean {
     return this.carrierActive;
   }
+
+  /**
+   * Synthesize and play a rapid back-to-back acoustic pitch comparison
+   * (Source Region F0 contour -> 150ms pause -> Target Region F0 contour)
+   * so the user can hear the phonetic cadence shift between the two regions.
+   */
+  public playAcousticShift(
+    sourceRegion: string,
+    targetRegion: string,
+    onComplete?: () => void
+  ) {
+    if (this.muted) {
+      onComplete?.();
+      return;
+    }
+
+    const ctx = this.initContext();
+    if (!ctx) {
+      onComplete?.();
+      return;
+    }
+
+    const REGION_F0_CURVES: Record<string, number[]> = {
+      hubballi_dharwad: [142, 148, 155, 168, 185, 210, 190], // Sharp terminal rising
+      kundapura_mangaluru: [165, 180, 198, 205, 195, 180, 165], // High melodic sing-song
+      kalaburagi_bidar: [134, 138, 142, 145, 142, 138, 132], // Grounded flat Dakhni register
+      arebhashe_kodagu: [170, 188, 195, 182, 196, 185, 165], // Bouncing highland cadence
+      bengaluru_mysuru: [160, 165, 172, 175, 172, 168, 164], // Measured standard contour
+    };
+
+    const curve1 = REGION_F0_CURVES[sourceRegion] || [150, 158, 168, 180, 195];
+    const curve2 = REGION_F0_CURVES[targetRegion] || [165, 158, 150, 142, 136];
+
+    const t = ctx.currentTime;
+    const toneDuration = 0.42; // 420ms per utterance
+    const pauseDuration = 0.15; // 150ms pause between regions
+
+    // --- UTTERANCE 1: Source Region Contour ---
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    const filter1 = ctx.createBiquadFilter();
+
+    osc1.type = 'sawtooth';
+    filter1.type = 'lowpass';
+    filter1.frequency.setValueAtTime(1400, t);
+
+    // Schedule frequency points across tone 1
+    const step1 = toneDuration / curve1.length;
+    curve1.forEach((hz, i) => {
+      osc1.frequency.setValueAtTime(hz, t + i * step1);
+    });
+
+    gain1.gain.setValueAtTime(0.001, t);
+    gain1.gain.linearRampToValueAtTime(0.18, t + 0.04);
+    gain1.gain.setValueAtTime(0.18, t + toneDuration - 0.04);
+    gain1.gain.exponentialRampToValueAtTime(0.001, t + toneDuration);
+
+    osc1.connect(filter1);
+    filter1.connect(gain1);
+    gain1.connect(ctx.destination);
+
+    osc1.start(t);
+    osc1.stop(t + toneDuration + 0.02);
+
+    // --- UTTERANCE 2: Target Region Contour (after 150ms pause) ---
+    const t2 = t + toneDuration + pauseDuration;
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    const filter2 = ctx.createBiquadFilter();
+
+    osc2.type = 'sawtooth';
+    filter2.type = 'lowpass';
+    filter2.frequency.setValueAtTime(1400, t2);
+
+    // Schedule frequency points across tone 2
+    const step2 = toneDuration / curve2.length;
+    curve2.forEach((hz, i) => {
+      osc2.frequency.setValueAtTime(hz, t2 + i * step2);
+    });
+
+    gain2.gain.setValueAtTime(0.001, t2);
+    gain2.gain.linearRampToValueAtTime(0.18, t2 + 0.04);
+    gain2.gain.setValueAtTime(0.18, t2 + toneDuration - 0.04);
+    gain2.gain.exponentialRampToValueAtTime(0.001, t2 + toneDuration);
+
+    osc2.connect(filter2);
+    filter2.connect(gain2);
+    gain2.connect(ctx.destination);
+
+    osc2.start(t2);
+    osc2.stop(t2 + toneDuration + 0.02);
+
+    const totalMs = (toneDuration * 2 + pauseDuration) * 1000 + 50;
+    setTimeout(() => {
+      onComplete?.();
+    }, totalMs);
+  }
 }
 
 export const hardwareSoundEngine = new HardwareSoundEngine();

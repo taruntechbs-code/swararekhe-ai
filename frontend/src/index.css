@@ -164,9 +164,10 @@ h1, h2, h3, h4, h5, h6 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
   gap: 20px;
+  min-width: 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 960px) {
   .morph-deck-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -542,23 +543,27 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: 7fr 5fr;
   gap: 28px;
   align-items: stretch;
+  min-width: 0;
 }
 
 @media (max-width: 960px) {
   .bay02-grid {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
 }
 
 .bay02-bridge-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  min-width: 0;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 900px) {
   .bay02-bridge-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
 
@@ -567,11 +572,13 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: 7fr 5fr;
   gap: 28px;
   align-items: stretch;
+  min-width: 0;
 }
 
 @media (max-width: 960px) {
   .bay03-grid {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
 }
 
@@ -581,11 +588,23 @@ h1, h2, h3, h4, h5, h6 {
   gap: 28px;
   margin-bottom: 32px;
   align-items: stretch;
+  min-width: 0;
 }
 
 @media (max-width: 960px) {
   .bay04-grid {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
+}
+
+/* Ensure no grid child causes horizontal overflow */
+.bay01-grid > *,
+.bay02-grid > *,
+.bay02-bridge-grid > *,
+.bay03-grid > *,
+.bay04-grid > *,
+.morph-deck-grid > * {
+  min-width: 0;
 }
 

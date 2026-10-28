@@ -8,6 +8,7 @@ import {
   ArrowLeftRight,
   GitBranch,
   Sparkles,
+  Volume2,
 } from 'lucide-react';
 import {
   GraphNode,
@@ -83,6 +84,10 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
   const [bridgeData, setBridgeData] = useState<LinguisticBridgeResponse>(FALLBACK_BRIDGE);
   const [isLoadingBridge, setIsLoadingBridge] = useState(false);
 
+  // Interactive Cognate Shift Ledger selection & audio audition
+  const [activeCognateIndex, setActiveCognateIndex] = useState<number | null>(null);
+  const [playingShiftConcept, setPlayingShiftConcept] = useState<string | null>(null);
+
   // Topology Strip state
   const [topology, setTopology] = useState<TopologyResponse>(FALLBACK_TOPOLOGY);
 
@@ -94,8 +99,8 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Generous SVG dimensions with wide radial margins
-  const SVG_WIDTH = 900;
-  const SVG_HEIGHT = 560;
+  const SVG_WIDTH = 1040;
+  const SVG_HEIGHT = 640;
   const CENTER_X = SVG_WIDTH / 2;
   const CENTER_Y = SVG_HEIGHT / 2;
 
@@ -187,7 +192,34 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
     }
   };
 
-  // Organic radial / force-inspired layout
+  // Helper to calculate approximate bounding box for collision repulsion
+  const getNodeBoxDimensions = (node: GraphNode): { w: number; h: number } => {
+    if (node.node_type === 'CONCEPT') {
+      return { w: 96, h: 96 };
+    }
+    if (node.node_type === 'VARIANT') {
+      const raw = node.label;
+      const display = raw.length > 24 ? raw.slice(0, 22) + '…' : raw;
+      const w = Math.min(190, Math.max(110, display.length * 7 + 28));
+      const h = node.kannada_label ? 44 : 36;
+      return { w, h };
+    }
+    if (node.node_type === 'REGION') {
+      const short = node.label.split('/')[0].trim();
+      const display = short.length > 20 ? short.slice(0, 18) + '…' : short;
+      const w = Math.min(140, Math.max(90, display.length * 7 + 24));
+      return { w, h: 36 };
+    }
+    if (node.node_type === 'INFLUENCE_LANG') {
+      return { w: 116, h: 36 };
+    }
+    if (node.node_type === 'CULTURAL_MARKER') {
+      return { w: 122, h: 36 };
+    }
+    return { w: 105, h: 36 };
+  };
+
+  // Organic radial layout with strict 72°/36° angular intervals & 30-iteration bounding-box repulsion
   const layoutGraph = (nodes: GraphNode[], _edges: GraphEdge[], centerId: string) => {
     const positions: Record<string, NodePosition> = {};
 
@@ -209,28 +241,22 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
         n.node_type !== 'CULTURAL_MARKER'
     );
 
-    // Inner orbit: VARIANT nodes (expanded radius for breathability)
-    const rVariant = 175;
+    // Inner orbit: VARIANT nodes at strict 72° (2π / 5) intervals around center
+    const rVariant = 205;
+    const numVariants = Math.max(1, variants.length);
     variants.forEach((v, idx) => {
-      const angle = (idx / Math.max(1, variants.length)) * Math.PI * 2 - Math.PI / 2;
+      const angle = (idx * 2 * Math.PI) / numVariants - Math.PI / 2;
       positions[v.id] = {
         x: Math.round(CENTER_X + rVariant * Math.cos(angle)),
         y: Math.round(CENTER_Y + rVariant * Math.sin(angle)),
       };
     });
 
-    // Middle orbit: REGION nodes (placed in compass directions corresponding to geographical zones)
-    const geoAngles: Record<string, number> = {
-      'region:hubballi_dharwad': -Math.PI * 0.75, // NW
-      'region:kundapura_mangaluru': -Math.PI * 0.95, // W
-      'region:kalaburagi_bidar': -Math.PI * 0.25, // NE
-      'region:arebhashe_kodagu': Math.PI * 0.65, // SW
-      'region:bengaluru_mysuru': Math.PI * 0.35, // SE
-    };
-
-    const rRegion = 270;
+    // Middle orbit: REGION nodes offset by +36° (π / 5) so region boxes never sit directly along the same ray as variant boxes
+    const rRegion = 315;
+    const numRegions = Math.max(1, regions.length);
     regions.forEach((r, idx) => {
-      const angle = geoAngles[r.id] ?? (idx / Math.max(1, regions.length)) * Math.PI * 2 + Math.PI / 4;
+      const angle = (idx * 2 * Math.PI) / numRegions - Math.PI / 2 + Math.PI / 5;
       positions[r.id] = {
         x: Math.round(CENTER_X + rRegion * Math.cos(angle)),
         y: Math.round(CENTER_Y + rRegion * Math.sin(angle)),
@@ -239,14 +265,94 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
 
     // Outer orbit: INFLUENCE_LANG & CULTURAL_MARKER
     const outerNodes = [...substrates, ...cultural, ...other];
-    const rOuter = 350;
+    const rOuter = 425;
+    const numOuter = Math.max(1, outerNodes.length);
     outerNodes.forEach((node, idx) => {
-      const angle = (idx / Math.max(1, outerNodes.length)) * Math.PI * 2 + Math.PI / 6;
+      const angle = (idx * 2 * Math.PI) / numOuter + Math.PI / 10;
       positions[node.id] = {
         x: Math.round(CENTER_X + rOuter * Math.cos(angle)),
         y: Math.round(CENTER_Y + rOuter * Math.sin(angle)),
       };
     });
+
+    // 30-iteration bounding-box repulsion pass:
+    // Ensures wide boxes (width > 180px) push apart vertically/horizontally by at least 18px padding
+    // and NEVER overlap each other (fixing 'Laayk aipini' / 'Bhaal cholo aytri' & 'Karavali' / 'Cholo ulla')
+    const PADDING = 18;
+    const ITERATIONS = 30;
+
+    const nodeBoxMap: Record<string, { w: number; h: number }> = {};
+    nodes.forEach((n) => {
+      nodeBoxMap[n.id] = getNodeBoxDimensions(n);
+    });
+
+    for (let iter = 0; iter < ITERATIONS; iter++) {
+      for (let i = 0; i < nodes.length; i++) {
+        const nodeA = nodes[i];
+        const posA = positions[nodeA.id];
+        if (!posA) continue;
+        const boxA = nodeBoxMap[nodeA.id];
+
+        for (let j = i + 1; j < nodes.length; j++) {
+          const nodeB = nodes[j];
+          const posB = positions[nodeB.id];
+          if (!posB) continue;
+          const boxB = nodeBoxMap[nodeB.id];
+
+          const reqDx = (boxA.w + boxB.w) / 2 + PADDING;
+          const reqDy = (boxA.h + boxB.h) / 2 + PADDING;
+
+          const dx = posB.x - posA.x;
+          const dy = posB.y - posA.y;
+          const absDx = Math.abs(dx);
+          const absDy = Math.abs(dy);
+
+          if (absDx < reqDx && absDy < reqDy) {
+            const overlapX = reqDx - absDx;
+            const overlapY = reqDy - absDy;
+
+            const isCenterA = nodeA.id === centerId;
+            const isCenterB = nodeB.id === centerId;
+
+            if (overlapX < overlapY) {
+              const sign = dx >= 0 ? 1 : -1;
+              const shift = overlapX * 0.5;
+              if (!isCenterB) posB.x += shift * sign;
+              if (!isCenterA) posA.x -= shift * sign;
+            } else {
+              const sign = dy >= 0 ? 1 : -1;
+              const shift = overlapY * 0.5;
+              if (!isCenterB) posB.y += shift * sign;
+              if (!isCenterA) posA.y -= shift * sign;
+            }
+          }
+        }
+      }
+
+      // Keep nodes bounded inside canvas & maintain clearance from center node
+      nodes.forEach((node) => {
+        if (node.id === centerId) {
+          positions[node.id] = { x: CENTER_X, y: CENTER_Y };
+          return;
+        }
+        const pos = positions[node.id];
+        const box = nodeBoxMap[node.id];
+        const minX = box.w / 2 + 16;
+        const maxX = SVG_WIDTH - box.w / 2 - 16;
+        const minY = box.h / 2 + 16;
+        const maxY = SVG_HEIGHT - box.h / 2 - 16;
+
+        pos.x = Math.max(minX, Math.min(maxX, pos.x));
+        pos.y = Math.max(minY, Math.min(maxY, pos.y));
+
+        const distCenter = Math.hypot(pos.x - CENTER_X, pos.y - CENTER_Y);
+        if (distCenter < 112) {
+          const angle = Math.atan2(pos.y - CENTER_Y, pos.x - CENTER_X) || (Math.PI / 4);
+          pos.x = Math.round(CENTER_X + 115 * Math.cos(angle));
+          pos.y = Math.round(CENTER_Y + 115 * Math.sin(angle));
+        }
+      });
+    }
 
     setNodePositions(positions);
   };
@@ -317,6 +423,23 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
     setSourceRegion(nextSrc);
     setTargetRegion(nextTgt);
     loadBridge(nextSrc, nextTgt);
+  };
+
+  const handleSelectCognateCard = (concept: string, idx: number) => {
+    hardwareSoundEngine.playKeyClick();
+    setActiveCognateIndex(idx);
+    setSearchQuery(concept);
+    loadConstellation(concept);
+    handleTriggerEtymologyPulse();
+  };
+
+  const handleAuditionShift = (e: React.MouseEvent, concept: string) => {
+    e.stopPropagation();
+    hardwareSoundEngine.playKeyClick();
+    setPlayingShiftConcept(concept);
+    hardwareSoundEngine.playAcousticShift(sourceRegion, targetRegion, () => {
+      setPlayingShiftConcept(null);
+    });
   };
 
   return (
@@ -503,8 +626,8 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
             style={{
               position: 'relative',
               overflow: 'hidden',
-              minHeight: '480px',
-              height: '560px',
+              minHeight: '520px',
+              height: '640px',
               cursor: isPanning ? 'grabbing' : 'grab',
             }}
           >
@@ -677,6 +800,11 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   const midX = (s.x + t.x) / 2;
                   const midY = (s.y + t.y) / 2;
 
+                  const showEdgeBadge = Boolean(
+                    isConnected ||
+                    (isPulsing && pulsePhase !== 'idle')
+                  );
+
                   return (
                     <g
                       key={`edge-${idx}`}
@@ -695,7 +823,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         strokeDasharray={edge.relation === 'BORROWED_FROM' ? '5,3' : undefined}
                         markerEnd={markerEnd}
                       />
-                      {(isConnected || isConnected === false && edge.relation === 'BORROWED_FROM') && (
+                      {showEdgeBadge && (
                         <g transform={`translate(${midX}, ${midY})`}>
                           <rect
                             x="-44"
@@ -920,7 +1048,21 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   }
 
                   if (node.node_type === 'VARIANT') {
-                    const boxW = Math.max(104, (node.label.length + (node.kannada_label?.length || 0)) * 6.5 + 24);
+                    const rawLabel = node.label;
+                    let line1 = rawLabel;
+                    let line2 = node.kannada_label || '';
+
+                    if (rawLabel.includes('/') && !line2) {
+                      const parts = rawLabel.split('/');
+                      line1 = parts[0].trim();
+                      line2 = parts.slice(1).join('/').trim();
+                    } else if (rawLabel.length > 24) {
+                      line1 = rawLabel.slice(0, 22) + '…';
+                    }
+
+                    const boxW = Math.min(190, Math.max(108, Math.max(line1.length, line2.length) * 6.8 + 24));
+                    const boxH = line2 ? 42 : 34;
+
                     return (
                       <g
                         key={node.id}
@@ -938,9 +1080,9 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         {isPulsing && pulseProgress >= 0.35 && pulseProgress <= 0.78 && (
                           <rect
                             x={-boxW / 2 - 4}
-                            y="-23"
+                            y={-boxH / 2 - 4}
                             width={boxW + 8}
-                            height="46"
+                            height={boxH + 8}
                             rx="8"
                             fill="none"
                             stroke="var(--dp-color-accent)"
@@ -950,9 +1092,9 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         )}
                         <rect
                           x={-boxW / 2}
-                          y="-19"
+                          y={-boxH / 2}
                           width={boxW}
-                          height="38"
+                          height={boxH}
                           rx="6"
                           fill="#1a2024"
                           stroke={isSelected ? 'var(--dp-color-accent)' : isHovered ? '#f2f4f4' : '#4a565e'}
@@ -960,24 +1102,24 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         />
                         <text
                           textAnchor="middle"
-                          y="-1"
+                          y={line2 ? -2 : 4}
                           fontFamily="var(--dp-typography-sans)"
-                          fontSize="14"
+                          fontSize="13"
                           fontWeight="700"
                           fill="#f2f4f4"
                         >
-                          {node.label}
+                          {line1}
                         </text>
-                        {node.kannada_label && (
+                        {line2 && (
                           <text
                             textAnchor="middle"
-                            y="14"
+                            y={13}
                             className="kannada-text"
-                            fontSize="12"
+                            fontSize="11"
                             fontWeight="600"
                             fill="#d8dee1"
                           >
-                            {node.kannada_label}
+                            {line2}
                           </text>
                         )}
                       </g>
@@ -986,6 +1128,10 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
 
                   if (node.node_type === 'REGION') {
                     const shortName = node.label.split('/')[0].trim();
+                    const displayShort = shortName.length > 20 ? shortName.slice(0, 18) + '…' : shortName;
+                    const boxW = Math.min(140, Math.max(90, displayShort.length * 7 + 24));
+                    const boxH = 32;
+
                     return (
                       <g
                         key={node.id}
@@ -1002,10 +1148,10 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         {/* Halo during outer substrate/region arrival */}
                         {isPulsing && pulseProgress >= 0.65 && (
                           <rect
-                            x="-58"
-                            y="-20"
-                            width="116"
-                            height="40"
+                            x={-boxW / 2 - 4}
+                            y={-boxH / 2 - 4}
+                            width={boxW + 8}
+                            height={boxH + 8}
                             rx="8"
                             fill="none"
                             stroke="#ffffff"
@@ -1014,10 +1160,10 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                           />
                         )}
                         <rect
-                          x="-54"
-                          y="-16"
-                          width="108"
-                          height="32"
+                          x={-boxW / 2}
+                          y={-boxH / 2}
+                          width={boxW}
+                          height={boxH}
                           rx="6"
                           fill="#161b1e"
                           stroke={isSelected ? '#ffffff' : isHovered ? 'var(--dp-color-accent)' : '#5a6872'}
@@ -1025,13 +1171,13 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         />
                         <text
                           textAnchor="middle"
-                          y="5"
+                          y="4"
                           fontFamily="var(--dp-typography-mono)"
-                          fontSize="12"
+                          fontSize="11"
                           fontWeight="700"
                           fill="#d8dee1"
                         >
-                          {shortName}
+                          {displayShort}
                         </text>
                       </g>
                     );
@@ -1147,98 +1293,106 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
 
           {/* Right Column: 3 Spacious Sub-Cards (gap: 20px, padding: 22px each) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Card 1: Node Inspector Card */}
-            <div
-              className="recessed-field-screen"
-              style={{
-                padding: '22px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                  paddingBottom: '8px',
-                }}
-              >
-                <span
+            {/* Card 1: Node Inspector Card (Shows full text on hover or click) */}
+            {(() => {
+              const activeDisplayNode = hoveredNodeId
+                ? constellation.nodes.find((n) => n.id === hoveredNodeId) || selectedNode
+                : selectedNode;
+
+              return (
+                <div
+                  className="recessed-field-screen"
                   style={{
-                    fontFamily: 'var(--dp-typography-mono)',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    color: 'var(--dp-color-accent)',
-                    letterSpacing: '0.04em',
+                    padding: '22px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
                   }}
                 >
-                  ACTIVE NODE TELEMETRY
-                </span>
-                {selectedNode && (
-                  <span
+                  <div
                     style={{
-                      fontSize: '10px',
-                      fontFamily: 'var(--dp-typography-mono)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      padding: '2px 8px',
-                      borderRadius: '3px',
-                      color: 'var(--dp-color-on-field-muted)',
-                      textTransform: 'uppercase',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                      paddingBottom: '8px',
                     }}
                   >
-                    {selectedNode.node_type}
-                  </span>
-                )}
-              </div>
-
-              {selectedNode ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--dp-color-on-field)' }}>
-                      {selectedNode.label}
+                    <span
+                      style={{
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        color: 'var(--dp-color-accent)',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      ACTIVE NODE TELEMETRY
                     </span>
+                    {activeDisplayNode && (
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontFamily: 'var(--dp-typography-mono)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          padding: '2px 8px',
+                          borderRadius: '3px',
+                          color: 'var(--dp-color-on-field-muted)',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {activeDisplayNode.node_type}
+                      </span>
+                    )}
                   </div>
 
-                  {selectedNode.kannada_label && (
-                    <div className="kannada-text" style={{ fontSize: '20px', fontWeight: 700, color: 'var(--dp-color-accent)' }}>
-                      {selectedNode.kannada_label}
-                    </div>
-                  )}
+                  {activeDisplayNode ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--dp-color-on-field)' }}>
+                          {activeDisplayNode.label}
+                        </span>
+                      </div>
 
-                  {selectedNode.metadata.ipa && (
-                    <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '13px', color: '#38bdf8' }}>
-                      IPA: <code>{selectedNode.metadata.ipa}</code>
-                    </div>
-                  )}
+                      {activeDisplayNode.kannada_label && (
+                        <div className="kannada-text" style={{ fontSize: '20px', fontWeight: 700, color: 'var(--dp-color-accent)' }}>
+                          {activeDisplayNode.kannada_label}
+                        </div>
+                      )}
 
-                  {selectedNode.metadata.rule && (
-                    <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-accent)' }}>
-                      RULE: [{selectedNode.metadata.rule}]
-                    </div>
-                  )}
+                      {activeDisplayNode.metadata.ipa && (
+                        <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '13px', color: '#38bdf8' }}>
+                          IPA: <code>{activeDisplayNode.metadata.ipa}</code>
+                        </div>
+                      )}
 
-                  {selectedNode.metadata.era && (
-                    <div style={{ fontSize: '12px', color: 'var(--dp-color-on-field-muted)' }}>
-                      Era: {selectedNode.metadata.era}
-                    </div>
-                  )}
+                      {activeDisplayNode.metadata.rule && (
+                        <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-accent)' }}>
+                          RULE: [{activeDisplayNode.metadata.rule}]
+                        </div>
+                      )}
 
-                  {selectedNode.metadata.description && (
-                    <div style={{ fontSize: '13px', fontStyle: 'italic', color: 'var(--dp-color-on-field-muted)', lineHeight: '1.4' }}>
-                      {selectedNode.metadata.description}
+                      {activeDisplayNode.metadata.era && (
+                        <div style={{ fontSize: '12px', color: 'var(--dp-color-on-field-muted)' }}>
+                          Era: {activeDisplayNode.metadata.era}
+                        </div>
+                      )}
+
+                      {activeDisplayNode.metadata.description && (
+                        <div style={{ fontSize: '13px', fontStyle: 'italic', color: 'var(--dp-color-on-field-muted)', lineHeight: '1.4' }}>
+                          {activeDisplayNode.metadata.description}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '13px', color: 'var(--dp-color-on-field-muted)', fontStyle: 'italic' }}>
+                      Select or hover any node in the constellation diagram to inspect phonological derivation rules, historical substrates, and IPA notation.
                     </div>
                   )}
                 </div>
-              ) : (
-                <div style={{ fontSize: '13px', color: 'var(--dp-color-on-field-muted)', fontStyle: 'italic' }}>
-                  Select or hover any node in the constellation diagram to inspect phonological derivation rules, historical substrates, and IPA notation.
-                </div>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Card 2: Etymological Commentary & Travelogue Narrative Card */}
             <div
@@ -1499,84 +1653,227 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
           </div>
 
           <div className="bay02-bridge-grid">
-            {bridgeData.phonetic_shift_chain.map((item, idx) => (
-              <div
-                key={idx}
-                className="removable-module"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px',
-                  padding: '18px 22px',
-                }}
-              >
-                {/* Concept Anchor */}
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', borderBottom: '1px solid #c2c9cc', paddingBottom: '6px' }}>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--dp-color-ink)' }}>
-                    {item.concept}
-                  </div>
-                  <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)', fontWeight: 600 }}>
-                    CANONICAL ROOT
-                  </div>
-                </div>
+            {bridgeData.phonetic_shift_chain.map((item, idx) => {
+              const isCardActive =
+                activeCognateIndex === idx ||
+                searchQuery.toLowerCase().trim() === item.concept.toLowerCase().trim();
+              const isAuditioning = playingShiftConcept === item.concept;
 
-                {/* Source & Target Comparison Columns */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '10px', alignItems: 'center' }}>
-                  {/* Source Region Variant */}
+              return (
+                <div
+                  key={idx}
+                  onClick={() => handleSelectCognateCard(item.concept, idx)}
+                  className={`removable-module ${isCardActive ? 'active' : ''}`}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '14px',
+                    padding: '20px 22px',
+                    cursor: 'pointer',
+                    border: isCardActive ? '1px solid var(--dp-color-accent)' : undefined,
+                    boxShadow: isCardActive ? '0 0 14px rgba(241, 91, 34, 0.22)' : undefined,
+                    transition: 'all 140ms ease',
+                  }}
+                >
+                  {/* Top Row: English Meaning Title + Canonical Root + Audition Shift button */}
                   <div
                     style={{
-                      backgroundColor: '#ffffff',
-                      padding: '8px 12px',
-                      borderRadius: 'var(--dp-radius-key)',
-                      borderLeft: '3px solid var(--dp-color-ink)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '8px',
+                      borderBottom: '1px solid #c2c9cc',
+                      paddingBottom: '10px',
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--dp-color-ink)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className={`led-indicator ${isCardActive ? 'active' : ''}`} />
+                      <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--dp-color-ink)' }}>
+                        {item.concept}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span
+                        style={{
+                          fontFamily: 'var(--dp-typography-mono)',
+                          fontSize: '11px',
+                          color: 'var(--dp-color-label)',
+                          backgroundColor: 'var(--dp-color-raised)',
+                          padding: '3px 8px',
+                          borderRadius: 'var(--dp-radius-key)',
+                          border: '1px solid #b6bec2',
+                          fontWeight: 600,
+                        }}
+                      >
+                        CANONICAL ROOT
+                      </span>
+
+                      <button
+                        type="button"
+                        className="raised-key"
+                        onClick={(e) => handleAuditionShift(e, item.concept)}
+                        title="Audition acoustic F0 pitch transition (Source -> 150ms -> Target)"
+                        style={{
+                          fontSize: '11px',
+                          padding: '4px 10px',
+                          height: '28px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          color: isAuditioning ? 'var(--dp-color-accent)' : undefined,
+                        }}
+                      >
+                        <Volume2 size={13} color="var(--dp-color-accent)" />
+                        <span>{isAuditioning ? 'SHIFTING...' : 'AUDITION SHIFT'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Comparison Body: Spacious 1fr auto 1fr row */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr auto 1fr',
+                      gap: '12px',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {/* Source Region Variant */}
+                    <div
+                      style={{
+                        backgroundColor: '#ffffff',
+                        padding: '14px 16px',
+                        borderRadius: 'var(--dp-radius-key)',
+                        border: '1px solid #cbd0d2',
+                        borderLeft: '4px solid var(--dp-color-ink)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontFamily: 'var(--dp-typography-mono)',
+                          fontSize: '10px',
+                          color: 'var(--dp-color-label)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        SRC: {REGION_OPTIONS.find((r) => r.code === sourceRegion)?.label.split('(')[0].trim() || 'SOURCE'}
+                      </div>
+                      <div
+                        className="kannada-text"
+                        style={{
+                          fontSize: '20px',
+                          fontWeight: 700,
+                          color: 'var(--dp-color-ink)',
+                          lineHeight: 1.25,
+                        }}
+                      >
+                        {item.region_a_variant.script}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          color: 'var(--dp-color-accent)',
+                          fontFamily: 'var(--dp-typography-sans)',
+                        }}
+                      >
                         {item.region_a_variant.phonetic}
-                      </span>
-                      <span className="kannada-text" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--dp-color-label)' }}>
-                        ({item.region_a_variant.script})
-                      </span>
-                    </div>
-                    {item.region_a_variant.rule && (
-                      <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)', marginTop: '4px' }}>
-                        [{item.region_a_variant.rule}]
                       </div>
-                    )}
-                  </div>
+                      {item.region_a_variant.rule && (
+                        <div
+                          style={{
+                            fontFamily: 'var(--dp-typography-mono)',
+                            fontSize: '10px',
+                            color: 'var(--dp-color-label)',
+                            marginTop: '2px',
+                            backgroundColor: 'var(--dp-color-raised)',
+                            padding: '2px 6px',
+                            borderRadius: '2px',
+                            width: 'fit-content',
+                          }}
+                        >
+                          [{item.region_a_variant.rule}]
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Transition Arrow */}
-                  <div style={{ textAlign: 'center', color: 'var(--dp-color-accent)', fontWeight: 800, fontSize: '16px' }}>
-                    ➔
-                  </div>
+                    {/* Transition Arrow */}
+                    <div style={{ textAlign: 'center', color: 'var(--dp-color-accent)', fontWeight: 800, fontSize: '18px' }}>
+                      ➔
+                    </div>
 
-                  {/* Target Region Variant */}
-                  <div
-                    style={{
-                      backgroundColor: 'var(--dp-color-well)',
-                      padding: '8px 12px',
-                      borderRadius: 'var(--dp-radius-key)',
-                      borderLeft: '3px solid var(--dp-color-accent)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--dp-color-accent)' }}>
+                    {/* Target Region Variant */}
+                    <div
+                      style={{
+                        backgroundColor: 'var(--dp-color-well)',
+                        padding: '14px 16px',
+                        borderRadius: 'var(--dp-radius-key)',
+                        border: '1px solid #9aa3a8',
+                        borderLeft: '4px solid var(--dp-color-accent)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontFamily: 'var(--dp-typography-mono)',
+                          fontSize: '10px',
+                          color: 'var(--dp-color-label)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        TGT: {REGION_OPTIONS.find((r) => r.code === targetRegion)?.label.split('(')[0].trim() || 'TARGET'}
+                      </div>
+                      <div
+                        className="kannada-text"
+                        style={{
+                          fontSize: '20px',
+                          fontWeight: 700,
+                          color: 'var(--dp-color-ink)',
+                          lineHeight: 1.25,
+                        }}
+                      >
+                        {item.region_b_variant.script}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          color: 'var(--dp-color-accent)',
+                          fontFamily: 'var(--dp-typography-sans)',
+                        }}
+                      >
                         {item.region_b_variant.phonetic}
-                      </span>
-                      <span className="kannada-text" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--dp-color-ink)' }}>
-                        ({item.region_b_variant.script})
-                      </span>
-                    </div>
-                    {item.region_b_variant.rule && (
-                      <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)', marginTop: '4px' }}>
-                        [{item.region_b_variant.rule}]
                       </div>
-                    )}
+                      {item.region_b_variant.rule && (
+                        <div
+                          style={{
+                            fontFamily: 'var(--dp-typography-mono)',
+                            fontSize: '10px',
+                            color: 'var(--dp-color-label)',
+                            marginTop: '2px',
+                            backgroundColor: 'var(--dp-color-raised)',
+                            padding: '2px 6px',
+                            borderRadius: '2px',
+                            width: 'fit-content',
+                          }}
+                        >
+                          [{item.region_b_variant.rule}]
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
