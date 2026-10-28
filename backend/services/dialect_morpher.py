@@ -50,8 +50,7 @@ REGIONAL_RULES: Dict[str, Dict[str, Any]] = {
             ("begane", "lagoone", "ಲಗೂನೆ", "marathi_loan_lagoone", "Substituted with North Karnataka / Marathi loan lagoone"),
         ],
         "suffix_rules": [
-            (r"hoguttiddiya|hogtiya|hoguttiddi", "hontirri", "ಹೊಂಟಿರ್ರೀ", "inchoative_hontirri", "Directional continuous shifted to inchoative hontirri"),
-            (r"hoguttiddiri|hogtiddira", "hogatirre", "ಹೋಗತಿರ್ರೀ", "verb_suffix_re_honorific", "Second person honorific verb inflection -atirre"),
+            (r"hoguttiddiri|hogtiddira|hoguttiddiya|hogtiya|hoguttiddi", "hontirri", "ಹೊಂಟೀರಿ", "inchoative_hontirri", "Directional continuous shifted to inchoative hontirri"),
             (r"iddira|idira", "adeerree", "ಅದೀರೇನ್ರೀ", "copula_ada_honorific", "Existential root ada with honorific ree interrogative"),
             (r"iddene|idene", "adene", "ಅದೇನ್", "copula_ada_first_person", "Existential root ada in first person"),
             (r"ide$", "ayti", "ಐತ್ರಿ", "copula_stative_ayti", "Stative copula ide -> ayti"),
@@ -244,7 +243,8 @@ ROMAN_TO_KANNADA_MAP = {
     "yathak": "ಯಾತ್ತಕ್",
     "yettak": "ಎತ್ತಕ್",
     "ellige": "ಎಲ್ಲಿಗೆ",
-    "hontirri": "ಹೊಂಟಿರ್ರೀ",
+    "hontirri": "ಹೊಂಟೀರಿ",
+    "hontirre": "ಹೊಂಟೀರಿ",
     "hoitiddiya": "ಹೋಯ್ತಿದ್ದಿಯಾ",
     "hoglikattiri": "ಹೋಗ್ಲಿಕತ್ತೀರಿ",
     "hoglikatti": "ಹೋಗ್ಲಿಕತ್ತಿ",
@@ -531,6 +531,8 @@ class RuleBasedTransducer:
         morphed_roman_clean = " ".join(morphed_tokens_roman).strip()
         # Clean spacing around punctuation
         morphed_roman_clean = re.sub(r"\s+([?,.!])", r"\1", morphed_roman_clean)
+        if morphed_roman_clean:
+            morphed_roman_clean = morphed_roman_clean[0].upper() + morphed_roman_clean[1:]
         morphed_script_clean = " ".join(morphed_tokens_script).strip()
         morphed_script_clean = re.sub(r"\s+([?,.!])", r"\1", morphed_script_clean)
 

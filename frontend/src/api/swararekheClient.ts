@@ -372,10 +372,10 @@ export const swararekheApi = {
         interpolated_greeting_local: 'ಹೆಂಗದೀರ್ರೀ? ಆರಾಮ್ ಅದೀರೇನ್ರೀ?',
         interpolated_phrase_result: {
           source_phrase: phrase || 'Where are you going?',
-          morphed_dominant_roman: 'Yallig hontirre?',
-          morphed_dominant_script: 'ಎಲ್ಲಿಗ್ ಹೊಂಟಿರ್ರೀ?',
+          morphed_dominant_roman: 'Yallig hontirri?',
+          morphed_dominant_script: 'ಎಲ್ಲಿಗ್ ಹೊಂಟೀರಿ?',
           dominant_rules_applied: ['verb_suffix_re_honorific_inflection'],
-          syllable_stress: 'yal-LIG hon-TIR-re',
+          syllable_stress: 'yal-LIG hon-TIR-ri',
           transition_notes: 'Approximated client blend based on geographic coordinates.',
         },
         acoustic_interpolated_pitch_hz: 156.4,
@@ -406,13 +406,13 @@ export const swararekheApi = {
           {
             region_code: 'hubballi_dharwad',
             region_name: 'Uttara Karnataka / Dharwad-Belagavi',
-            morphed_kannada_script: 'ಎಲ್ಲಿಗ್ ಹೊಂಟಿರ್ರೀ?',
-            morphed_phonetic_roman: 'Yallig hontirre?',
+            morphed_kannada_script: 'ಎಲ್ಲಿಗ್ ಹೊಂಟೀರಿ?',
+            morphed_phonetic_roman: 'Yallig hontirri?',
             ipa_approximation: '[jəllɪɡ hoːŋt̪ɪrriː]',
-            syllable_stress_breakdown: 'yal-LIG hon-TIR-re',
+            syllable_stress_breakdown: 'yal-LIG hon-TIR-ri',
             word_by_word_diff: [
               { source_token: 'ellige', target_token_roman: 'yallig', target_token_script: 'ಎಲ್ಲಿಗ್', rule_applied: 'dative_vowel_drop', explanation: 'Apocope of terminal vowel' },
-              { source_token: 'hoguttiddiri', target_token_roman: 'hontirre', target_token_script: 'ಹೊಂಟಿರ್ರೀ', rule_applied: 'verb_suffix_re_honorific', explanation: 'Inchoative aspect with honorific ri' },
+              { source_token: 'hoguttiddiri', target_token_roman: 'hontirri', target_token_script: 'ಹೊಂಟೀರಿ', rule_applied: 'inchoative_hontirri', explanation: 'Inchoative aspect with honorific ri' },
             ],
             morphological_rules_triggered: ['verb_suffix_re_honorific_inflection'],
             cultural_nuance_note: "Hallmark Uttara Karnataka inchoative 'hontirri' with alveolar trill honorific 'ri'.",
@@ -727,7 +727,7 @@ export const FALLBACK_BRIDGE: LinguisticBridgeResponse = {
     },
     {
       concept: 'Where are you going?',
-      region_a_variant: { phonetic: 'yallig hontirre', script: 'ಎಲ್ಲಿಗ್ ಹೊಂಟಿರ್ರೀ', ipa: '[jəllɪɡ hoːŋt̪ɪrriː]', rule: 'verb_suffix_re_honorific' },
+      region_a_variant: { phonetic: 'Yallig hontirri', script: 'ಎಲ್ಲಿಗ್ ಹೊಂಟೀರಿ', ipa: '[jəllɪɡ hoːŋt̪ɪrriː]', rule: 'inchoative_hontirri' },
       region_b_variant: { phonetic: 'yallig hoglikattiri', script: 'ಎಲ್ಲಿಗ್ ಹೋಗ್ಲಿಕತ್ತೀರಿ', ipa: '[jəllɪɡ hoːɡlɪkət̪t̪iːri]', rule: 'aspectual_inchoative_katthiri' },
     },
     {

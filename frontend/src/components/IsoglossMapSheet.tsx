@@ -3,7 +3,6 @@ import {
   MapPin,
   Compass,
   Volume2,
-  GitBranch,
   Layers,
   Radio,
   Navigation,
@@ -364,16 +363,8 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
         <span>// GEOSPATIAL ISOGLOSS TELEMETRY &amp; SPATIAL IDW BLEND DECK</span>
       </div>
 
-      {/* Two-Column Hardware Layout: Responsive 12-Column Grid (7fr 5fr, gap: 28px) */}
-      <div
-        className="bay01-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '7fr 5fr',
-          gap: '28px',
-          alignItems: 'start',
-        }}
-      >
+      {/* Two-Column Hardware Layout: Equal 6fr 6fr Grid (1fr 1fr, gap: 32px) */}
+      <div className="bay01-grid">
         {/* Left Column: Recessed Dark Display Well with SVG Telemetry Map (padding: 24px) */}
         <div className="recessed-well" style={{ padding: '24px' }}>
           {/* Hardware Transceiver & Carrier Control Strip */}
@@ -435,18 +426,26 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
               marginBottom: '16px',
               display: 'flex',
               flexWrap: 'wrap',
-              gap: '8px',
+              gap: '6px',
               alignItems: 'center',
+              padding: '10px 14px',
+              backgroundColor: 'var(--dp-color-raised)',
+              border: '1px solid #b6bec2',
+              borderRadius: 'var(--dp-radius-key)',
             }}
           >
             <span
               className="meta-label"
               style={{
-                marginRight: '4px',
+                marginRight: '6px',
                 marginBottom: 0,
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--dp-color-label)',
+                whiteSpace: 'nowrap',
               }}
             >
-              Survey Pins:
+              SURVEY PINS:
             </span>
             {SURVEY_TOWNS.map((town) => {
               const isSelected =
@@ -471,11 +470,12 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                   }}
                   style={{
                     fontSize: '12px',
-                    padding: '6px 12px',
-                    height: '32px',
+                    padding: '5px 10px',
+                    height: '28px',
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  <MapPin size={12} color={isSelected ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)'} />
+                  <MapPin size={11} color={isSelected ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)'} />
                   <span>{town.name}</span>
                 </button>
               );
@@ -812,21 +812,22 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
             </div>
           ) : activeData ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* SUB-BLOCK 1: Coordinate & Zone Header + Large Interpolated Local Greeting */}
+              {/* UNIFIED CRT CARD: Location Telemetry, Local Greeting & Transition Morph */}
               <div
                 className="recessed-field-screen"
                 style={{
-                  padding: '20px',
+                  padding: '20px 22px',
                   borderLeft: '4px solid var(--dp-color-accent)',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '14px',
+                  gap: '12px',
                 }}
               >
+                {/* Header: Coordinates & Zone Classification */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Navigation size={16} color="var(--dp-color-accent)" />
-                    <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '13px', fontWeight: 600, letterSpacing: '0.04em' }}>
+                    <Navigation size={15} color="var(--dp-color-accent)" />
+                    <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.04em' }}>
                       LAT {activeData.latitude.toFixed(4)}°N, LNG {activeData.longitude.toFixed(4)}°E
                     </span>
                   </div>
@@ -836,7 +837,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                       fontSize: '11px',
                       backgroundColor: 'rgba(241, 91, 34, 0.15)',
                       color: 'var(--dp-color-accent)',
-                      padding: '4px 10px',
+                      padding: '3px 8px',
                       borderRadius: 'var(--dp-radius-key)',
                       border: '1px solid var(--dp-color-accent)',
                       fontWeight: 600,
@@ -847,47 +848,88 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                   </span>
                 </div>
 
-                {/* Local Greeting in large 24px script with 12px vertical spacing */}
-                <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  <span
-                    className="meta-label"
+                {/* Primary Morphed Phrasing & Greeting */}
+                <div style={{ paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                  <div
                     style={{
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '11px',
                       color: 'var(--dp-color-on-field-muted)',
-                      marginBottom: '8px',
+                      textTransform: 'uppercase',
+                      marginBottom: '6px',
                     }}
                   >
-                    INTERPOLATED LOCAL GREETING:
-                  </span>
+                    INTERPOLATED LOCAL PHRASING:
+                  </div>
                   <div
                     className="kannada-text"
                     style={{
                       fontSize: '24px',
                       fontWeight: 700,
                       color: 'var(--dp-color-accent)',
-                      lineHeight: 1.3,
-                      marginBottom: '6px',
+                      lineHeight: 1.25,
+                      marginBottom: '4px',
                     }}
                   >
-                    {activeData.interpolated_greeting_local}
+                    {activeData.interpolated_phrase_result.morphed_dominant_script || activeData.interpolated_greeting_local}
                   </div>
                   <div
                     style={{
                       fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '13px',
-                      color: 'var(--dp-color-on-field-muted)',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: 'var(--dp-color-on-field)',
                     }}
                   >
-                    [{activeData.interpolated_phrase_result.morphed_dominant_roman}]
+                    {activeData.interpolated_phrase_result.morphed_dominant_roman}
                   </div>
                 </div>
+
+                {/* Active Substrates Pills Row */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', paddingTop: '4px' }}>
+                  <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-on-field-muted)', textTransform: 'uppercase' }}>
+                    SUBSTRATES:
+                  </span>
+                  {activeData.active_border_substrates.map((sub, sIdx) => (
+                    <span
+                      key={sIdx}
+                      style={{
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                        color: 'var(--dp-color-on-field-muted)',
+                        border: '1px solid #333d42',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {sub}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Concise 2-line Transition Commentary */}
+                <p
+                  style={{
+                    fontSize: '13px',
+                    color: 'var(--dp-color-on-field-muted)',
+                    lineHeight: '1.45',
+                    margin: 0,
+                    paddingTop: '6px',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                >
+                  {activeData.interpolated_phrase_result.transition_notes}
+                </p>
               </div>
 
-              {/* SUB-BLOCK 2: IDW Regional Blend Shares (14px vertical separation, 8px-tall progress bar) */}
+              {/* CARD 2: IDW Regional Blend Shares (P = 2.0) */}
               <div
                 className="removable-module"
                 style={{
                   backgroundColor: 'var(--dp-color-raised)',
-                  padding: '20px',
+                  padding: '20px 22px',
                 }}
               >
                 <div
@@ -895,17 +937,17 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: '16px',
+                    marginBottom: '14px',
                     fontFamily: 'var(--dp-typography-mono)',
-                    fontSize: 'var(--dp-typography-label)',
-                    fontWeight: 600,
+                    fontSize: '11px',
+                    fontWeight: 700,
                     color: 'var(--dp-color-label)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
                   }}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Layers size={15} color="var(--dp-color-ink)" />
+                    <Layers size={14} color="var(--dp-color-ink)" />
                     <span>IDW REGIONAL BLEND SHARES (P = 2.0)</span>
                   </span>
                   {isScrubbing && (
@@ -915,43 +957,49 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                   )}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* 2-line row per region */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {activeData.blend_weights.map((blend) => {
                     const isDominant = blend.region_code === activeData.dominant_region_code;
                     return (
                       <div
                         key={blend.region_code}
                         style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '6px',
-                          padding: '8px 10px',
+                          marginBottom: '10px',
+                          padding: '6px 10px',
                           backgroundColor: isDominant ? '#ffffff' : 'transparent',
                           borderRadius: 'var(--dp-radius-key)',
-                          border: isDominant ? '1px solid #b6bec2' : 'none',
+                          border: isDominant ? '1px solid #b6bec2' : '1px solid transparent',
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
+                        {/* Line 1: Region Name (left) and 47.9% • 132 km (right, nowrap) */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            fontSize: '13px',
+                            marginBottom: '5px',
+                          }}
+                        >
                           <span style={{ fontWeight: isDominant ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span className={`led-indicator ${isDominant ? 'active' : ''}`} />
                             <span>{blend.region_name}</span>
                           </span>
-                          <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '13px' }}>
+                          <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '12px', whiteSpace: 'nowrap' }}>
                             <strong style={{ color: isDominant ? 'var(--dp-color-accent)' : 'inherit' }}>
                               {blend.blend_percentage.toFixed(1)}%
                             </strong>{' '}
-                            <span style={{ fontSize: '12px', color: 'var(--dp-color-label)' }}>
-                              [{blend.distance_km} km]
-                            </span>
+                            <span style={{ color: 'var(--dp-color-label)' }}>• {blend.distance_km} km</span>
                           </span>
                         </div>
 
-                        {/* Clean 8px-tall horizontal progress bar */}
+                        {/* Line 2: Crisp 6px progress bar */}
                         <div
                           style={{
-                            height: '8px',
-                            backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                            borderRadius: '4px',
+                            height: '6px',
+                            backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                            borderRadius: '3px',
                             overflow: 'hidden',
                           }}
                         >
@@ -960,7 +1008,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                               height: '100%',
                               width: `${blend.blend_percentage}%`,
                               backgroundColor: isDominant ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)',
-                              borderRadius: '4px',
+                              borderRadius: '3px',
                               transition: 'width 80ms ease',
                             }}
                           />
@@ -973,7 +1021,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                 {/* Substrates & Interpolated Pitch */}
                 <div
                   style={{
-                    marginTop: '16px',
+                    marginTop: '12px',
                     paddingTop: '12px',
                     borderTop: '1px solid #cbd0d2',
                     display: 'flex',
@@ -995,82 +1043,6 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                       [CARRIER ACTIVE]
                     </span>
                   )}
-                </div>
-              </div>
-
-              {/* SUB-BLOCK 3: Active Substrates (Pill Tags) & Transition Note */}
-              <div
-                className="removable-module"
-                style={{
-                  backgroundColor: '#ffffff',
-                  padding: '20px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <GitBranch size={16} color="var(--dp-color-accent)" />
-                  <span className="meta-label" style={{ marginBottom: 0 }}>
-                    ACTIVE CONTACT SUBSTRATES &amp; ISOGLOSS TRANSITION
-                  </span>
-                </div>
-
-                {/* Active Substrates as neat rounded pill tags */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {activeData.active_border_substrates.map((sub, sIdx) => (
-                    <span
-                      key={sIdx}
-                      style={{
-                        fontFamily: 'var(--dp-typography-mono)',
-                        fontSize: '12px',
-                        padding: '4px 10px',
-                        borderRadius: '12px',
-                        backgroundColor: 'var(--dp-color-raised)',
-                        color: 'var(--dp-color-ink)',
-                        border: '1px solid #b6bec2',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {sub}
-                    </span>
-                  ))}
-                </div>
-
-                <p
-                  style={{
-                    fontSize: '14px',
-                    color: 'var(--dp-color-ink)',
-                    lineHeight: '1.6',
-                    margin: 0,
-                  }}
-                >
-                  {activeData.interpolated_phrase_result.transition_notes}
-                </p>
-
-                <div
-                  style={{
-                    marginTop: '4px',
-                    paddingTop: '10px',
-                    borderTop: '1px solid #edf0f1',
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: '10px',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <span className="meta-label" style={{ marginBottom: 0 }}>
-                    DOMINANT DIALECT RENDERING:
-                  </span>
-                  <span
-                    className="kannada-text"
-                    style={{ fontSize: '18px', fontWeight: 700, color: 'var(--dp-color-ink)' }}
-                  >
-                    {activeData.interpolated_phrase_result.morphed_dominant_script}
-                  </span>
-                  <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '13px', color: 'var(--dp-color-label)' }}>
-                    [{activeData.interpolated_phrase_result.morphed_dominant_roman}]
-                  </span>
                 </div>
               </div>
             </div>
