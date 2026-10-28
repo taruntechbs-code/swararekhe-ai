@@ -36,18 +36,18 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         position: 'relative',
       }}
     >
-      {/* Top Header Opening: Model Designation & Brand Title vs Compact Control Assembly */}
+      {/* Top Header Opening: Clean 2-Column CSS Grid (1fr auto, gap: 32px, align-items: center) */}
       <div
         className="chassis-header-opening"
         style={{
-          display: 'flex',
-          flexWrap: 'wrap',
+          display: 'grid',
+          gridTemplateColumns: '1fr auto',
+          gap: '32px',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '20px',
+          paddingBottom: '24px',
         }}
       >
-        {/* Left: Engraved Model Designation & Brand Heading */}
+        {/* Left: Model Eyebrow Badge, Clean Bold Title, 1-Line Subtitle */}
         <div>
           <div
             style={{
@@ -55,27 +55,27 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
               fontSize: 'var(--dp-typography-label)',
               fontWeight: 600,
               color: 'var(--dp-color-label)',
-              letterSpacing: '1px',
+              letterSpacing: '0.06em',
               textTransform: 'uppercase',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              marginBottom: '4px',
+              marginBottom: '8px',
             }}
           >
             <span style={{ color: 'var(--dp-color-accent)' }}>●</span>
             <span>MODEL SR-05 // SPATIO-ACOUSTIC ISOGLOSS INSTRUMENT</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', flexWrap: 'wrap' }}>
             <h1
               style={{
-                fontSize: '38px',
+                fontSize: '42px',
                 fontWeight: 800,
                 letterSpacing: '-0.5px',
                 color: 'var(--dp-color-ink)',
                 margin: 0,
-                lineHeight: 1,
+                lineHeight: 1.15,
               }}
             >
               SWARAREKHE
@@ -83,7 +83,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
             <span
               className="kannada-text"
               style={{
-                fontSize: '26px',
+                fontSize: '28px',
                 fontWeight: 700,
                 color: 'var(--dp-color-label)',
               }}
@@ -96,9 +96,10 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
                 fontSize: 'var(--dp-typography-metadata)',
                 color: 'var(--dp-color-label)',
                 backgroundColor: 'var(--dp-color-well)',
-                padding: '2px 8px',
+                padding: '3px 10px',
                 borderRadius: 'var(--dp-radius-key)',
                 border: '1px solid #9aa3a8',
+                letterSpacing: '0.04em',
               }}
             >
               CHASSIS VER 2.5
@@ -110,14 +111,15 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
               fontFamily: 'var(--dp-typography-sans)',
               fontSize: '15px',
               color: 'var(--dp-color-label)',
-              marginTop: '4px',
+              marginTop: '8px',
+              lineHeight: 1.5,
             }}
           >
             High-Precision Linguistic Isogloss Interpolation &amp; Etymological Graph Bay
           </div>
         </div>
 
-        {/* Right: Compact Hardware Control Assembly (Vents + Rotary Dial + Sync Key) */}
+        {/* Right: Compact Hardware Control Assembly with 16px gap */}
         <div
           className="chassis-header-control-column"
           style={{
@@ -170,100 +172,166 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Recessed Dark Facts Display Screen (#20272b) */}
+      {/* Recessed Telemetry Strip: Spacious 5-Column CSS Grid (#20272b) */}
       <div
-        className="recessed-field-screen"
+        className="recessed-field-screen chassis-telemetry-grid"
         style={{
-          marginTop: '18px',
-          padding: '12px 18px',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '20px',
+          padding: '16px 24px',
+          margin: '20px 0',
         }}
       >
-        <div
-          style={{
-            fontFamily: 'var(--dp-typography-mono)',
-            fontSize: 'var(--dp-typography-label)',
-            color: 'var(--dp-color-accent)',
-            letterSpacing: '1px',
-            textTransform: 'uppercase',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-        >
-          <span className="led-indicator active" />
-          <span>LIVE TELEMETRY READOUT</span>
+        <div>
+          <span
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'var(--dp-color-on-field-muted)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              display: 'block',
+              marginBottom: '6px',
+            }}
+          >
+            REGIONS
+          </span>
+          <div
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '22px',
+              fontWeight: 700,
+              color: 'var(--dp-color-on-field)',
+              lineHeight: 1,
+            }}
+          >
+            {String(stats.total_regions).padStart(2, '0')}
+          </div>
         </div>
 
-        <div
-          className="chassis-facts-grid"
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: '18px',
-            fontFamily: 'var(--dp-typography-mono)',
-            fontSize: 'var(--dp-typography-metadata)',
-            color: 'var(--dp-color-on-field-muted)',
-          }}
-        >
-          <div>
-            <span>REGIONS: </span>
-            <strong style={{ color: 'var(--dp-color-on-field)' }}>
-              {String(stats.total_regions).padStart(2, '0')}
-            </strong>
+        <div>
+          <span
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'var(--dp-color-on-field-muted)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              display: 'block',
+              marginBottom: '6px',
+            }}
+          >
+            FIELD VARIANTS
+          </span>
+          <div
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '22px',
+              fontWeight: 700,
+              color: 'var(--dp-color-on-field)',
+              lineHeight: 1,
+            }}
+          >
+            {String(stats.total_dialect_variants).padStart(2, '0')}
           </div>
-          <div>
-            <span>FIELD VARIANTS: </span>
-            <strong style={{ color: 'var(--dp-color-on-field)' }}>
-              {String(stats.total_dialect_variants).padStart(2, '0')}
-            </strong>
+        </div>
+
+        <div>
+          <span
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'var(--dp-color-on-field-muted)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              display: 'block',
+              marginBottom: '6px',
+            }}
+          >
+            GRAPH NODES
+          </span>
+          <div
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '22px',
+              fontWeight: 700,
+              color: 'var(--dp-color-on-field)',
+              lineHeight: 1,
+            }}
+          >
+            {String(stats.graph_nodes).padStart(3, '0')}
           </div>
-          <div>
-            <span>GRAPH NODES: </span>
-            <strong style={{ color: 'var(--dp-color-on-field)' }}>
-              {String(stats.graph_nodes).padStart(3, '0')}
-            </strong>
+        </div>
+
+        <div>
+          <span
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'var(--dp-color-on-field-muted)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              display: 'block',
+              marginBottom: '6px',
+            }}
+          >
+            ETYMOLOGY EDGES
+          </span>
+          <div
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '22px',
+              fontWeight: 700,
+              color: 'var(--dp-color-on-field)',
+              lineHeight: 1,
+            }}
+          >
+            {String(stats.graph_edges).padStart(3, '0')}
           </div>
-          <div>
-            <span>EDGES: </span>
-            <strong style={{ color: 'var(--dp-color-on-field)' }}>
-              {String(stats.graph_edges).padStart(3, '0')}
-            </strong>
-          </div>
-          <div>
-            <span>DSP PROFILES: </span>
-            <strong style={{ color: 'var(--dp-color-on-field)' }}>
-              {String(stats.acoustic_profiles_ready).padStart(2, '0')}
-            </strong>
-          </div>
-          <div>
-            <span>ARCHIVE ENTRIES: </span>
-            <strong style={{ color: 'var(--dp-color-on-field)' }}>
-              {String(stats.community_submissions_total || 5).padStart(2, '0')}
-            </strong>
-          </div>
-          <div>
-            <span>LIVING INJECTIONS: </span>
-            <strong style={{ color: 'var(--dp-color-accent)' }}>
-              {String(stats.approved_living_entries || 3).padStart(2, '0')}
-            </strong>
+        </div>
+
+        <div>
+          <span
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'var(--dp-color-accent)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              display: 'block',
+              marginBottom: '6px',
+            }}
+          >
+            DSP PROFILES
+          </span>
+          <div
+            style={{
+              fontFamily: 'var(--dp-typography-mono)',
+              fontSize: '22px',
+              fontWeight: 700,
+              color: 'var(--dp-color-accent)',
+              lineHeight: 1,
+            }}
+          >
+            {String(stats.acoustic_profiles_ready).padStart(2, '0')}
           </div>
         </div>
       </div>
 
-      {/* Bank of Raised Hardware Navigation Keys */}
+      {/* Bank of Raised Hardware Navigation Keys with 12px gap & 12px 18px padding */}
       <nav
         className="chassis-nav-bank"
         aria-label="Instrument Navigation Bays"
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '8px',
+          gap: '12px',
           marginTop: '16px',
         }}
       >
@@ -273,6 +341,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => onTabChange('atlas')}
           style={{
             fontWeight: activeTab === 'atlas' ? 700 : 500,
+            padding: '12px 18px',
           }}
         >
           <span className={`led-indicator ${activeTab === 'atlas' ? 'active' : ''}`} />
@@ -286,6 +355,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => onTabChange('graph')}
           style={{
             fontWeight: activeTab === 'graph' ? 700 : 500,
+            padding: '12px 18px',
           }}
         >
           <span className={`led-indicator ${activeTab === 'graph' ? 'active' : ''}`} />
@@ -299,6 +369,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => onTabChange('acoustic')}
           style={{
             fontWeight: activeTab === 'acoustic' ? 700 : 500,
+            padding: '12px 18px',
           }}
         >
           <span className={`led-indicator ${activeTab === 'acoustic' ? 'active' : ''}`} />
@@ -312,6 +383,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => onTabChange('archive')}
           style={{
             fontWeight: activeTab === 'archive' ? 700 : 500,
+            padding: '12px 18px',
           }}
         >
           <span className={`led-indicator ${activeTab === 'archive' ? 'active' : ''}`} />
@@ -325,6 +397,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => onTabChange('all')}
           style={{
             fontWeight: activeTab === 'all' ? 700 : 500,
+            padding: '12px 18px',
             marginLeft: 'auto',
           }}
         >

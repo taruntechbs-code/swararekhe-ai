@@ -83,7 +83,10 @@ export const App: React.FC = () => {
         className="chassis-housing"
         style={{
           width: '100%',
-          maxWidth: '1640px',
+          maxWidth: '1440px',
+          margin: '32px auto',
+          padding: '32px 36px',
+          borderRadius: '16px',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -104,7 +107,7 @@ export const App: React.FC = () => {
         <main
           style={{
             flex: 1,
-            padding: '0 24px 28px 24px',
+            padding: '8px 0 24px 0',
             width: '100%',
           }}
         >

@@ -178,26 +178,26 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
         <span>// NEURO-SYMBOLIC PHONOLOGICAL TRANSDUCTION TRAY</span>
       </div>
 
-      {/* Input Console Well */}
-      <div className="recessed-well" style={{ padding: '20px' }}>
+      {/* Input Console Deck with Generous 24px Padding & 28px Margin Bottom */}
+      <div className="recessed-well" style={{ padding: '24px', marginBottom: '28px' }}>
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleExecuteMorph(inputText, sourceLang);
           }}
-          style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}
         >
-          {/* Controls Bar: Source Mode Keys + Region Filter + Rulebook Trigger */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)', textTransform: 'uppercase' }}>
+          {/* Controls Bar: Source Mode Keys + Region Filter + Rulebook Trigger with 16px gap */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <span className="meta-label" style={{ marginBottom: 0 }}>
                 SOURCE REGISTER:
               </span>
               <button
                 type="button"
                 className={`raised-key ${sourceLang === 'en' ? 'active' : ''}`}
                 onClick={() => setSourceLang('en')}
-                style={{ fontSize: '13px', padding: '4px 12px', height: '28px' }}
+                style={{ fontSize: '13px', padding: '6px 14px', height: '32px' }}
               >
                 <span className={`led-indicator ${sourceLang === 'en' ? 'active' : ''}`} />
                 <span>ENGLISH (EN)</span>
@@ -206,23 +206,24 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                 type="button"
                 className={`raised-key ${sourceLang === 'kn' ? 'active' : ''}`}
                 onClick={() => setSourceLang('kn')}
-                style={{ fontSize: '13px', padding: '4px 12px', height: '28px' }}
+                style={{ fontSize: '13px', padding: '6px 14px', height: '32px' }}
               >
                 <span className={`led-indicator ${sourceLang === 'kn' ? 'active' : ''}`} />
                 <span>ಕನ್ನಡ ಪ್ರಮಾಣ (KN)</span>
               </button>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Filter size={14} color="var(--dp-color-label)" />
-                <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)' }}>
+                <span className="meta-label" style={{ marginBottom: 0 }}>
                   SCOPE:
                 </span>
                 <select
                   value={targetRegionFilter}
                   onChange={(e) => setTargetRegionFilter(e.target.value)}
                   className="industrial-select"
+                  style={{ height: '32px', padding: '4px 10px' }}
                 >
                   <option value="all">COMPARE ALL 5 DIALECTS</option>
                   <option value="hubballi_dharwad">UTTARA KARNATAKA (DHARWAD)</option>
@@ -238,7 +239,7 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                 className="raised-key"
                 onClick={handleOpenRulebook}
                 title="Inspect the 5-Region Phonological Rulebook"
-                style={{ fontSize: '13px', padding: '4px 12px', height: '28px' }}
+                style={{ fontSize: '13px', padding: '6px 14px', height: '32px' }}
               >
                 <BookOpen size={14} color="var(--dp-color-ink)" />
                 <span>RULEBOOK</span>
@@ -246,8 +247,8 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
             </div>
           </div>
 
-          {/* Main Phrase Input Field with Rotary Dial Action Button */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {/* Main Phrase Input Field (Height: 52px, Font: 18px) beside Primary MORPH Button (gap: 16px) */}
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <input
               type="text"
               value={inputText}
@@ -260,8 +261,9 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
               className="industrial-input"
               style={{
                 flex: 1,
-                fontSize: '17px',
-                padding: '12px 16px',
+                height: '52px',
+                fontSize: '18px',
+                padding: '0 18px',
               }}
             />
 
@@ -279,14 +281,13 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
             </div>
           </div>
 
-          {/* Bank of Preset Prompt Keys */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+          {/* Bank of Preset Prompt Keys in Spacious Flex Row (gap: 10px, margin-top: 16px, padding: 8px 14px) */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginTop: '16px' }}>
             <span
+              className="meta-label"
               style={{
-                fontFamily: 'var(--dp-typography-mono)',
-                fontSize: '11px',
-                color: 'var(--dp-color-label)',
-                marginRight: '2px',
+                marginRight: '4px',
+                marginBottom: 0,
               }}
             >
               PRESET KEYS:
@@ -301,7 +302,7 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                   setSourceLang(keyItem.lang);
                   handleExecuteMorph(keyItem.text, keyItem.lang);
                 }}
-                style={{ fontSize: '12px', padding: '3px 8px', height: '26px' }}
+                style={{ fontSize: '13px', padding: '8px 14px', height: '34px' }}
                 title={`Load and morph: "${keyItem.text}"`}
               >
                 <span>{keyItem.label}</span>
@@ -315,16 +316,16 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
           <div
             className="recessed-field-screen"
             style={{
-              marginTop: '12px',
-              padding: '8px 14px',
+              marginTop: '16px',
+              padding: '10px 16px',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '10px',
               fontFamily: 'var(--dp-typography-mono)',
               fontSize: '12px',
             }}
           >
-            <CheckCircle2 size={14} color="var(--dp-color-accent)" />
+            <CheckCircle2 size={16} color="var(--dp-color-accent)" />
             <span>
               CANONICAL ANCHOR: <strong style={{ color: 'var(--dp-color-on-field)' }}>{morphData.matched_seed_concept}</strong>
             </span>
@@ -334,7 +335,7 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
         {audioFeedback && (
           <div
             style={{
-              marginTop: '10px',
+              marginTop: '12px',
               fontFamily: 'var(--dp-typography-mono)',
               fontSize: '12px',
               color: 'var(--dp-color-accent)',
@@ -349,8 +350,8 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
         )}
       </div>
 
-      {/* Recessed Tray Holding the 5 Removable-Looking Comparison Modules */}
-      <div className="recessed-well" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Recessed Tray Holding the 5 Regional Modules with 20px gap */}
+      <div className="recessed-well" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div
           style={{
             display: 'flex',
@@ -360,6 +361,7 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
             fontSize: '11px',
             color: 'var(--dp-color-label)',
             textTransform: 'uppercase',
+            letterSpacing: '0.06em',
             padding: '0 4px',
           }}
         >
@@ -380,172 +382,140 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
             <div
               key={result.region_code}
               className={`removable-module ${isSelected ? 'selected' : ''}`}
+              style={{
+                padding: '24px 28px',
+              }}
             >
-              {/* Module Header Bar: Inset Pressed Key / Region Identification & Actions */}
+              {/* Clean 3-Column Internal Grid: Col 1 (Identity), Col 2 (Output), Col 3 (Actions) */}
               <div
+                className="morph-card-grid"
                 style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
+                  display: 'grid',
+                  gridTemplateColumns: '1.2fr 2fr auto',
+                  gap: '24px',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '10px',
-                  borderBottom: '1px solid #cbd0d2',
-                  paddingBottom: '10px',
-                  marginBottom: '12px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                  {/* Inset pressed key button to focus region on map */}
+                {/* COL 1: Region Identity (Region Name 18px Bold, Kannada Tag, Substrate Tag with 8px Spacing) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <button
                     type="button"
                     onClick={() => onSelectRegion(result.region_code)}
                     className={`raised-key ${isSelected ? 'active' : ''}`}
-                    style={{ fontSize: '14px', padding: '3px 10px', height: '28px' }}
+                    style={{
+                      fontSize: '15px',
+                      padding: '8px 14px',
+                      justifyContent: 'flex-start',
+                      width: 'fit-content',
+                    }}
                     title="Focus region on telemetry map"
                   >
                     <span className={`led-indicator ${isSelected ? 'active' : ''}`} />
-                    <span style={{ fontWeight: 700 }}>{result.region_name}</span>
+                    <span style={{ fontWeight: 700, fontSize: '16px' }}>{result.region_name}</span>
                   </button>
 
-                  <span
-                    className="kannada-text"
-                    style={{
-                      fontFamily: 'var(--dp-typography-kannada)',
-                      fontSize: '15px',
-                      fontWeight: 700,
-                      color: 'var(--dp-color-label)',
-                      backgroundColor: 'var(--dp-color-well)',
-                      padding: '2px 8px',
-                      borderRadius: 'var(--dp-radius-key)',
-                      border: '1px solid #9aa3a8',
-                    }}
-                  >
-                    {badge.kannada}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span
+                      className="kannada-text"
+                      style={{
+                        fontFamily: 'var(--dp-typography-kannada)',
+                        fontSize: '15px',
+                        fontWeight: 700,
+                        color: 'var(--dp-color-label)',
+                        backgroundColor: 'var(--dp-color-well)',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--dp-radius-key)',
+                        border: '1px solid #9aa3a8',
+                      }}
+                    >
+                      {badge.kannada}
+                    </span>
 
-                  <span
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '11px',
-                      color: 'var(--dp-color-label)',
-                    }}
-                  >
-                    {result.engine_mode === 'deterministic_symbolic'
-                      ? 'SYMBOLIC TRANSDUCTION'
-                      : 'HYBRID LLM'}{' '}
-                    [{Math.round(result.confidence_score * 100)}%]
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {/* Cadence Playback Key */}
-                  <button
-                    type="button"
-                    className="raised-key"
-                    onClick={() => handlePlayCadence(result.region_code)}
-                    title={`Play synthetic audio cadence for ${result.region_name}`}
-                    style={{ fontSize: '13px', padding: '3px 10px', height: '28px' }}
-                  >
-                    <Volume2 size={14} color={isPlaying ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)'} />
-                    <span>{isPlaying ? 'PLAYING...' : 'CADENCE'}</span>
-                  </button>
-
-                  {/* Tactile +/- Disclosure Key */}
-                  <button
-                    type="button"
-                    className="raised-icon-key"
-                    onClick={() => handleToggleExpand(result.region_code)}
-                    title="Toggle morphological derivation chain"
-                    style={{ width: '28px', height: '28px', padding: '4px' }}
-                  >
-                    {isExpanded ? <Minus size={14} /> : <Plus size={14} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Core Output Readings (Kannada, Roman Phonetic, IPA, Stress) */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                  gap: '16px',
-                  alignItems: 'baseline',
-                }}
-              >
-                {/* 1. Large Kannada Script */}
-                <div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '11px',
-                      color: 'var(--dp-color-label)',
-                      textTransform: 'uppercase',
-                      marginBottom: '2px',
-                    }}
-                  >
-                    MORPhed KANNADA SCRIPT
+                    <span
+                      style={{
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '11px',
+                        color: 'var(--dp-color-label)',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      {result.engine_mode === 'deterministic_symbolic' ? 'SYMBOLIC' : 'HYBRID LLM'}{' '}
+                      [{Math.round(result.confidence_score * 100)}%]
+                    </span>
                   </div>
+                </div>
+
+                {/* COL 2: Primary Morphed Output (Large Kannada 28px, Roman 20px, IPA pill, Syllable Stress) */}
+                <div>
+                  {/* Large Kannada Script */}
                   <div
                     className="kannada-text"
                     style={{
-                      fontSize: '26px',
+                      fontSize: '28px',
                       fontWeight: 700,
                       color: 'var(--dp-color-ink)',
                       lineHeight: '1.25',
+                      marginBottom: '8px',
                     }}
                   >
                     {result.morphed_kannada_script}
                   </div>
-                </div>
 
-                {/* 2. Phonetic Roman & Syllable Stress */}
-                <div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '11px',
-                      color: 'var(--dp-color-label)',
-                      textTransform: 'uppercase',
-                      marginBottom: '2px',
-                    }}
-                  >
-                    PHONETIC ROMAN &amp; PROSODY
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--dp-typography-sans)',
-                      fontSize: '19px',
-                      fontWeight: 700,
-                      color: 'var(--dp-color-ink)',
-                    }}
-                  >
-                    {result.morphed_phonetic_roman}
+                  {/* Roman Phonetic Transcription beside [IPA] pill */}
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                    <span
+                      style={{
+                        fontFamily: 'var(--dp-typography-sans)',
+                        fontSize: '20px',
+                        fontWeight: 700,
+                        color: 'var(--dp-color-ink)',
+                      }}
+                    >
+                      {result.morphed_phonetic_roman}
+                    </span>
+
+                    <span
+                      style={{
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '13px',
+                        backgroundColor: 'var(--dp-color-field)',
+                        color: 'var(--dp-color-on-field)',
+                        padding: '3px 8px',
+                        borderRadius: 'var(--dp-radius-key)',
+                        border: '1px solid #111518',
+                      }}
+                    >
+                      {result.ipa_approximation}
+                    </span>
                   </div>
 
+                  {/* Clean row of syllable stress pills */}
                   <div
                     style={{
-                      marginTop: '4px',
+                      marginTop: '10px',
                       fontFamily: 'var(--dp-typography-mono)',
                       fontSize: '12px',
                       display: 'flex',
                       flexWrap: 'wrap',
-                      gap: '4px',
+                      gap: '6px',
                       alignItems: 'center',
                     }}
                   >
-                    <span style={{ color: 'var(--dp-color-label)' }}>STRESS:</span>
+                    <span className="meta-label" style={{ marginBottom: 0 }}>
+                      CADENCE STRESS:
+                    </span>
                     {result.syllable_stress_breakdown.split(/[\s-]+/).map((syl, sIdx) => {
                       const isStressed = syl === syl.toUpperCase() && syl.length > 1;
                       return (
                         <span
                           key={sIdx}
                           style={{
-                            padding: '1px 5px',
-                            borderRadius: '2px',
-                            backgroundColor: isStressed ? 'rgba(241, 91, 34, 0.15)' : 'transparent',
+                            padding: '2px 7px',
+                            borderRadius: '3px',
+                            backgroundColor: isStressed ? 'rgba(241, 91, 34, 0.15)' : 'rgba(0, 0, 0, 0.05)',
                             color: isStressed ? 'var(--dp-color-accent)' : 'inherit',
                             fontWeight: isStressed ? 700 : 400,
-                            border: isStressed ? '1px solid var(--dp-color-accent)' : 'none',
+                            border: isStressed ? '1px solid var(--dp-color-accent)' : '1px solid #cbd0d2',
                           }}
                         >
                           {syl}
@@ -555,121 +525,135 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                   </div>
                 </div>
 
-                {/* 3. IPA Pronunciation Readout */}
-                <div>
-                  <div
+                {/* COL 3: Interactive Controls (PLAY CADENCE & DERIVATION + Toggle with 10px gap) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    type="button"
+                    className="raised-key"
+                    onClick={() => handlePlayCadence(result.region_code)}
+                    title={`Play synthetic audio cadence for ${result.region_name}`}
+                    style={{ fontSize: '13px', padding: '8px 14px', height: '36px' }}
+                  >
+                    <Volume2 size={15} color={isPlaying ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)'} />
+                    <span>{isPlaying ? 'PLAYING...' : 'CADENCE'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="raised-key"
+                    onClick={() => handleToggleExpand(result.region_code)}
+                    title="Toggle morphological derivation chain"
                     style={{
+                      fontSize: '13px',
+                      padding: '8px 12px',
+                      height: '36px',
                       fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '11px',
-                      color: 'var(--dp-color-label)',
-                      textTransform: 'uppercase',
-                      marginBottom: '2px',
+                      fontWeight: 600,
                     }}
                   >
-                    IPA TRANSCRIPTION
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '14px',
-                      backgroundColor: 'var(--dp-color-field)',
-                      color: 'var(--dp-color-on-field)',
-                      padding: '4px 10px',
-                      borderRadius: 'var(--dp-radius-key)',
-                      display: 'inline-block',
-                      border: '1px solid #111518',
-                    }}
-                  >
-                    {result.ipa_approximation}
-                  </div>
+                    {isExpanded ? (
+                      <>
+                        <Minus size={14} />
+                        <span>HIDE</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={14} />
+                        <span>DERIVATION</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
 
-              {/* Cultural Context Field Note */}
-              <div
-                style={{
-                  marginTop: '10px',
-                  padding: '6px 12px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                  borderRadius: 'var(--dp-radius-key)',
-                  borderLeft: '3px solid var(--dp-color-label)',
-                  fontFamily: 'var(--dp-typography-sans)',
-                  fontSize: '13px',
-                  color: 'var(--dp-color-ink)',
-                }}
-              >
-                <strong>FIELD NOTE:</strong> {result.cultural_nuance_note}
-              </div>
-
-              {/* Expanded Derivation Chain */}
+              {/* PROGRESSIVE DISCLOSURE DRAWER: Field Note & Morpheme Transduction Chain (Separated by 1px Hairline with 16px Padding) */}
               {isExpanded && (
                 <div
                   style={{
-                    marginTop: '10px',
-                    padding: '12px 14px',
-                    backgroundColor: '#ffffff',
-                    borderRadius: 'var(--dp-radius-key)',
-                    border: '1px solid #b6bec2',
+                    marginTop: '16px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid #cbd0d2',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '8px',
+                    gap: '12px',
                   }}
                 >
-                  <span
+                  {/* Cultural Context Field Note */}
+                  <div
                     style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      color: 'var(--dp-color-label)',
-                      textTransform: 'uppercase',
+                      padding: '10px 14px',
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      borderRadius: 'var(--dp-radius-key)',
+                      borderLeft: '4px solid var(--dp-color-label)',
+                      fontFamily: 'var(--dp-typography-sans)',
+                      fontSize: '14px',
+                      color: 'var(--dp-color-ink)',
+                      lineHeight: 1.5,
                     }}
                   >
-                    MORPHEME TRANSDUCTION CHAIN:
-                  </span>
+                    <strong>FIELD NOTE:</strong> {result.cultural_nuance_note}
+                  </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {result.word_by_word_diff.map((diff, dIdx) => (
-                      <div
-                        key={dIdx}
-                        style={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '4px 8px',
-                          backgroundColor: 'var(--dp-color-raised)',
-                          borderRadius: 'var(--dp-radius-key)',
-                          fontSize: '13px',
-                          fontFamily: 'var(--dp-typography-mono)',
-                        }}
-                      >
-                        <span style={{ textDecoration: 'line-through', opacity: 0.6 }}>
-                          {diff.source_token}
-                        </span>
-                        <ArrowRight size={12} color="var(--dp-color-accent)" />
-                        <span style={{ fontWeight: 700, color: 'var(--dp-color-accent)' }}>
-                          {diff.target_token_roman}
-                        </span>
-                        <span className="kannada-text" style={{ fontWeight: 700 }}>
-                          ({diff.target_token_script})
-                        </span>
-                        <span
+                  {/* Morpheme Transduction Chain */}
+                  <div
+                    style={{
+                      padding: '14px 16px',
+                      backgroundColor: '#ffffff',
+                      borderRadius: 'var(--dp-radius-key)',
+                      border: '1px solid #b6bec2',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                    }}
+                  >
+                    <span className="meta-label">
+                      MORPHEME TRANSDUCTION CHAIN:
+                    </span>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {result.word_by_word_diff.map((diff, dIdx) => (
+                        <div
+                          key={dIdx}
                           style={{
-                            fontSize: '10px',
-                            backgroundColor: '#ffffff',
-                            padding: '1px 6px',
-                            borderRadius: '2px',
-                            border: '1px solid #b6bec2',
-                            color: 'var(--dp-color-label)',
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '6px 10px',
+                            backgroundColor: 'var(--dp-color-raised)',
+                            borderRadius: 'var(--dp-radius-key)',
+                            fontSize: '13px',
+                            fontFamily: 'var(--dp-typography-mono)',
                           }}
                         >
-                          [{diff.rule_applied}]
-                        </span>
-                        <span style={{ fontSize: '12px', fontStyle: 'italic', color: 'var(--dp-color-ink)' }}>
-                          — {diff.explanation}
-                        </span>
-                      </div>
-                    ))}
+                          <span style={{ textDecoration: 'line-through', opacity: 0.6 }}>
+                            {diff.source_token}
+                          </span>
+                          <ArrowRight size={12} color="var(--dp-color-accent)" />
+                          <span style={{ fontWeight: 700, color: 'var(--dp-color-accent)' }}>
+                            {diff.target_token_roman}
+                          </span>
+                          <span className="kannada-text" style={{ fontWeight: 700 }}>
+                            ({diff.target_token_script})
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              backgroundColor: '#ffffff',
+                              padding: '2px 8px',
+                              borderRadius: '2px',
+                              border: '1px solid #b6bec2',
+                              color: 'var(--dp-color-label)',
+                            }}
+                          >
+                            [{diff.rule_applied}]
+                          </span>
+                          <span style={{ fontSize: '13px', fontStyle: 'italic', color: 'var(--dp-color-ink)' }}>
+                            — {diff.explanation}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}

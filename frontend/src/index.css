@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   /* Industrial Hardware Chassis Tokens */
   --dp-color-chassis: #cbd0d2;
@@ -47,7 +49,7 @@ html, body {
   color: var(--dp-color-ink);
   font-family: var(--dp-typography-sans);
   font-size: var(--dp-typography-reading);
-  line-height: 1.45;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -69,6 +71,19 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--dp-color-ink);
 }
 
+/* Metadata Monospace Labels */
+.meta-label,
+.industrial-label {
+  font-family: var(--dp-typography-mono);
+  font-size: var(--dp-typography-label);
+  font-weight: 600;
+  color: var(--dp-color-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+
 /* Kannada Script Native Rendering */
 .kannada-text {
   font-family: var(--dp-typography-kannada);
@@ -83,7 +98,10 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--dp-color-chassis);
   background-image: linear-gradient(180deg, #d3d8db 0%, #cbd0d2 40%, #c4c9cc 100%);
   border: var(--dp-border-hairline) solid #a3abb0;
-  border-radius: 12px;
+  max-width: 1440px;
+  margin: 32px auto;
+  padding: 32px 36px;
+  border-radius: 16px;
   box-shadow: 
     inset 1px 1px 0 rgba(255, 255, 255, 0.7),
     inset -1px -1px 0 rgba(0, 0, 0, 0.2),
@@ -93,11 +111,76 @@ h1, h2, h3, h4, h5, h6 {
   overflow: hidden;
 }
 
+.chassis-bay-section {
+  margin-bottom: 40px;
+  padding: 28px 32px;
+}
+
 .chassis-seam {
   height: 0;
   border-top: 1px solid #b2b9bd;
   border-bottom: 1px solid #dee2e4;
+  margin: 28px 0;
+}
+
+/* 5-Column Recessed Telemetry Grid */
+.chassis-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  padding: 16px 24px;
   margin: 20px 0;
+}
+
+@media (max-width: 1024px) {
+  .chassis-telemetry-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .chassis-telemetry-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Bay 01A 12-Column Responsive Layout */
+.bay01-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .bay01-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* Bay 01B 3-Column Dialect Card Layout */
+.morph-card-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr auto;
+  gap: 24px;
+  align-items: center;
+}
+
+@media (max-width: 920px) {
+  .morph-card-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    align-items: flex-start;
+  }
+}
+
+/* Map Kannada Label Pill Backdrop */
+.map-label-backdrop {
+  background-color: rgba(24, 30, 34, 0.85);
+  padding: 4px 8px;
+  border-radius: var(--dp-radius-key);
+  border: 1px solid #3a444a;
 }
 
 .chassis-vent-group {
