@@ -18,10 +18,16 @@ import {
   swararekheApi,
   FALLBACK_SUBMISSIONS,
 } from '../api/swararekheClient';
+import { hardwareSoundEngine } from '../utils/hardwareSoundEngine';
 
 interface LivingArchiveBayProps {
   onContributeSuccess?: () => void;
 }
+
+const truncateText = (text: string, maxLen: number): string => {
+  if (!text) return '';
+  return text.length > maxLen ? text.slice(0, maxLen) + '...' : text;
+};
 
 const PRESET_LOCATIONS = [
   { name: 'Belagavi', lat: 15.8497, lng: 74.4977, region: 'hubballi_dharwad' },
@@ -112,6 +118,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
   });
   const [presetIndex, setPresetIndex] = useState(0);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+  const [isFlashingInjection, setIsFlashingInjection] = useState(false);
 
   // Load submissions on mount
   useEffect(() => {
@@ -178,6 +185,12 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
     try {
       const res = await swararekheApi.contributeSubmission(payload);
       setTriageResult(res);
+
+      if (res.ai_triage_status === 'approved_injected' || res.graph_node_injected) {
+        hardwareSoundEngine.playRelayLatch();
+        setIsFlashingInjection(true);
+        setTimeout(() => setIsFlashingInjection(false), 600);
+      }
 
       if (res.ai_triage_status === 'approved_injected') {
         setFeedbackMsg('SUCCESS: ENTRY AUTO-APPROVED & INJECTED INTO LIVE GRAPH!');
@@ -468,6 +481,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                   padding: '0 14px',
                   fontSize: '18px',
                   fontWeight: 600,
+                  fontFamily: "'Noto Sans Kannada', var(--dp-typography-kannada), sans-serif",
                 }}
               />
             </div>
@@ -571,6 +585,9 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
             flexDirection: 'column',
             gap: '20px',
             minHeight: '520px',
+            border: isFlashingInjection ? '2px solid var(--dp-color-accent)' : '1px solid #2e373d',
+            boxShadow: isFlashingInjection ? '0 0 24px rgba(241, 91, 34, 0.45)' : undefined,
+            transition: 'border-color 150ms ease, box-shadow 150ms ease',
           }}
         >
           {/* Header Bar */}
@@ -687,20 +704,38 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                     gap: '8px',
                     fontFamily: 'var(--dp-typography-mono)',
                     fontSize: '11px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                    backgroundColor: isFlashingInjection ? 'rgba(241, 91, 34, 0.25)' : 'rgba(0, 0, 0, 0.45)',
                     padding: '6px 10px',
                     borderRadius: 'var(--dp-radius-key)',
-                    border: '1px solid #2e373d',
+                    border: isFlashingInjection ? '1px solid var(--dp-color-accent)' : '1px solid #2e373d',
+                    transition: 'all 150ms ease',
                   }}
                 >
                   <span
                     className={`led-indicator ${triageResult.graph_node_injected ? 'active' : ''}`}
                     style={{
-                      backgroundColor: triageResult.graph_node_injected ? '#10b981' : '#552210',
-                      boxShadow: triageResult.graph_node_injected ? '0 0 6px #10b981' : 'none',
+                      backgroundColor: isFlashingInjection
+                        ? 'var(--dp-color-accent)'
+                        : triageResult.graph_node_injected
+                        ? '#10b981'
+                        : '#552210',
+                      boxShadow: isFlashingInjection
+                        ? '0 0 10px var(--dp-color-accent)'
+                        : triageResult.graph_node_injected
+                        ? '0 0 6px #10b981'
+                        : 'none',
                     }}
                   />
-                  <span style={{ color: triageResult.graph_node_injected ? '#34d399' : 'var(--dp-color-on-field-muted)' }}>
+                  <span
+                    style={{
+                      color: isFlashingInjection
+                        ? 'var(--dp-color-accent)'
+                        : triageResult.graph_node_injected
+                        ? '#34d399'
+                        : 'var(--dp-color-on-field-muted)',
+                      fontWeight: isFlashingInjection ? 700 : 500,
+                    }}
+                  >
                     {triageResult.graph_node_injected ? 'GRAPH INJECTION: LIVE' : 'GRAPH INJECTION: OFF'}
                   </span>
                 </div>
@@ -972,11 +1007,13 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 fontFamily: 'var(--dp-typography-mono)',
                 fontSize: '11px',
                 fontWeight: 600,
-                color: 'var(--dp-color-label)',
+                color: isFlashingInjection ? 'var(--dp-color-accent)' : 'var(--dp-color-label)',
                 backgroundColor: 'var(--dp-color-raised)',
                 padding: '4px 10px',
                 borderRadius: 'var(--dp-radius-key)',
-                border: '1px solid #8e979d',
+                border: isFlashingInjection ? '1px solid var(--dp-color-accent)' : '1px solid #8e979d',
+                boxShadow: isFlashingInjection ? '0 0 8px rgba(241, 91, 34, 0.4)' : 'none',
+                transition: 'border-color 150ms ease, color 150ms ease, box-shadow 150ms ease',
               }}
             >
               RECORD COUNT: {submissions.length}
@@ -1003,172 +1040,217 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
 
         {/* Spacious Stack of Padded Ledger Cards (padding: 18px 24px, gap: 14px) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '560px', overflowY: 'auto', paddingRight: '4px' }}>
-          {submissions.map((sub, idx) => (
-            <div
-              key={sub.id || idx}
-              className="removable-module"
-              onClick={() => handleSelectSubmissionRow(sub)}
-              title="Click to load and inspect this submission in the AI Triage Terminal"
-              style={{
-                padding: '18px 24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                cursor: 'pointer',
-                transition: 'border-color 140ms ease, box-shadow 140ms ease',
-                backgroundColor: '#ffffff',
-              }}
-            >
-              {/* Meta Header Row */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      backgroundColor: 'var(--dp-color-field)',
-                      color: 'var(--dp-color-on-field)',
-                      padding: '2px 8px',
-                      borderRadius: 'var(--dp-radius-key)',
-                    }}
-                  >
-                    #{sub.id}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '11px',
-                      backgroundColor: 'var(--dp-color-raised)',
-                      color: 'var(--dp-color-ink)',
-                      padding: '2px 8px',
-                      borderRadius: 'var(--dp-radius-key)',
-                      border: '1px solid #b6bec2',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {sub.district_name}
-                  </span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--dp-color-ink)' }}>
-                    by {sub.contributor_name}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '10px',
-                      padding: '2px 7px',
-                      borderRadius: '2px',
-                      backgroundColor: '#edf0f1',
-                      border: '1px solid #cbd0d2',
-                      textTransform: 'uppercase',
-                      color: 'var(--dp-color-label)',
-                    }}
-                  >
-                    {sub.category}
-                  </span>
-                </div>
+          {submissions.map((sub, idx) => {
+            const isSpam =
+              sub.ai_triage_status === 'rejected_spam' ||
+              (sub.phonotactic_validity_score !== undefined && sub.phonotactic_validity_score < 0.4);
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span
-                    style={{
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      color:
-                        (sub.phonotactic_validity_score || 0) >= 0.85
-                          ? '#059669'
-                          : (sub.phonotactic_validity_score || 0) >= 0.65
-                          ? '#d97706'
-                          : '#dc2626',
-                    }}
-                  >
-                    SCORE: {sub.phonotactic_validity_score ? `${Math.round(sub.phonotactic_validity_score * 100)}%` : '95%'}
-                  </span>
+            const displayKannada = isSpam
+              ? truncateText(sub.local_phrase_kannada || '', 48)
+              : sub.local_phrase_kannada;
+            const displayRoman = isSpam
+              ? truncateText(sub.local_phrase_roman || '', 48)
+              : sub.local_phrase_roman;
+            const displayMeaning = isSpam
+              ? truncateText(sub.standard_meaning_english || '', 64)
+              : sub.standard_meaning_english;
 
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      padding: '3px 9px',
-                      borderRadius: '3px',
-                      backgroundColor:
-                        sub.ai_triage_status === 'approved_injected'
-                          ? '#d1fae5'
-                          : sub.ai_triage_status === 'pending_review'
-                          ? '#fef3c7'
-                          : '#fee2e2',
-                      color:
-                        sub.ai_triage_status === 'approved_injected'
-                          ? '#065f46'
-                          : sub.ai_triage_status === 'pending_review'
-                          ? '#92400e'
-                          : '#991b1b',
-                      border: `1px solid ${
-                        sub.ai_triage_status === 'approved_injected'
-                          ? '#6ee7b7'
-                          : sub.ai_triage_status === 'pending_review'
-                          ? '#fcd34d'
-                          : '#fca5a5'
-                      }`,
-                      textTransform: 'uppercase',
-                    }}
-                  >
+            return (
+              <div
+                key={sub.id || idx}
+                className="removable-module"
+                onClick={() => handleSelectSubmissionRow(sub)}
+                title="Click to load and inspect this submission in the AI Triage Terminal"
+                style={{
+                  padding: '18px 24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  transition: 'border-color 140ms ease, box-shadow 140ms ease',
+                  backgroundColor: '#ffffff',
+                  wordBreak: 'break-all',
+                  overflowWrap: 'break-word',
+                  maxWidth: '100%',
+                }}
+              >
+                {/* Meta Header Row */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <span
                       style={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '50%',
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        backgroundColor: 'var(--dp-color-field)',
+                        color: 'var(--dp-color-on-field)',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--dp-radius-key)',
+                      }}
+                    >
+                      #{sub.id}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '11px',
+                        backgroundColor: 'var(--dp-color-raised)',
+                        color: 'var(--dp-color-ink)',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--dp-radius-key)',
+                        border: '1px solid #b6bec2',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {sub.district_name}
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--dp-color-ink)' }}>
+                      by {sub.contributor_name}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '10px',
+                        padding: '2px 7px',
+                        borderRadius: '2px',
+                        backgroundColor: '#edf0f1',
+                        border: '1px solid #cbd0d2',
+                        textTransform: 'uppercase',
+                        color: 'var(--dp-color-label)',
+                      }}
+                    >
+                      {sub.category}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span
+                      style={{
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color:
+                          (sub.phonotactic_validity_score || 0) >= 0.85
+                            ? '#059669'
+                            : (sub.phonotactic_validity_score || 0) >= 0.65
+                            ? '#d97706'
+                            : '#dc2626',
+                      }}
+                    >
+                      SCORE: {sub.phonotactic_validity_score ? `${Math.round(sub.phonotactic_validity_score * 100)}%` : '95%'}
+                    </span>
+
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        padding: '3px 9px',
+                        borderRadius: '3px',
                         backgroundColor:
                           sub.ai_triage_status === 'approved_injected'
-                            ? '#10b981'
+                            ? '#d1fae5'
                             : sub.ai_triage_status === 'pending_review'
-                            ? '#f59e0b'
-                            : '#ef4444',
+                            ? '#fef3c7'
+                            : '#fee2e2',
+                        color:
+                          sub.ai_triage_status === 'approved_injected'
+                            ? '#065f46'
+                            : sub.ai_triage_status === 'pending_review'
+                            ? '#92400e'
+                            : '#991b1b',
+                        border: `1px solid ${
+                          sub.ai_triage_status === 'approved_injected'
+                            ? '#6ee7b7'
+                            : sub.ai_triage_status === 'pending_review'
+                            ? '#fcd34d'
+                            : '#fca5a5'
+                        }`,
+                        textTransform: 'uppercase',
                       }}
-                    />
-                    {sub.ai_triage_status === 'approved_injected'
-                      ? 'APPROVED'
-                      : sub.ai_triage_status === 'pending_review'
-                      ? 'PENDING'
-                      : 'REJECTED'}
+                    >
+                      <span
+                        style={{
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          backgroundColor:
+                            sub.ai_triage_status === 'approved_injected'
+                              ? '#10b981'
+                              : sub.ai_triage_status === 'pending_review'
+                              ? '#f59e0b'
+                              : '#ef4444',
+                        }}
+                      />
+                      {sub.ai_triage_status === 'approved_injected'
+                        ? 'APPROVED'
+                        : sub.ai_triage_status === 'pending_review'
+                        ? 'PENDING'
+                        : 'REJECTED'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expression Row */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: '14px',
+                    flexWrap: 'wrap',
+                    wordBreak: 'break-all',
+                    overflowWrap: 'break-word',
+                    maxWidth: '100%',
+                  }}
+                >
+                  <span
+                    className="kannada-text"
+                    style={{
+                      fontFamily: "'Noto Sans Kannada', var(--dp-typography-kannada), sans-serif",
+                      fontSize: '22px',
+                      fontWeight: 700,
+                      color: 'var(--dp-color-ink)',
+                      wordBreak: 'break-all',
+                      overflowWrap: 'break-word',
+                      maxWidth: '100%',
+                    }}
+                  >
+                    {displayKannada}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '14px',
+                      color: 'var(--dp-color-label)',
+                      fontWeight: 500,
+                      wordBreak: 'break-all',
+                      overflowWrap: 'break-word',
+                      maxWidth: '100%',
+                    }}
+                  >
+                    "{displayRoman}"
                   </span>
                 </div>
-              </div>
 
-              {/* Expression Row */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', flexWrap: 'wrap' }}>
-                <span
-                  className="kannada-text"
+                {/* Meaning Row */}
+                <div
                   style={{
-                    fontSize: '22px',
-                    fontWeight: 700,
-                    color: 'var(--dp-color-ink)',
-                  }}
-                >
-                  {sub.local_phrase_kannada}
-                </span>
-                <span
-                  style={{
-                    fontFamily: 'var(--dp-typography-mono)',
                     fontSize: '14px',
-                    color: 'var(--dp-color-label)',
-                    fontWeight: 500,
+                    lineHeight: '1.5',
+                    color: 'var(--dp-color-ink)',
+                    wordBreak: 'break-all',
+                    overflowWrap: 'break-word',
+                    maxWidth: '100%',
                   }}
                 >
-                  "{sub.local_phrase_roman}"
-                </span>
+                  <strong>Meaning:</strong> {displayMeaning}
+                </div>
               </div>
-
-              {/* Meaning Row */}
-              <div style={{ fontSize: '14px', lineHeight: '1.5', color: 'var(--dp-color-ink)' }}>
-                <strong>Meaning:</strong> {sub.standard_meaning_english}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

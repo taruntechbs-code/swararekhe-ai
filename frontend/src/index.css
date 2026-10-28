@@ -86,7 +86,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Kannada Script Native Rendering */
 .kannada-text {
-  font-family: var(--dp-typography-kannada);
+  font-family: 'Noto Sans Kannada', var(--dp-typography-kannada), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.35;
 }
 
