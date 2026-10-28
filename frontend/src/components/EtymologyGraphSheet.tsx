@@ -61,6 +61,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
   const [isLoadingConstellation, setIsLoadingConstellation] = useState(false);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [hoveredEdge, setHoveredEdge] = useState<GraphEdge | null>(null);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
   // SVG Pan & Zoom state
   const [zoom, setZoom] = useState(1.0);
@@ -86,9 +87,9 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
-  // SVG dimensions
-  const SVG_WIDTH = 840;
-  const SVG_HEIGHT = 520;
+  // Generous SVG dimensions with wide radial margins
+  const SVG_WIDTH = 900;
+  const SVG_HEIGHT = 560;
   const CENTER_X = SVG_WIDTH / 2;
   const CENTER_Y = SVG_HEIGHT / 2;
 
@@ -158,8 +159,8 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
         n.node_type !== 'CULTURAL_MARKER'
     );
 
-    // Inner orbit: VARIANT nodes
-    const rVariant = 145;
+    // Inner orbit: VARIANT nodes (expanded radius for breathability)
+    const rVariant = 175;
     variants.forEach((v, idx) => {
       const angle = (idx / Math.max(1, variants.length)) * Math.PI * 2 - Math.PI / 2;
       positions[v.id] = {
@@ -177,7 +178,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
       'region:bengaluru_mysuru': Math.PI * 0.35, // SE
     };
 
-    const rRegion = 215;
+    const rRegion = 270;
     regions.forEach((r, idx) => {
       const angle = geoAngles[r.id] ?? (idx / Math.max(1, regions.length)) * Math.PI * 2 + Math.PI / 4;
       positions[r.id] = {
@@ -188,7 +189,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
 
     // Outer orbit: INFLUENCE_LANG & CULTURAL_MARKER
     const outerNodes = [...substrates, ...cultural, ...other];
-    const rOuter = 265;
+    const rOuter = 350;
     outerNodes.forEach((node, idx) => {
       const angle = (idx / Math.max(1, outerNodes.length)) * Math.PI * 2 + Math.PI / 6;
       positions[node.id] = {
@@ -261,7 +262,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
       {/* Bay Header */}
       <div className="chassis-bay-header">
         <span className="bay-indicator">
@@ -275,16 +276,16 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
       <div
         className="recessed-well"
         style={{
-          padding: '14px 18px',
+          padding: '18px 22px',
           display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
+          gap: '16px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Network size={20} color="var(--dp-color-accent)" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Network size={22} color="var(--dp-color-accent)" />
           <span
             style={{
               fontFamily: 'var(--dp-typography-mono)',
@@ -302,8 +303,9 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               fontSize: '12px',
               backgroundColor: 'var(--dp-color-field)',
               color: 'var(--dp-color-on-field)',
-              padding: '2px 8px',
+              padding: '4px 10px',
               borderRadius: 'var(--dp-radius-key)',
+              letterSpacing: '0.04em',
             }}
           >
             {topology.total_nodes} NODES // {topology.total_edges} EDGES
@@ -311,8 +313,8 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
         </div>
 
         {/* Centrality Hub Keys */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)', fontWeight: 600 }}>
             CENTRALITY HUBS:
           </span>
           {topology.influence_centrality_ranking.slice(0, 5).map((rank) => (
@@ -327,12 +329,12 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               title={`Trace ego constellation for ${rank.label} (Betweenness: ${rank.betweenness_centrality})`}
               style={{
                 fontSize: '12px',
-                padding: '3px 8px',
-                height: '26px',
+                padding: '4px 10px',
+                height: '28px',
               }}
             >
               <span>{rank.label}</span>
-              <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-accent)' }}>
+              <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-accent)', marginLeft: '4px' }}>
                 [{rank.degree}]
               </span>
             </button>
@@ -343,30 +345,41 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
       {/* =========================================================================
           PANEL 02A: Concept Constellation Display Well (Upper Working Band)
          ========================================================================= */}
-      <div className="recessed-well" style={{ padding: '20px' }}>
-        {/* Search Console & Quick Preset Concept Keys */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+      <div className="recessed-well" style={{ padding: '28px 32px' }}>
+        {/* Search Console & Quick Preset Concept Keys Toolbar */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            padding: '18px 22px',
+            marginBottom: '24px',
+            backgroundColor: 'var(--dp-color-raised)',
+            border: '1px solid #9aa3a8',
+            borderRadius: 'var(--dp-radius-key)',
+          }}
+        >
           <form
             onSubmit={(e) => {
               e.preventDefault();
               loadConstellation(searchQuery);
             }}
-            style={{ display: 'flex', gap: '10px', alignItems: 'center' }}
+            style={{ display: 'flex', gap: '12px', alignItems: 'center' }}
           >
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search root concept, English gloss, or dialect variant (e.g., 'good', 'bhaal', 'avva')..."
+              placeholder="Search root concept, English gloss, or dialect variant (e.g., 'good', 'bhaal', 'avva', 'rain')..."
               className="industrial-input"
-              style={{ flex: 1, fontSize: '16px', padding: '10px 14px' }}
+              style={{ flex: 1, fontSize: '16px', padding: '10px 16px', height: '46px' }}
             />
 
             <button
               type="submit"
               disabled={isLoadingConstellation}
               className="raised-key"
-              style={{ minWidth: '140px', height: '42px', fontWeight: 700 }}
+              style={{ minWidth: '150px', height: '46px', fontWeight: 700 }}
               title="Query NetworkX 2-hop ego-graph"
             >
               <Search size={16} color="var(--dp-color-accent)" />
@@ -375,13 +388,14 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
           </form>
 
           {/* Preset Concept Keys Bank */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', paddingTop: '4px' }}>
             <span
               style={{
                 fontFamily: 'var(--dp-typography-mono)',
                 fontSize: '11px',
                 color: 'var(--dp-color-label)',
-                marginRight: '2px',
+                marginRight: '4px',
+                fontWeight: 600,
               }}
             >
               EGO CENTERS:
@@ -395,7 +409,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   setSearchQuery(item.query);
                   loadConstellation(item.query);
                 }}
-                style={{ fontSize: '12px', padding: '3px 8px', height: '26px' }}
+                style={{ fontSize: '12px', padding: '4px 10px', height: '28px' }}
                 title={`Trace constellation for '${item.label}'`}
               >
                 <span>{item.label}</span>
@@ -404,15 +418,8 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
           </div>
         </div>
 
-        {/* Constellation Screen & Adjacent Stable Readout Grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(520px, 1.6fr) minmax(320px, 1fr)',
-            gap: 'var(--dp-spacing-column-gap)',
-            alignItems: 'stretch',
-          }}
-        >
+        {/* Constellation Screen & 3 Spacious Sub-Cards (bay02-grid: 7fr 5fr) */}
+        <div className="bay02-grid">
           {/* Recessed Dark Telemetry Display Screen */}
           <div
             className="recessed-field-screen"
@@ -420,7 +427,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               position: 'relative',
               overflow: 'hidden',
               minHeight: '480px',
-              height: '520px',
+              height: '560px',
               cursor: isPanning ? 'grabbing' : 'grab',
             }}
           >
@@ -443,10 +450,10 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
             <div
               style={{
                 position: 'absolute',
-                top: '12px',
-                right: '12px',
+                top: '14px',
+                right: '14px',
                 display: 'flex',
-                gap: '6px',
+                gap: '8px',
                 zIndex: 10,
               }}
             >
@@ -456,9 +463,9 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   className="raised-icon-key"
                   onClick={handleZoomIn}
                   aria-label="Zoom in on constellation graph"
-                  style={{ width: '30px', height: '30px', padding: '4px' }}
+                  style={{ width: '32px', height: '32px', padding: '6px' }}
                 >
-                  <ZoomIn size={14} />
+                  <ZoomIn size={15} />
                 </button>
                 <span className="tooltip-bubble">ZOOM IN (+)</span>
               </div>
@@ -469,9 +476,9 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   className="raised-icon-key"
                   onClick={handleZoomOut}
                   aria-label="Zoom out of constellation graph"
-                  style={{ width: '30px', height: '30px', padding: '4px' }}
+                  style={{ width: '32px', height: '32px', padding: '6px' }}
                 >
-                  <ZoomOut size={14} />
+                  <ZoomOut size={15} />
                 </button>
                 <span className="tooltip-bubble">ZOOM OUT (-)</span>
               </div>
@@ -482,9 +489,9 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   className="raised-icon-key"
                   onClick={handleResetView}
                   aria-label="Reset graph view"
-                  style={{ width: '30px', height: '30px', padding: '4px' }}
+                  style={{ width: '32px', height: '32px', padding: '6px' }}
                 >
-                  <RotateCcw size={14} />
+                  <RotateCcw size={15} />
                 </button>
                 <span className="tooltip-bubble">RESET VIEW</span>
               </div>
@@ -494,13 +501,13 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
             <div
               style={{
                 position: 'absolute',
-                bottom: '12px',
-                left: '12px',
+                bottom: '14px',
+                left: '14px',
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: '8px',
-                backgroundColor: 'rgba(24, 30, 34, 0.9)',
-                padding: '5px 10px',
+                gap: '12px',
+                backgroundColor: 'rgba(24, 30, 34, 0.92)',
+                padding: '6px 12px',
                 borderRadius: 'var(--dp-radius-key)',
                 border: '1px solid #323a3f',
                 fontSize: '11px',
@@ -508,19 +515,19 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 zIndex: 10,
               }}
             >
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--dp-color-accent)' }} />
                 CONCEPT
               </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#f2f4f4' }} />
                 VARIANT
               </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#f15b22' }} />
                 SUBSTRATE
               </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#38bdf8' }} />
                 CULTURAL
               </span>
@@ -550,21 +557,30 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               </defs>
 
               <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
-                {/* 1. Draw Edges */}
+                {/* 1. Draw Edges with Focus / Dimming */}
                 {constellation.edges.map((edge, idx) => {
                   const s = getNodePos(edge.source);
                   const t = getNodePos(edge.target);
-                  const isHovered =
-                    hoveredEdge?.source === edge.source && hoveredEdge?.target === edge.target;
+                  
+                  const isConnected =
+                    (hoveredNodeId && (edge.source === hoveredNodeId || edge.target === hoveredNodeId)) ||
+                    (selectedNode && (edge.source === selectedNode.id || edge.target === selectedNode.id)) ||
+                    (hoveredEdge && (edge.source === hoveredEdge.source && edge.target === hoveredEdge.target));
+                  const hasFocus = Boolean(hoveredNodeId || selectedNode || hoveredEdge);
+                  const edgeOpacity = hasFocus ? (isConnected ? 1.0 : 0.25) : 0.75;
+                  const strokeWidth = isConnected ? 2.5 : 1.4;
 
-                  let strokeColor = '#606c74';
-                  let markerEnd = 'url(#arrow-white)';
-                  if (edge.relation === 'BORROWED_FROM') {
-                    strokeColor = 'var(--dp-color-accent)';
-                    markerEnd = 'url(#arrow-orange)';
-                  } else if (edge.relation === 'CULTURAL_TIE' || edge.relation === 'COGNATE_WITH') {
-                    strokeColor = '#38bdf8';
-                    markerEnd = 'url(#arrow-cyan)';
+                  let strokeColor = isConnected ? 'var(--dp-color-accent)' : '#606c74';
+                  let markerEnd = isConnected ? 'url(#arrow-orange)' : 'url(#arrow-white)';
+
+                  if (!isConnected) {
+                    if (edge.relation === 'BORROWED_FROM') {
+                      strokeColor = 'var(--dp-color-accent)';
+                      markerEnd = 'url(#arrow-orange)';
+                    } else if (edge.relation === 'CULTURAL_TIE' || edge.relation === 'COGNATE_WITH') {
+                      strokeColor = '#38bdf8';
+                      markerEnd = 'url(#arrow-cyan)';
+                    }
                   }
 
                   const midX = (s.x + t.x) / 2;
@@ -573,9 +589,10 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   return (
                     <g
                       key={`edge-${idx}`}
+                      opacity={edgeOpacity}
                       onMouseEnter={() => setHoveredEdge(edge)}
                       onMouseLeave={() => setHoveredEdge(null)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: 'pointer', transition: 'opacity 140ms ease' }}
                     >
                       <line
                         x1={s.x}
@@ -583,18 +600,18 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         x2={t.x}
                         y2={t.y}
                         stroke={strokeColor}
-                        strokeWidth={isHovered ? 2.5 : 1.4}
+                        strokeWidth={strokeWidth}
                         strokeDasharray={edge.relation === 'BORROWED_FROM' ? '5,3' : undefined}
                         markerEnd={markerEnd}
                       />
-                      {(isHovered || edge.relation === 'BORROWED_FROM') && (
+                      {(isConnected || isConnected === false && edge.relation === 'BORROWED_FROM') && (
                         <g transform={`translate(${midX}, ${midY})`}>
                           <rect
                             x="-44"
                             y="-9"
                             width="88"
                             height="18"
-                            rx="2"
+                            rx="4"
                             fill="#181e22"
                             stroke={strokeColor}
                             strokeWidth="1"
@@ -615,10 +632,11 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   );
                 })}
 
-                {/* 2. Draw Nodes */}
+                {/* 2. Draw Nodes with Dark Pill Backdrops */}
                 {constellation.nodes.map((node) => {
                   const pos = getNodePos(node.id);
                   const isSelected = selectedNode?.id === node.id;
+                  const isHovered = hoveredNodeId === node.id;
 
                   if (node.node_type === 'CONCEPT') {
                     return (
@@ -626,25 +644,36 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         key={node.id}
                         transform={`translate(${pos.x}, ${pos.y})`}
                         onClick={() => setSelectedNode(node)}
+                        onMouseEnter={() => setHoveredNodeId(node.id)}
+                        onMouseLeave={() => setHoveredNodeId(null)}
                         onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                         style={{ cursor: 'pointer' }}
                       >
                         <circle
-                          r="42"
+                          r="44"
                           fill="#181e22"
-                          stroke="var(--dp-color-accent)"
+                          stroke={isSelected || isHovered ? 'var(--dp-color-accent)' : '#606c74'}
                           strokeWidth={isSelected ? 3.5 : 2.0}
                           strokeDasharray="4,2"
                         />
                         <circle
-                          r="36"
-                          fill="#283238"
-                          stroke="#48555e"
+                          r="38"
+                          fill="#22292e"
+                          stroke={isSelected ? 'var(--dp-color-accent)' : '#44515a'}
                           strokeWidth={1.5}
+                        />
+                        <rect
+                          x="-42"
+                          y="-24"
+                          width="84"
+                          height="48"
+                          rx="6"
+                          fill="#181e22"
+                          fillOpacity="0.88"
                         />
                         <text
                           textAnchor="middle"
-                          y="-5"
+                          y="-6"
                           fontFamily="var(--dp-typography-sans)"
                           fontSize="15"
                           fontWeight="700"
@@ -655,9 +684,9 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         {node.kannada_label && (
                           <text
                             textAnchor="middle"
-                            y="14"
+                            y="12"
                             className="kannada-text"
-                            fontSize="14"
+                            fontSize="13"
                             fontWeight="700"
                             fill="var(--dp-color-accent)"
                           >
@@ -666,8 +695,8 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         )}
                         <text
                           textAnchor="middle"
-                          y="26"
-                          fontSize="9"
+                          y="22"
+                          fontSize="8"
                           fontFamily="var(--dp-typography-mono)"
                           fill="#a3abb0"
                           letterSpacing="0.5px"
@@ -679,24 +708,26 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   }
 
                   if (node.node_type === 'VARIANT') {
-                    const boxW = Math.max(90, (node.label.length + (node.kannada_label?.length || 0)) * 6.2);
+                    const boxW = Math.max(104, (node.label.length + (node.kannada_label?.length || 0)) * 6.5 + 24);
                     return (
                       <g
                         key={node.id}
                         transform={`translate(${pos.x}, ${pos.y})`}
                         onClick={() => setSelectedNode(node)}
+                        onMouseEnter={() => setHoveredNodeId(node.id)}
+                        onMouseLeave={() => setHoveredNodeId(null)}
                         onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                         style={{ cursor: 'pointer' }}
                       >
                         <rect
                           x={-boxW / 2}
-                          y="-18"
+                          y="-19"
                           width={boxW}
-                          height="36"
-                          rx="4"
-                          fill="#252d32"
-                          stroke={isSelected ? 'var(--dp-color-accent)' : '#4a565e'}
-                          strokeWidth={isSelected ? 2.0 : 1.0}
+                          height="38"
+                          rx="6"
+                          fill="#1a2024"
+                          stroke={isSelected ? 'var(--dp-color-accent)' : isHovered ? '#f2f4f4' : '#4a565e'}
+                          strokeWidth={isSelected ? 2.2 : 1.2}
                         />
                         <text
                           textAnchor="middle"
@@ -711,7 +742,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         {node.kannada_label && (
                           <text
                             textAnchor="middle"
-                            y="13"
+                            y="14"
                             className="kannada-text"
                             fontSize="12"
                             fontWeight="600"
@@ -731,22 +762,24 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         key={node.id}
                         transform={`translate(${pos.x}, ${pos.y})`}
                         onClick={() => setSelectedNode(node)}
+                        onMouseEnter={() => setHoveredNodeId(node.id)}
+                        onMouseLeave={() => setHoveredNodeId(null)}
                         onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                         style={{ cursor: 'pointer' }}
                       >
                         <rect
-                          x="-50"
-                          y="-14"
-                          width="100"
-                          height="28"
-                          rx="3"
-                          fill="#181e22"
-                          stroke={isSelected ? '#ffffff' : '#5a6872'}
+                          x="-54"
+                          y="-16"
+                          width="108"
+                          height="32"
+                          rx="6"
+                          fill="#161b1e"
+                          stroke={isSelected ? '#ffffff' : isHovered ? 'var(--dp-color-accent)' : '#5a6872'}
                           strokeWidth={isSelected ? 2.0 : 1.0}
                         />
                         <text
                           textAnchor="middle"
-                          y="4"
+                          y="5"
                           fontFamily="var(--dp-typography-mono)"
                           fontSize="12"
                           fontWeight="700"
@@ -764,15 +797,17 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         key={node.id}
                         transform={`translate(${pos.x}, ${pos.y})`}
                         onClick={() => setSelectedNode(node)}
+                        onMouseEnter={() => setHoveredNodeId(node.id)}
+                        onMouseLeave={() => setHoveredNodeId(null)}
                         onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                         style={{ cursor: 'pointer' }}
                       >
                         <rect
-                          x="-48"
-                          y="-14"
-                          width="96"
-                          height="28"
-                          rx="3"
+                          x="-52"
+                          y="-16"
+                          width="104"
+                          height="32"
+                          rx="6"
                           fill="#2a1b15"
                           stroke="var(--dp-color-accent)"
                           strokeWidth={isSelected ? 2.0 : 1.2}
@@ -780,7 +815,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                         />
                         <text
                           textAnchor="middle"
-                          y="4"
+                          y="5"
                           fontFamily="var(--dp-typography-mono)"
                           fontSize="12"
                           fontWeight="700"
@@ -798,22 +833,24 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                       key={node.id}
                       transform={`translate(${pos.x}, ${pos.y})`}
                       onClick={() => setSelectedNode(node)}
+                      onMouseEnter={() => setHoveredNodeId(node.id)}
+                      onMouseLeave={() => setHoveredNodeId(null)}
                       onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                       style={{ cursor: 'pointer' }}
                     >
                       <rect
-                        x="-52"
-                        y="-14"
-                        width="104"
-                        height="28"
-                        rx="3"
+                        x="-56"
+                        y="-16"
+                        width="112"
+                        height="32"
+                        rx="6"
                         fill="#122530"
                         stroke="#38bdf8"
                         strokeWidth={isSelected ? 2.0 : 1.0}
                       />
                       <text
                         textAnchor="middle"
-                        y="4"
+                        y="5"
                         fontFamily="var(--dp-typography-sans)"
                         fontSize="12"
                         fontWeight="600"
@@ -828,61 +865,168 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
             </svg>
           </div>
 
-          {/* Adjacent Stable Field Readout Sheet */}
-          <div
-            className="recessed-field-screen"
-            style={{
-              padding: '18px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              overflowY: 'auto',
-              maxHeight: '520px',
-            }}
-          >
+          {/* Right Column: 3 Spacious Sub-Cards (gap: 20px, padding: 22px each) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Card 1: Node Inspector Card */}
             <div
+              className="recessed-field-screen"
               style={{
+                padding: '22px',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                paddingBottom: '8px',
+                flexDirection: 'column',
+                gap: '12px',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={16} color="var(--dp-color-accent)" />
-                <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '13px', fontWeight: 700, textTransform: 'uppercase' }}>
-                  ETYMOLOGICAL COMMENTARY
-                </span>
-              </div>
-              <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)' }}>
-                2-HOP EGO
-              </span>
-            </div>
-
-            {/* Travelogue Narrative */}
-            <div>
-              <p style={{ fontSize: '14px', lineHeight: '1.45', color: 'var(--dp-color-on-field-muted)' }}>
-                {constellation.etymological_narrative}
-              </p>
-            </div>
-
-            {/* Active Substrate Influence Tags */}
-            <div>
-              <span
+              <div
                 style={{
-                  fontFamily: 'var(--dp-typography-mono)',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: 'var(--dp-color-accent)',
-                  textTransform: 'uppercase',
-                  display: 'block',
-                  marginBottom: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  paddingBottom: '8px',
                 }}
               >
-                BORDER SUBSTRATE INFLUENCES:
-              </span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <span
+                  style={{
+                    fontFamily: 'var(--dp-typography-mono)',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    color: 'var(--dp-color-accent)',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  ACTIVE NODE TELEMETRY
+                </span>
+                {selectedNode && (
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      padding: '2px 8px',
+                      borderRadius: '3px',
+                      color: 'var(--dp-color-on-field-muted)',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {selectedNode.node_type}
+                  </span>
+                )}
+              </div>
+
+              {selectedNode ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--dp-color-on-field)' }}>
+                      {selectedNode.label}
+                    </span>
+                  </div>
+
+                  {selectedNode.kannada_label && (
+                    <div className="kannada-text" style={{ fontSize: '20px', fontWeight: 700, color: 'var(--dp-color-accent)' }}>
+                      {selectedNode.kannada_label}
+                    </div>
+                  )}
+
+                  {selectedNode.metadata.ipa && (
+                    <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '13px', color: '#38bdf8' }}>
+                      IPA: <code>{selectedNode.metadata.ipa}</code>
+                    </div>
+                  )}
+
+                  {selectedNode.metadata.rule && (
+                    <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-accent)' }}>
+                      RULE: [{selectedNode.metadata.rule}]
+                    </div>
+                  )}
+
+                  {selectedNode.metadata.era && (
+                    <div style={{ fontSize: '12px', color: 'var(--dp-color-on-field-muted)' }}>
+                      Era: {selectedNode.metadata.era}
+                    </div>
+                  )}
+
+                  {selectedNode.metadata.description && (
+                    <div style={{ fontSize: '13px', fontStyle: 'italic', color: 'var(--dp-color-on-field-muted)', lineHeight: '1.4' }}>
+                      {selectedNode.metadata.description}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ fontSize: '13px', color: 'var(--dp-color-on-field-muted)', fontStyle: 'italic' }}>
+                  Select or hover any node in the constellation diagram to inspect phonological derivation rules, historical substrates, and IPA notation.
+                </div>
+              )}
+            </div>
+
+            {/* Card 2: Etymological Commentary & Travelogue Narrative Card */}
+            <div
+              className="recessed-field-screen"
+              style={{
+                padding: '22px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  paddingBottom: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={16} color="var(--dp-color-accent)" />
+                  <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--dp-color-on-field)' }}>
+                    ETYMOLOGICAL COMMENTARY &amp; TRAJECTORY
+                  </span>
+                </div>
+                <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)' }}>
+                  2-HOP EGO
+                </span>
+              </div>
+
+              <div>
+                <p style={{ fontSize: '15px', lineHeight: '1.65', color: 'var(--dp-color-on-field-muted)' }}>
+                  {constellation.etymological_narrative}
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3: Border Substrates & Hubs Card */}
+            <div
+              className="recessed-field-screen"
+              style={{
+                padding: '22px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+              }}
+            >
+              <div
+                style={{
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  paddingBottom: '8px',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--dp-typography-mono)',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: 'var(--dp-color-accent)',
+                    textTransform: 'uppercase',
+                    display: 'block',
+                  }}
+                >
+                  BORDER SUBSTRATE INFLUENCES:
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {constellation.substrate_influences.map((sub, sIdx) => (
                   <span
                     key={sIdx}
@@ -890,7 +1034,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                       backgroundColor: 'rgba(241, 91, 34, 0.15)',
                       border: '1px solid var(--dp-color-accent)',
                       borderRadius: 'var(--dp-radius-key)',
-                      padding: '2px 8px',
+                      padding: '4px 10px',
                       fontSize: '12px',
                       color: 'var(--dp-color-accent)',
                       fontFamily: 'var(--dp-typography-mono)',
@@ -902,69 +1046,6 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 ))}
               </div>
             </div>
-
-            {/* Selected Node Metadata Inspector */}
-            {selectedNode && (
-              <div
-                style={{
-                  backgroundColor: '#181e22',
-                  border: '1px solid #323a3f',
-                  borderRadius: 'var(--dp-radius-key)',
-                  padding: '12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--dp-color-on-field)' }}>
-                    {selectedNode.label}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '10px',
-                      fontFamily: 'var(--dp-typography-mono)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      padding: '2px 6px',
-                      borderRadius: '2px',
-                      color: 'var(--dp-color-on-field-muted)',
-                    }}
-                  >
-                    {selectedNode.node_type}
-                  </span>
-                </div>
-
-                {selectedNode.kannada_label && (
-                  <div className="kannada-text" style={{ fontSize: '18px', fontWeight: 700, color: 'var(--dp-color-accent)' }}>
-                    {selectedNode.kannada_label}
-                  </div>
-                )}
-
-                {selectedNode.metadata.ipa && (
-                  <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '12px', color: '#38bdf8' }}>
-                    IPA: <code>{selectedNode.metadata.ipa}</code>
-                  </div>
-                )}
-
-                {selectedNode.metadata.rule && (
-                  <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-accent)' }}>
-                    RULE: [{selectedNode.metadata.rule}]
-                  </div>
-                )}
-
-                {selectedNode.metadata.era && (
-                  <div style={{ fontSize: '12px', color: 'var(--dp-color-on-field-muted)' }}>
-                    Era: {selectedNode.metadata.era}
-                  </div>
-                )}
-
-                {selectedNode.metadata.description && (
-                  <div style={{ fontSize: '12px', fontStyle: 'italic', color: 'var(--dp-color-on-field-muted)' }}>
-                    {selectedNode.metadata.description}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -972,26 +1053,28 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
       {/* =========================================================================
           PANEL 02B: Linguistic Bridge Comparator Deck (Lower Working Band)
          ========================================================================= */}
-      <div className="recessed-well" style={{ padding: '20px' }}>
-        {/* Comparator Header & Region Selectors */}
+      <div className="recessed-well" style={{ padding: '28px 32px' }}>
+        {/* Comparator Header & Region Selectors (4-Column Toolbar) */}
         <div
           style={{
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '14px',
-            borderBottom: '1px solid #9aa3a8',
-            paddingBottom: '14px',
-            marginBottom: '16px',
+            gap: '20px',
+            padding: '20px 24px',
+            backgroundColor: 'var(--dp-color-raised)',
+            border: '1px solid #9aa3a8',
+            borderRadius: 'var(--dp-radius-key)',
+            marginBottom: '24px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <GitBranch size={20} color="var(--dp-color-accent)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <GitBranch size={22} color="var(--dp-color-accent)" />
             <span
               style={{
                 fontFamily: 'var(--dp-typography-mono)',
-                fontSize: '13px',
+                fontSize: '14px',
                 fontWeight: 700,
                 color: 'var(--dp-color-ink)',
                 textTransform: 'uppercase',
@@ -1000,14 +1083,14 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               LINGUISTIC BRIDGE &amp; SUBSTRATE COMPARATOR
             </span>
             {isLoadingBridge && (
-              <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-accent)' }}>
+              <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-accent)', fontWeight: 600 }}>
                 [CALCULATING...]
               </span>
             )}
           </div>
 
           {/* Region Selector Keys & Swap Action */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <select
               value={sourceRegion}
               onChange={(e) => {
@@ -1015,6 +1098,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 loadBridge(e.target.value, targetRegion);
               }}
               className="industrial-select"
+              style={{ height: '42px', padding: '0 14px', fontSize: '14px' }}
             >
               {REGION_OPTIONS.map((reg) => (
                 <option key={`src-${reg.code}`} value={reg.code}>
@@ -1029,9 +1113,9 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 className="raised-icon-key"
                 onClick={handleSwapRegions}
                 aria-label="Swap source and target regions"
-                style={{ width: '32px', height: '32px', padding: '4px' }}
+                style={{ width: '38px', height: '38px', padding: '6px' }}
               >
-                <ArrowLeftRight size={14} />
+                <ArrowLeftRight size={16} />
               </button>
               <span className="tooltip-bubble">SWAP REGIONS</span>
             </div>
@@ -1043,6 +1127,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 loadBridge(sourceRegion, e.target.value);
               }}
               className="industrial-select"
+              style={{ height: '42px', padding: '0 14px', fontSize: '14px' }}
             >
               {REGION_OPTIONS.map((reg) => (
                 <option key={`tgt-${reg.code}`} value={reg.code}>
@@ -1057,21 +1142,21 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
         <div
           className="recessed-field-screen"
           style={{
-            padding: '16px 20px',
+            padding: '20px 24px',
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '16px',
-            marginBottom: '16px',
+            gap: '20px',
+            marginBottom: '24px',
           }}
         >
           {/* Similarity Index Metric */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div
               style={{
-                borderLeft: '3px solid var(--dp-color-accent)',
-                paddingLeft: '12px',
+                borderLeft: '4px solid var(--dp-color-accent)',
+                paddingLeft: '14px',
               }}
             >
               <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-on-field-muted)', textTransform: 'uppercase' }}>
@@ -1080,7 +1165,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               <div
                 style={{
                   fontFamily: 'var(--dp-typography-mono)',
-                  fontSize: '32px',
+                  fontSize: '36px',
                   fontWeight: 800,
                   color: 'var(--dp-color-accent)',
                   lineHeight: '1.1',
@@ -1094,14 +1179,14 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-on-field-muted)', textTransform: 'uppercase' }}>
                 SOCIOLINGUISTIC SUMMARY:
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--dp-color-on-field)', maxWidth: '720px', lineHeight: '1.35', marginTop: '2px' }}>
+              <p style={{ fontSize: '14px', color: 'var(--dp-color-on-field)', maxWidth: '720px', lineHeight: '1.6', marginTop: '4px' }}>
                 {bridgeData.bridge_summary}
               </p>
             </div>
           </div>
 
           {/* Substrates & Shortest Path */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '12px' }}>
               <span style={{ color: 'var(--dp-color-on-field-muted)' }}>SHARED SUBSTRATES: </span>
               <strong style={{ color: 'var(--dp-color-accent)' }}>
@@ -1110,106 +1195,113 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
             </div>
 
             {bridgeData.shortest_etymological_paths.length > 0 && (
-              <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: '#38bdf8' }}>
+              <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '12px', color: '#38bdf8' }}>
                 PATH: {bridgeData.shortest_etymological_paths[0].join(' ➔ ')}
               </div>
             )}
           </div>
         </div>
 
-        {/* Removable-Style Horizontal Modules: 14 Concepts Aligned */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* 2-Column Responsive Grid of Cognate Cards (bay02-bridge-grid) */}
+        <div>
           <div
             style={{
               fontFamily: 'var(--dp-typography-mono)',
-              fontSize: '11px',
+              fontSize: '12px',
+              fontWeight: 600,
               color: 'var(--dp-color-label)',
               textTransform: 'uppercase',
+              marginBottom: '14px',
               padding: '0 4px',
             }}
           >
             SIDE-BY-SIDE LEXICAL COGNATE SHIFT LEDGER ({bridgeData.phonetic_shift_chain.length} CONCEPTS MOUNTED)
           </div>
 
-          {bridgeData.phonetic_shift_chain.map((item, idx) => (
-            <div
-              key={idx}
-              className="removable-module"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(140px, 0.8fr) minmax(240px, 1.2fr) 30px minmax(240px, 1.2fr)',
-                gap: '12px',
-                alignItems: 'center',
-                padding: '10px 14px',
-              }}
-            >
-              {/* Concept Anchor */}
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--dp-color-ink)' }}>
-                  {item.concept}
-                </div>
-                <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)' }}>
-                  CANONICAL ROOT
-                </div>
-              </div>
-
-              {/* Source Region Variant */}
+          <div className="bay02-bridge-grid">
+            {bridgeData.phonetic_shift_chain.map((item, idx) => (
               <div
+                key={idx}
+                className="removable-module"
                 style={{
-                  backgroundColor: '#ffffff',
-                  padding: '6px 10px',
-                  borderRadius: 'var(--dp-radius-key)',
-                  borderLeft: '3px solid var(--dp-color-ink)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  padding: '18px 22px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                  <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--dp-color-ink)' }}>
-                    {item.region_a_variant.phonetic}
-                  </span>
-                  <span className="kannada-text" style={{ fontSize: '15px', fontWeight: 600 }}>
-                    ({item.region_a_variant.script})
-                  </span>
-                </div>
-                {item.region_a_variant.rule && (
-                  <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)' }}>
-                    [{item.region_a_variant.rule}]
+                {/* Concept Anchor */}
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', borderBottom: '1px solid #c2c9cc', paddingBottom: '6px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--dp-color-ink)' }}>
+                    {item.concept}
                   </div>
-                )}
-              </div>
-
-              {/* Transition Arrow */}
-              <div style={{ textAlign: 'center', color: 'var(--dp-color-accent)', fontWeight: 700 }}>
-                ➔
-              </div>
-
-              {/* Target Region Variant */}
-              <div
-                style={{
-                  backgroundColor: 'var(--dp-color-well)',
-                  padding: '6px 10px',
-                  borderRadius: 'var(--dp-radius-key)',
-                  borderLeft: '3px solid var(--dp-color-accent)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                  <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--dp-color-accent)' }}>
-                    {item.region_b_variant.phonetic}
-                  </span>
-                  <span className="kannada-text" style={{ fontSize: '15px', fontWeight: 600 }}>
-                    ({item.region_b_variant.script})
-                  </span>
-                </div>
-                {item.region_b_variant.rule && (
-                  <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)' }}>
-                    [{item.region_b_variant.rule}]
+                  <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)', fontWeight: 600 }}>
+                    CANONICAL ROOT
                   </div>
-                )}
+                </div>
+
+                {/* Source & Target Comparison Columns */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '10px', alignItems: 'center' }}>
+                  {/* Source Region Variant */}
+                  <div
+                    style={{
+                      backgroundColor: '#ffffff',
+                      padding: '8px 12px',
+                      borderRadius: 'var(--dp-radius-key)',
+                      borderLeft: '3px solid var(--dp-color-ink)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--dp-color-ink)' }}>
+                        {item.region_a_variant.phonetic}
+                      </span>
+                      <span className="kannada-text" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--dp-color-label)' }}>
+                        ({item.region_a_variant.script})
+                      </span>
+                    </div>
+                    {item.region_a_variant.rule && (
+                      <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)', marginTop: '4px' }}>
+                        [{item.region_a_variant.rule}]
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Transition Arrow */}
+                  <div style={{ textAlign: 'center', color: 'var(--dp-color-accent)', fontWeight: 800, fontSize: '16px' }}>
+                    ➔
+                  </div>
+
+                  {/* Target Region Variant */}
+                  <div
+                    style={{
+                      backgroundColor: 'var(--dp-color-well)',
+                      padding: '8px 12px',
+                      borderRadius: 'var(--dp-radius-key)',
+                      borderLeft: '3px solid var(--dp-color-accent)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--dp-color-accent)' }}>
+                        {item.region_b_variant.phonetic}
+                      </span>
+                      <span className="kannada-text" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--dp-color-ink)' }}>
+                        ({item.region_b_variant.script})
+                      </span>
+                    </div>
+                    {item.region_b_variant.rule && (
+                      <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-label)', marginTop: '4px' }}>
+                        [{item.region_b_variant.rule}]
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
 export default EtymologyGraphSheet;

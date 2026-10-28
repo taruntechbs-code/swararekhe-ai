@@ -534,3 +534,60 @@ h1, h2, h3, h4, h5, h6 {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================================
+   Bay Layout Grids (Bays 02, 03, 04)
+   ========================================================================= */
+
+.bay02-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 28px;
+  align-items: stretch;
+}
+
+@media (max-width: 960px) {
+  .bay02-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bay02-bridge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .bay02-bridge-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bay03-grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 28px;
+  align-items: stretch;
+}
+
+@media (max-width: 960px) {
+  .bay03-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bay04-grid {
+  display: grid;
+  grid-template-columns: 6fr 6fr;
+  gap: 28px;
+  margin-bottom: 32px;
+  align-items: stretch;
+}
+
+@media (max-width: 960px) {
+  .bay04-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

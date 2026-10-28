@@ -222,7 +222,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       {/* BAY 04 HEADER: Operational Banner */}
       <div
         style={{
@@ -230,13 +230,13 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
+          gap: '16px',
           borderBottom: 'var(--dp-border-hairline) solid #9aa3a8',
-          paddingBottom: '14px',
+          paddingBottom: '16px',
         }}
       >
         <div>
-          <div className="chassis-bay-header" style={{ marginBottom: '2px' }}>
+          <div className="chassis-bay-header" style={{ marginBottom: '4px' }}>
             <span className="bay-indicator">
               <span className="led-indicator active" />
               <span>BAY 04 // LIVING FIELD ARCHIVE &amp; CROWDSOURCE TRIAGE DECK</span>
@@ -255,48 +255,41 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
         </div>
 
         {/* Action button: Quick sample loader */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             type="button"
             className="raised-key"
             onClick={handleCyclePresetRecord}
             title="Load authentic curated dialect field sample into the form"
-            style={{ fontSize: '13px', height: '36px' }}
+            style={{ fontSize: '13px', height: '40px', padding: '0 16px', fontWeight: 600 }}
           >
-            <Sparkles size={15} color="var(--dp-color-accent)" />
+            <Sparkles size={16} color="var(--dp-color-accent)" />
             <span>LOAD SAMPLE FIELD RECORD</span>
           </button>
         </div>
       </div>
 
-      {/* UPPER SPLIT: Left Input Console & Right AI Triage Terminal */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: '24px',
-          alignItems: 'start',
-        }}
-      >
+      {/* UPPER SPLIT: Left Input Console & Right AI Triage Terminal (bay04-grid: 6fr 6fr, gap: 28px, margin-bottom: 32px) */}
+      <div className="bay04-grid">
         {/* =========================================================================
             LEFT PANEL: Structured Field Contribution Console
             ========================================================================= */}
-        <div className="recessed-well" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="recessed-well" style={{ padding: '26px 28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               borderBottom: '1px solid #9ba4a9',
-              paddingBottom: '8px',
+              paddingBottom: '12px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BookOpenCheck size={18} color="var(--dp-color-ink)" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <BookOpenCheck size={20} color="var(--dp-color-accent)" />
               <span
                 style={{
                   fontFamily: 'var(--dp-typography-mono)',
-                  fontSize: '12px',
+                  fontSize: '13px',
                   fontWeight: 700,
                   color: 'var(--dp-color-ink)',
                   letterSpacing: '0.5px',
@@ -311,27 +304,18 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 fontFamily: 'var(--dp-typography-mono)',
                 fontSize: '11px',
                 color: 'var(--dp-color-label)',
+                fontWeight: 600,
               }}
             >
               FORM SR-FC-01
             </span>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Contributor & District Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontFamily: 'var(--dp-typography-mono)',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: 'var(--dp-color-label)',
-                    marginBottom: '4px',
-                    textTransform: 'uppercase',
-                  }}
-                >
+                <label className="industrial-label" style={{ marginBottom: '8px' }}>
                   Contributor Name
                 </label>
                 <input
@@ -340,31 +324,13 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                   onChange={(e) => setContributorName(e.target.value)}
                   placeholder="e.g. Dr. Mallikarjun B."
                   required
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    fontFamily: 'var(--dp-typography-sans)',
-                    fontSize: '14px',
-                    borderRadius: 'var(--dp-radius-key)',
-                    border: '1px solid #8e979d',
-                    backgroundColor: '#ffffff',
-                    color: 'var(--dp-color-ink)',
-                  }}
+                  className="industrial-input"
+                  style={{ width: '100%', height: '46px', padding: '0 14px', fontSize: '14px' }}
                 />
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontFamily: 'var(--dp-typography-mono)',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: 'var(--dp-color-label)',
-                    marginBottom: '4px',
-                    textTransform: 'uppercase',
-                  }}
-                >
+                <label className="industrial-label" style={{ marginBottom: '8px' }}>
                   District / Taluk
                 </label>
                 <input
@@ -373,16 +339,8 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                   onChange={(e) => setDistrictName(e.target.value)}
                   placeholder="e.g. Belagavi"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    fontFamily: 'var(--dp-typography-sans)',
-                    fontSize: '14px',
-                    borderRadius: 'var(--dp-radius-key)',
-                    border: '1px solid #8e979d',
-                    backgroundColor: '#ffffff',
-                    color: 'var(--dp-color-ink)',
-                  }}
+                  className="industrial-input"
+                  style={{ width: '100%', height: '46px', padding: '0 14px', fontSize: '14px' }}
                 />
               </div>
             </div>
@@ -394,18 +352,10 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: '4px',
+                  marginBottom: '8px',
                 }}
               >
-                <label
-                  style={{
-                    fontFamily: 'var(--dp-typography-mono)',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: 'var(--dp-color-label)',
-                    textTransform: 'uppercase',
-                  }}
-                >
+                <label className="industrial-label" style={{ marginBottom: 0 }}>
                   Geographic Coordinates (Lat / Lng)
                 </label>
                 <span
@@ -419,7 +369,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
                 <input
                   type="number"
                   step="0.0001"
@@ -427,15 +377,8 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                   onChange={(e) => setLatitude(parseFloat(e.target.value) || 0)}
                   placeholder="Latitude (e.g. 15.8497)"
                   required
-                  style={{
-                    padding: '6px 10px',
-                    fontFamily: 'var(--dp-typography-mono)',
-                    fontSize: '13px',
-                    borderRadius: 'var(--dp-radius-key)',
-                    border: '1px solid #8e979d',
-                    backgroundColor: '#ffffff',
-                    color: 'var(--dp-color-ink)',
-                  }}
+                  className="industrial-input"
+                  style={{ height: '46px', padding: '0 14px', fontFamily: 'var(--dp-typography-mono)', fontSize: '13px' }}
                 />
                 <input
                   type="number"
@@ -444,26 +387,19 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                   onChange={(e) => setLongitude(parseFloat(e.target.value) || 0)}
                   placeholder="Longitude (e.g. 74.4977)"
                   required
-                  style={{
-                    padding: '6px 10px',
-                    fontFamily: 'var(--dp-typography-mono)',
-                    fontSize: '13px',
-                    borderRadius: 'var(--dp-radius-key)',
-                    border: '1px solid #8e979d',
-                    backgroundColor: '#ffffff',
-                    color: 'var(--dp-color-ink)',
-                  }}
+                  className="industrial-input"
+                  style={{ height: '46px', padding: '0 14px', fontFamily: 'var(--dp-typography-mono)', fontSize: '13px' }}
                 />
               </div>
 
               {/* Quick Preset Location Pills */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '4px' }}>
                 <span
                   style={{
                     fontFamily: 'var(--dp-typography-mono)',
-                    fontSize: '10px',
+                    fontSize: '11px',
                     color: 'var(--dp-color-label)',
-                    marginRight: '2px',
+                    fontWeight: 600,
                   }}
                 >
                   PRESETS:
@@ -473,15 +409,15 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                     key={loc.name}
                     type="button"
                     onClick={() => handleApplyPresetLocation(loc)}
+                    className="raised-key"
                     style={{
                       fontFamily: 'var(--dp-typography-mono)',
                       fontSize: '11px',
-                      padding: '2px 7px',
-                      backgroundColor: districtName === loc.name ? 'var(--dp-color-field)' : 'var(--dp-color-raised)',
-                      color: districtName === loc.name ? 'var(--dp-color-on-field)' : 'var(--dp-color-ink)',
-                      border: '1px solid #9aa3a8',
-                      borderRadius: 'var(--dp-radius-key)',
-                      cursor: 'pointer',
+                      padding: '4px 10px',
+                      height: '28px',
+                      backgroundColor: districtName === loc.name ? 'var(--dp-color-field)' : undefined,
+                      color: districtName === loc.name ? 'var(--dp-color-on-field)' : undefined,
+                      fontWeight: districtName === loc.name ? 700 : 500,
                     }}
                   >
                     {loc.name}
@@ -490,34 +426,20 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
               </div>
             </div>
 
-            {/* Category Select */}
+            {/* Semantic Category Select */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontFamily: 'var(--dp-typography-mono)',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: 'var(--dp-color-label)',
-                  marginBottom: '4px',
-                  textTransform: 'uppercase',
-                }}
-              >
+              <label className="industrial-label" style={{ marginBottom: '8px' }}>
                 Semantic Category
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                className="industrial-select"
                 style={{
                   width: '100%',
-                  padding: '8px 10px',
-                  fontFamily: 'var(--dp-typography-sans)',
+                  height: '46px',
+                  padding: '0 14px',
                   fontSize: '14px',
-                  borderRadius: 'var(--dp-radius-key)',
-                  border: '1px solid #8e979d',
-                  backgroundColor: '#ffffff',
-                  color: 'var(--dp-color-ink)',
-                  cursor: 'pointer',
                 }}
               >
                 <option value="greeting">Greeting / Salutation (ಅಭಿವಾದನ)</option>
@@ -531,17 +453,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
 
             {/* Kannada Phrase (Native Script) */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontFamily: 'var(--dp-typography-mono)',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: 'var(--dp-color-label)',
-                  marginBottom: '4px',
-                  textTransform: 'uppercase',
-                }}
-              >
+              <label className="industrial-label" style={{ marginBottom: '8px' }}>
                 Local Dialect Expression (Kannada Script)
               </label>
               <input
@@ -549,33 +461,20 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 value={phraseKannada}
                 onChange={(e) => setPhraseKannada(e.target.value)}
                 placeholder="ಉದಾ: ಚಲೋ ಐತ್ರಿ ಪಾ"
-                className="kannada-text"
+                className="industrial-input kannada-text"
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
-                  fontSize: '17px',
+                  height: '46px',
+                  padding: '0 14px',
+                  fontSize: '18px',
                   fontWeight: 600,
-                  borderRadius: 'var(--dp-radius-key)',
-                  border: '1px solid #8e979d',
-                  backgroundColor: '#ffffff',
-                  color: 'var(--dp-color-ink)',
                 }}
               />
             </div>
 
             {/* Roman Transliteration */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontFamily: 'var(--dp-typography-mono)',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: 'var(--dp-color-label)',
-                  marginBottom: '4px',
-                  textTransform: 'uppercase',
-                }}
-              >
+              <label className="industrial-label" style={{ marginBottom: '8px' }}>
                 Roman Phonetic Transliteration
               </label>
               <input
@@ -584,32 +483,20 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 onChange={(e) => setPhraseRoman(e.target.value)}
                 placeholder="e.g. Cholo aytri pa"
                 required
+                className="industrial-input"
                 style={{
                   width: '100%',
-                  padding: '8px 10px',
+                  height: '46px',
+                  padding: '0 14px',
                   fontFamily: 'var(--dp-typography-mono)',
                   fontSize: '14px',
-                  borderRadius: 'var(--dp-radius-key)',
-                  border: '1px solid #8e979d',
-                  backgroundColor: '#ffffff',
-                  color: 'var(--dp-color-ink)',
                 }}
               />
             </div>
 
             {/* English Standard Meaning */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontFamily: 'var(--dp-typography-mono)',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: 'var(--dp-color-label)',
-                  marginBottom: '4px',
-                  textTransform: 'uppercase',
-                }}
-              >
+              <label className="industrial-label" style={{ marginBottom: '8px' }}>
                 Standard English Translation / Meaning
               </label>
               <input
@@ -618,28 +505,25 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 onChange={(e) => setEnglishMeaning(e.target.value)}
                 placeholder="e.g. It is very fine brother"
                 required
+                className="industrial-input"
                 style={{
                   width: '100%',
-                  padding: '8px 10px',
-                  fontFamily: 'var(--dp-typography-sans)',
+                  height: '46px',
+                  padding: '0 14px',
                   fontSize: '14px',
-                  borderRadius: 'var(--dp-radius-key)',
-                  border: '1px solid #8e979d',
-                  backgroundColor: '#ffffff',
-                  color: 'var(--dp-color-ink)',
                 }}
               />
             </div>
 
             {/* Submission Action Key */}
-            <div style={{ marginTop: '6px' }}>
+            <div style={{ marginTop: '8px' }}>
               <button
                 type="submit"
                 className="raised-key"
                 disabled={isSubmitting}
                 style={{
                   width: '100%',
-                  height: '44px',
+                  height: '48px',
                   backgroundColor: 'var(--dp-color-field)',
                   color: 'var(--dp-color-on-field)',
                   border: '1px solid #111518',
@@ -659,15 +543,15 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
             <div
               style={{
                 fontFamily: 'var(--dp-typography-mono)',
-                fontSize: '11px',
-                padding: '8px 12px',
+                fontSize: '12px',
+                padding: '10px 14px',
                 backgroundColor: 'var(--dp-color-field)',
                 color: 'var(--dp-color-accent)',
                 borderRadius: 'var(--dp-radius-key)',
                 border: '1px solid #111518',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '10px',
               }}
             >
               <span className="led-indicator active" />
@@ -682,11 +566,11 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
         <div
           className="recessed-field-screen"
           style={{
-            padding: '20px 22px',
+            padding: '26px 28px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '18px',
-            minHeight: '480px',
+            gap: '20px',
+            minHeight: '520px',
           }}
         >
           {/* Header Bar */}
@@ -696,15 +580,15 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
               alignItems: 'center',
               justifyContent: 'space-between',
               borderBottom: '1px solid #2e373d',
-              paddingBottom: '10px',
+              paddingBottom: '12px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldCheck size={18} color="var(--dp-color-accent)" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <ShieldCheck size={20} color="var(--dp-color-accent)" />
               <span
                 style={{
                   fontFamily: 'var(--dp-typography-mono)',
-                  fontSize: '12px',
+                  fontSize: '13px',
                   fontWeight: 700,
                   color: 'var(--dp-color-accent)',
                   letterSpacing: '0.8px',
@@ -726,11 +610,11 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
           </div>
 
           {triageResult ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Triage Decision Banner */}
               <div
                 style={{
-                  padding: '14px 16px',
+                  padding: '16px 20px',
                   borderRadius: 'var(--dp-radius-key)',
                   backgroundColor:
                     triageResult.ai_triage_status === 'approved_injected'
@@ -748,17 +632,17 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: '12px',
+                  gap: '16px',
                   flexWrap: 'wrap',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   {triageResult.ai_triage_status === 'approved_injected' ? (
-                    <CheckCircle2 size={24} color="#10b981" />
+                    <CheckCircle2 size={26} color="#10b981" />
                   ) : triageResult.ai_triage_status === 'pending_review' ? (
-                    <AlertTriangle size={24} color="#f59e0b" />
+                    <AlertTriangle size={26} color="#f59e0b" />
                   ) : (
-                    <AlertTriangle size={24} color="#ef4444" />
+                    <AlertTriangle size={26} color="#ef4444" />
                   )}
                   <div>
                     <div
@@ -787,6 +671,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                         fontFamily: 'var(--dp-typography-mono)',
                         fontSize: '11px',
                         color: 'var(--dp-color-on-field-muted)',
+                        marginTop: '2px',
                       }}
                     >
                       SUBMISSION ID: #{triageResult.submission_id} &bull; DRAVIDIAN PHONOTACTIC VALIDATOR
@@ -799,11 +684,11 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
+                    gap: '8px',
                     fontFamily: 'var(--dp-typography-mono)',
                     fontSize: '11px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                    padding: '4px 8px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                    padding: '6px 10px',
                     borderRadius: 'var(--dp-radius-key)',
                     border: '1px solid #2e373d',
                   }}
@@ -825,7 +710,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
               <div
                 style={{
                   backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                  padding: '12px 14px',
+                  padding: '16px 18px',
                   borderRadius: 'var(--dp-radius-key)',
                   border: '1px solid #2e373d',
                 }}
@@ -835,7 +720,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: '6px',
+                    marginBottom: '8px',
                     fontFamily: 'var(--dp-typography-mono)',
                     fontSize: '11px',
                   }}
@@ -851,7 +736,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                           : triageResult.phonotactic_validity_score >= 0.65
                           ? '#fbbf24'
                           : '#f87171',
-                      fontSize: '14px',
+                      fontSize: '15px',
                     }}
                   >
                     {Math.round(triageResult.phonotactic_validity_score * 100)}% ({triageResult.phonotactic_validity_score.toFixed(2)})
@@ -862,7 +747,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 <div
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '10px',
                     backgroundColor: '#111518',
                     borderRadius: '4px',
                     overflow: 'hidden',
@@ -884,28 +769,31 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                   />
                 </div>
 
+                {/* Sub-metric breakdown bars (gap: 14px) */}
                 <div
                   style={{
                     display: 'flex',
+                    flexWrap: 'wrap',
                     justifyContent: 'space-between',
-                    marginTop: '6px',
+                    gap: '14px',
+                    marginTop: '10px',
                     fontFamily: 'var(--dp-typography-mono)',
-                    fontSize: '10px',
+                    fontSize: '11px',
                     color: 'var(--dp-color-on-field-muted)',
                   }}
                 >
-                  <span>Dravidian Vowel Harmony: 0.96</span>
-                  <span>Syllable Onset/Coda Validity: 0.94</span>
-                  <span>Morphological Boundary: 0.98</span>
+                  <span>Dravidian Vowel Harmony: <strong>0.96</strong></span>
+                  <span>Onset/Coda Validity: <strong>0.94</strong></span>
+                  <span>Morphological Boundary: <strong>0.98</strong></span>
                 </div>
               </div>
 
               {/* Geographic Region Assignment & Morphemes */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                 <div
                   style={{
                     backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                    padding: '10px 12px',
+                    padding: '14px 16px',
                     borderRadius: 'var(--dp-radius-key)',
                     border: '1px solid #2e373d',
                   }}
@@ -917,14 +805,14 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                       color: 'var(--dp-color-on-field-muted)',
                       textTransform: 'uppercase',
                       display: 'block',
-                      marginBottom: '4px',
+                      marginBottom: '6px',
                     }}
                   >
                     Nearest Dialect Heartland
                   </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <MapPin size={14} color="var(--dp-color-accent)" />
-                    <strong style={{ fontSize: '13px', color: 'var(--dp-color-on-field)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <MapPin size={16} color="var(--dp-color-accent)" />
+                    <strong style={{ fontSize: '14px', color: 'var(--dp-color-on-field)' }}>
                       {triageResult.nearest_region_code.toUpperCase().replace('_', ' / ')}
                     </strong>
                   </div>
@@ -933,7 +821,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 <div
                   style={{
                     backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                    padding: '10px 12px',
+                    padding: '14px 16px',
                     borderRadius: 'var(--dp-radius-key)',
                     border: '1px solid #2e373d',
                   }}
@@ -945,12 +833,12 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                       color: 'var(--dp-color-on-field-muted)',
                       textTransform: 'uppercase',
                       display: 'block',
-                      marginBottom: '4px',
+                      marginBottom: '6px',
                     }}
                   >
                     Detected Morphological Markers
                   </span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {triageResult.detected_morphological_markers && triageResult.detected_morphological_markers.length > 0 ? (
                       triageResult.detected_morphological_markers.map((marker, idx) => (
                         <span
@@ -960,8 +848,8 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                             fontSize: '10px',
                             backgroundColor: '#2e373d',
                             color: 'var(--dp-color-on-field)',
-                            padding: '2px 6px',
-                            borderRadius: '2px',
+                            padding: '3px 8px',
+                            borderRadius: '3px',
                             border: '1px solid #414b52',
                           }}
                         >
@@ -975,7 +863,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 </div>
               </div>
 
-              {/* Triage Explanatory Notes */}
+              {/* Triage Explanatory Notes (line-height: 1.6, padding: 16px) */}
               <div>
                 <span
                   style={{
@@ -984,7 +872,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                     color: 'var(--dp-color-on-field-muted)',
                     textTransform: 'uppercase',
                     display: 'block',
-                    marginBottom: '6px',
+                    marginBottom: '8px',
                   }}
                 >
                   Triage Review Notes &amp; Graph Bridge:
@@ -992,24 +880,24 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 <div
                   style={{
                     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    padding: '10px 14px',
+                    padding: '16px 18px',
                     borderRadius: 'var(--dp-radius-key)',
                     border: '1px solid #2e373d',
                     fontFamily: 'var(--dp-typography-mono)',
                     fontSize: '12px',
-                    lineHeight: '1.45',
+                    lineHeight: '1.6',
                     color: 'var(--dp-color-on-field-muted)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <ArrowRight size={13} color="var(--dp-color-accent)" style={{ marginTop: '2px', flexShrink: 0 }} />
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <ArrowRight size={14} color="var(--dp-color-accent)" style={{ marginTop: '3px', flexShrink: 0 }} />
                     <span>{triageResult.triage_notes}</span>
                   </div>
                   {triageResult.graph_node_injected && (
                     <div
                       style={{
-                        marginTop: '8px',
-                        paddingTop: '8px',
+                        marginTop: '12px',
+                        paddingTop: '10px',
                         borderTop: '1px dashed #3a454d',
                         display: 'flex',
                         alignItems: 'center',
@@ -1017,7 +905,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                         color: '#34d399',
                       }}
                     >
-                      <Database size={13} />
+                      <Database size={14} />
                       <span>
                         Dynamic Knowledge Graph injection confirmed: MultiDiGraph node added under{' '}
                         <code>variant:{phraseRoman.toLowerCase().replace(/[^a-z0-9]/g, '_')}:{triageResult.nearest_region_code}</code>
@@ -1036,10 +924,10 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--dp-color-on-field-muted)',
-                gap: '8px',
+                gap: '12px',
               }}
             >
-              <Database size={32} color="#414b52" />
+              <Database size={36} color="#414b52" />
               <p style={{ margin: 0, fontFamily: 'var(--dp-typography-mono)', fontSize: '13px' }}>
                 AI TRIAGE ENGINE IDLE // READY TO PROCESS FIELD RECORD
               </p>
@@ -1048,8 +936,8 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
         </div>
       </div>
 
-      {/* LOWER TRAY: Community Submissions Chronological Ledger */}
-      <div className="recessed-well" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {/* LOWER TRAY: Community Submissions Chronological Ledger Cards (Padded Ledger Cards) */}
+      <div className="recessed-well" style={{ padding: '26px 28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {/* Ledger Header Bar */}
         <div
           style={{
@@ -1057,17 +945,17 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
             flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '12px',
+            gap: '14px',
             borderBottom: '1px solid #9ba4a9',
-            paddingBottom: '10px',
+            paddingBottom: '14px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Database size={18} color="var(--dp-color-ink)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Database size={20} color="var(--dp-color-ink)" />
             <span
               style={{
                 fontFamily: 'var(--dp-typography-mono)',
-                fontSize: '12px',
+                fontSize: '13px',
                 fontWeight: 700,
                 color: 'var(--dp-color-ink)',
                 letterSpacing: '0.5px',
@@ -1083,9 +971,10 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
               style={{
                 fontFamily: 'var(--dp-typography-mono)',
                 fontSize: '11px',
+                fontWeight: 600,
                 color: 'var(--dp-color-label)',
                 backgroundColor: 'var(--dp-color-raised)',
-                padding: '2px 8px',
+                padding: '4px 10px',
                 borderRadius: 'var(--dp-radius-key)',
                 border: '1px solid #8e979d',
               }}
@@ -1100,10 +989,10 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
               disabled={isLoadingSubmissions}
               title="Refresh submissions ledger from server"
               aria-label="Refresh submissions ledger"
-              style={{ width: '30px', height: '30px', padding: '4px' }}
+              style={{ width: '34px', height: '34px', padding: '6px' }}
             >
               <RefreshCw
-                size={14}
+                size={16}
                 style={{
                   animation: isLoadingSubmissions ? 'spin 1s linear infinite' : 'none',
                 }}
@@ -1112,126 +1001,79 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
           </div>
         </div>
 
-        {/* Scrollable Ledger Table */}
-        <div
-          style={{
-            overflowX: 'auto',
-            maxHeight: '360px',
-            borderRadius: 'var(--dp-radius-key)',
-            border: '1px solid #8e979d',
-            backgroundColor: '#ffffff',
-          }}
-        >
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              textAlign: 'left',
-              fontFamily: 'var(--dp-typography-sans)',
-              fontSize: '13px',
-            }}
-          >
-            <thead>
-              <tr
-                style={{
-                  backgroundColor: 'var(--dp-color-field)',
-                  color: 'var(--dp-color-on-field-muted)',
-                  fontFamily: 'var(--dp-typography-mono)',
-                  fontSize: '11px',
-                  textTransform: 'uppercase',
-                  borderBottom: '1px solid #111518',
-                }}
-              >
-                <th style={{ padding: '8px 12px' }}>ID</th>
-                <th style={{ padding: '8px 12px' }}>Contributor</th>
-                <th style={{ padding: '8px 12px' }}>District</th>
-                <th style={{ padding: '8px 12px' }}>Kannada Script</th>
-                <th style={{ padding: '8px 12px' }}>Roman Phonetic</th>
-                <th style={{ padding: '8px 12px' }}>English Meaning</th>
-                <th style={{ padding: '8px 12px' }}>Category</th>
-                <th style={{ padding: '8px 12px' }}>Score</th>
-                <th style={{ padding: '8px 12px' }}>Triage Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {submissions.map((sub, idx) => (
-                <tr
-                  key={sub.id || idx}
-                  onClick={() => handleSelectSubmissionRow(sub)}
-                  style={{
-                    borderBottom: '1px solid #e1e5e7',
-                    backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafb',
-                    cursor: 'pointer',
-                    transition: 'background-color 120ms ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#edf2f4';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#ffffff' : '#f8fafb';
-                  }}
-                >
-                  <td style={{ padding: '8px 12px', fontFamily: 'var(--dp-typography-mono)', fontSize: '11px' }}>
-                    #{sub.id}
-                  </td>
-                  <td style={{ padding: '8px 12px', fontWeight: 600 }}>{sub.contributor_name}</td>
-                  <td style={{ padding: '8px 12px' }}>
-                    <span
-                      style={{
-                        fontFamily: 'var(--dp-typography-mono)',
-                        fontSize: '11px',
-                        backgroundColor: 'var(--dp-color-raised)',
-                        padding: '1px 6px',
-                        borderRadius: '2px',
-                        border: '1px solid #b6bec2',
-                      }}
-                    >
-                      {sub.district_name}
-                    </span>
-                  </td>
-                  <td
-                    className="kannada-text"
+        {/* Spacious Stack of Padded Ledger Cards (padding: 18px 24px, gap: 14px) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '560px', overflowY: 'auto', paddingRight: '4px' }}>
+          {submissions.map((sub, idx) => (
+            <div
+              key={sub.id || idx}
+              className="removable-module"
+              onClick={() => handleSelectSubmissionRow(sub)}
+              title="Click to load and inspect this submission in the AI Triage Terminal"
+              style={{
+                padding: '18px 24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                cursor: 'pointer',
+                transition: 'border-color 140ms ease, box-shadow 140ms ease',
+                backgroundColor: '#ffffff',
+              }}
+            >
+              {/* Meta Header Row */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span
                     style={{
-                      padding: '8px 12px',
-                      fontSize: '15px',
-                      fontWeight: 600,
-                      color: 'var(--dp-color-ink)',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      backgroundColor: 'var(--dp-color-field)',
+                      color: 'var(--dp-color-on-field)',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--dp-radius-key)',
                     }}
                   >
-                    {sub.local_phrase_kannada}
-                  </td>
-                  <td
+                    #{sub.id}
+                  </span>
+                  <span
                     style={{
-                      padding: '8px 12px',
                       fontFamily: 'var(--dp-typography-mono)',
-                      fontSize: '12px',
+                      fontSize: '11px',
+                      backgroundColor: 'var(--dp-color-raised)',
+                      color: 'var(--dp-color-ink)',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--dp-radius-key)',
+                      border: '1px solid #b6bec2',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {sub.district_name}
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--dp-color-ink)' }}>
+                    by {sub.contributor_name}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '10px',
+                      padding: '2px 7px',
+                      borderRadius: '2px',
+                      backgroundColor: '#edf0f1',
+                      border: '1px solid #cbd0d2',
+                      textTransform: 'uppercase',
                       color: 'var(--dp-color-label)',
                     }}
                   >
-                    {sub.local_phrase_roman}
-                  </td>
-                  <td style={{ padding: '8px 12px', color: 'var(--dp-color-ink)' }}>{sub.standard_meaning_english}</td>
-                  <td style={{ padding: '8px 12px' }}>
-                    <span
-                      style={{
-                        fontFamily: 'var(--dp-typography-mono)',
-                        fontSize: '10px',
-                        padding: '2px 6px',
-                        borderRadius: '2px',
-                        backgroundColor: '#edf0f1',
-                        border: '1px solid #cbd0d2',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {sub.category}
-                    </span>
-                  </td>
-                  <td
+                    {sub.category}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span
                     style={{
-                      padding: '8px 12px',
                       fontFamily: 'var(--dp-typography-mono)',
                       fontSize: '11px',
-                      fontWeight: 600,
+                      fontWeight: 700,
                       color:
                         (sub.phonotactic_validity_score || 0) >= 0.85
                           ? '#059669'
@@ -1240,70 +1082,97 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                           : '#dc2626',
                     }}
                   >
-                    {sub.phonotactic_validity_score
-                      ? `${Math.round(sub.phonotactic_validity_score * 100)}%`
-                      : '95%'}
-                  </td>
-                  <td style={{ padding: '8px 12px' }}>
+                    SCORE: {sub.phonotactic_validity_score ? `${Math.round(sub.phonotactic_validity_score * 100)}%` : '95%'}
+                  </span>
+
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      padding: '3px 9px',
+                      borderRadius: '3px',
+                      backgroundColor:
+                        sub.ai_triage_status === 'approved_injected'
+                          ? '#d1fae5'
+                          : sub.ai_triage_status === 'pending_review'
+                          ? '#fef3c7'
+                          : '#fee2e2',
+                      color:
+                        sub.ai_triage_status === 'approved_injected'
+                          ? '#065f46'
+                          : sub.ai_triage_status === 'pending_review'
+                          ? '#92400e'
+                          : '#991b1b',
+                      border: `1px solid ${
+                        sub.ai_triage_status === 'approved_injected'
+                          ? '#6ee7b7'
+                          : sub.ai_triage_status === 'pending_review'
+                          ? '#fcd34d'
+                          : '#fca5a5'
+                      }`,
+                      textTransform: 'uppercase',
+                    }}
+                  >
                     <span
                       style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        fontFamily: 'var(--dp-typography-mono)',
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        padding: '2px 7px',
-                        borderRadius: '2px',
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
                         backgroundColor:
                           sub.ai_triage_status === 'approved_injected'
-                            ? '#d1fae5'
+                            ? '#10b981'
                             : sub.ai_triage_status === 'pending_review'
-                            ? '#fef3c7'
-                            : '#fee2e2',
-                        color:
-                          sub.ai_triage_status === 'approved_injected'
-                            ? '#065f46'
-                            : sub.ai_triage_status === 'pending_review'
-                            ? '#92400e'
-                            : '#991b1b',
-                        border: `1px solid ${
-                          sub.ai_triage_status === 'approved_injected'
-                            ? '#6ee7b7'
-                            : sub.ai_triage_status === 'pending_review'
-                            ? '#fcd34d'
-                            : '#fca5a5'
-                        }`,
-                        textTransform: 'uppercase',
+                            ? '#f59e0b'
+                            : '#ef4444',
                       }}
-                    >
-                      <span
-                        style={{
-                          width: '6px',
-                          height: '6px',
-                          borderRadius: '50%',
-                          backgroundColor:
-                            sub.ai_triage_status === 'approved_injected'
-                              ? '#10b981'
-                              : sub.ai_triage_status === 'pending_review'
-                              ? '#f59e0b'
-                              : '#ef4444',
-                        }}
-                      />
-                      {sub.ai_triage_status === 'approved_injected'
-                        ? 'APPROVED'
-                        : sub.ai_triage_status === 'pending_review'
-                        ? 'PENDING'
-                        : 'REJECTED'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    />
+                    {sub.ai_triage_status === 'approved_injected'
+                      ? 'APPROVED'
+                      : sub.ai_triage_status === 'pending_review'
+                      ? 'PENDING'
+                      : 'REJECTED'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Expression Row */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', flexWrap: 'wrap' }}>
+                <span
+                  className="kannada-text"
+                  style={{
+                    fontSize: '22px',
+                    fontWeight: 700,
+                    color: 'var(--dp-color-ink)',
+                  }}
+                >
+                  {sub.local_phrase_kannada}
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'var(--dp-typography-mono)',
+                    fontSize: '14px',
+                    color: 'var(--dp-color-label)',
+                    fontWeight: 500,
+                  }}
+                >
+                  "{sub.local_phrase_roman}"
+                </span>
+              </div>
+
+              {/* Meaning Row */}
+              <div style={{ fontSize: '14px', lineHeight: '1.5', color: 'var(--dp-color-ink)' }}>
+                <strong>Meaning:</strong> {sub.standard_meaning_english}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 };
+
 export default LivingArchiveBay;
