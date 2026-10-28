@@ -20,6 +20,7 @@ import {
   FALLBACK_BRIDGE,
   FALLBACK_TOPOLOGY,
 } from '../api/swararekheClient';
+import { hardwareSoundEngine } from '../utils/hardwareSoundEngine';
 
 interface EtymologyGraphSheetProps {
   initialQuery?: string;
@@ -85,6 +86,11 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
   // Topology Strip state
   const [topology, setTopology] = useState<TopologyResponse>(FALLBACK_TOPOLOGY);
 
+  // Interactive Impulse Pulse Tracer state
+  const [isPulsing, setIsPulsing] = useState<boolean>(false);
+  const [pulsePhase, setPulsePhase] = useState<'idle' | 'center' | 'variants' | 'substrates'>('idle');
+  const [pulseProgress, setPulseProgress] = useState<number>(0);
+
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Generous SVG dimensions with wide radial margins
@@ -92,6 +98,50 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
   const SVG_HEIGHT = 560;
   const CENTER_X = SVG_WIDTH / 2;
   const CENTER_Y = SVG_HEIGHT / 2;
+
+  const handleTriggerEtymologyPulse = () => {
+    if (isPulsing) return;
+    setIsPulsing(true);
+    setPulsePhase('center');
+    setPulseProgress(0);
+    hardwareSoundEngine.playKeyClick();
+    hardwareSoundEngine.playRelayLatch();
+
+    const startTime = performance.now();
+    const DURATION_MS = 2000;
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(1, elapsed / DURATION_MS);
+      setPulseProgress(progress);
+
+      if (progress < 0.28) {
+        setPulsePhase('center');
+      } else if (progress < 0.65) {
+        setPulsePhase('variants');
+      } else if (progress < 1.0) {
+        setPulsePhase('substrates');
+      } else {
+        setIsPulsing(false);
+        setPulsePhase('idle');
+        setPulseProgress(0);
+        return;
+      }
+
+      requestAnimationFrame(animate);
+    };
+
+    requestAnimationFrame(animate);
+
+    // Audio milestone triggers during physical wave propagation
+    setTimeout(() => {
+      hardwareSoundEngine.playRotaryDetent();
+    }, 550);
+
+    setTimeout(() => {
+      hardwareSoundEngine.playRelayLatch();
+    }, 1300);
+  };
 
   // Load initial graph data
   useEffect(() => {
@@ -205,9 +255,16 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
     return nodePositions[id] || { x: CENTER_X, y: CENTER_Y };
   };
 
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.2, 2.4));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.2, 0.6));
+  const handleZoomIn = () => {
+    hardwareSoundEngine.playKeyClick();
+    setZoom((prev) => Math.min(prev + 0.2, 2.4));
+  };
+  const handleZoomOut = () => {
+    hardwareSoundEngine.playKeyClick();
+    setZoom((prev) => Math.max(prev - 0.2, 0.6));
+  };
   const handleResetView = () => {
+    hardwareSoundEngine.playKeyClick();
     setZoom(1.0);
     setPan({ x: 0, y: 0 });
     layoutGraph(constellation.nodes, constellation.edges, constellation.matched_center_node_id);
@@ -254,6 +311,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
   };
 
   const handleSwapRegions = () => {
+    hardwareSoundEngine.playKeyClick();
     const nextSrc = targetRegion;
     const nextTgt = sourceRegion;
     setSourceRegion(nextSrc);
@@ -362,6 +420,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              hardwareSoundEngine.playKeyClick();
               loadConstellation(searchQuery);
             }}
             style={{ display: 'flex', gap: '12px', alignItems: 'center' }}
@@ -385,6 +444,23 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               <Search size={16} color="var(--dp-color-accent)" />
               <span>{isLoadingConstellation ? 'EXPLORING...' : 'TRACE ROOTS'}</span>
             </button>
+
+            <button
+              type="button"
+              onClick={handleTriggerEtymologyPulse}
+              disabled={isPulsing || isLoadingConstellation}
+              className={`raised-key ${isPulsing ? 'active' : ''}`}
+              style={{
+                minWidth: '205px',
+                height: '46px',
+                fontWeight: 700,
+                color: isPulsing ? 'var(--dp-color-accent)' : undefined,
+              }}
+              title="Propagate physical etymological impulse pulse from root concept through variant edges to substrate origins"
+            >
+              <Sparkles size={16} color="var(--dp-color-accent)" />
+              <span>{isPulsing ? `IMPULSE: ${pulsePhase.toUpperCase()}` : 'TRACE ETYMOLOGY PULSE'}</span>
+            </button>
           </form>
 
           {/* Preset Concept Keys Bank */}
@@ -406,6 +482,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 type="button"
                 className="raised-key"
                 onClick={() => {
+                  hardwareSoundEngine.playKeyClick();
                   setSearchQuery(item.query);
                   loadConstellation(item.query);
                 }}
@@ -494,6 +571,20 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   <RotateCcw size={15} />
                 </button>
                 <span className="tooltip-bubble">RESET VIEW</span>
+              </div>
+
+              <div className="tooltip-wrap">
+                <button
+                  type="button"
+                  className={`raised-icon-key ${isPulsing ? 'active' : ''}`}
+                  onClick={handleTriggerEtymologyPulse}
+                  disabled={isPulsing}
+                  aria-label="Fire etymology impulse signal pulse"
+                  style={{ width: '32px', height: '32px', padding: '6px' }}
+                >
+                  <Sparkles size={15} color="var(--dp-color-accent)" />
+                </button>
+                <span className="tooltip-bubble">TRACE IMPULSE PULSE</span>
               </div>
             </div>
 
@@ -632,6 +723,114 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                   );
                 })}
 
+                {/* 1.5 Interactive Etymology Impulse Wave & Traveling Energy Packets */}
+                {isPulsing && (
+                  <g pointerEvents="none">
+                    {/* Tier 0: Concept Core Expanding Shockwave */}
+                    {pulseProgress < 0.38 && (
+                      <g>
+                        <circle
+                          cx={getNodePos(constellation.matched_center_node_id || constellation.nodes[0]?.id).x}
+                          cy={getNodePos(constellation.matched_center_node_id || constellation.nodes[0]?.id).y}
+                          r={44 + pulseProgress * 95}
+                          fill="none"
+                          stroke="var(--dp-color-accent)"
+                          strokeWidth="3.2"
+                          opacity={Math.max(0, 1 - pulseProgress * 2.6)}
+                        />
+                        <circle
+                          cx={getNodePos(constellation.matched_center_node_id || constellation.nodes[0]?.id).x}
+                          cy={getNodePos(constellation.matched_center_node_id || constellation.nodes[0]?.id).y}
+                          r={32 + pulseProgress * 65}
+                          fill="none"
+                          stroke="#ffffff"
+                          strokeWidth="2.0"
+                          opacity={Math.max(0, 1 - pulseProgress * 2.8)}
+                        />
+                      </g>
+                    )}
+
+                    {/* Tier 1: Traveling Energy Packets (Concept -> Variants) */}
+                    {pulseProgress >= 0.15 && pulseProgress <= 0.68 && (
+                      <g>
+                        {constellation.edges
+                          .filter(
+                            (e) =>
+                              e.source === (constellation.matched_center_node_id || constellation.nodes[0]?.id) ||
+                              e.target === (constellation.matched_center_node_id || constellation.nodes[0]?.id)
+                          )
+                          .map((edge, idx) => {
+                            const centerId = constellation.matched_center_node_id || constellation.nodes[0]?.id;
+                            const s = getNodePos(edge.source === centerId ? edge.source : edge.target);
+                            const t = getNodePos(edge.source === centerId ? edge.target : edge.source);
+                            const t1 = Math.max(0, Math.min(1, (pulseProgress - 0.15) / 0.5));
+                            const px = s.x + (t.x - s.x) * t1;
+                            const py = s.y + (t.y - s.y) * t1;
+
+                            return (
+                              <g key={`pulse-t1-${idx}`}>
+                                <circle
+                                  cx={px}
+                                  cy={py}
+                                  r="7"
+                                  fill="var(--dp-color-accent)"
+                                  stroke="#ffffff"
+                                  strokeWidth="2"
+                                />
+                                <circle
+                                  cx={px - (t.x - s.x) * 0.06}
+                                  cy={py - (t.y - s.y) * 0.06}
+                                  r="4.5"
+                                  fill="var(--dp-color-accent)"
+                                  opacity="0.65"
+                                />
+                              </g>
+                            );
+                          })}
+                      </g>
+                    )}
+
+                    {/* Tier 2: Traveling Energy Packets (Variants -> Substrates / External) */}
+                    {pulseProgress >= 0.48 && (
+                      <g>
+                        {constellation.edges
+                          .filter(
+                            (e) =>
+                              e.source !== (constellation.matched_center_node_id || constellation.nodes[0]?.id) &&
+                              e.target !== (constellation.matched_center_node_id || constellation.nodes[0]?.id)
+                          )
+                          .map((edge, idx) => {
+                            const s = getNodePos(edge.source);
+                            const t = getNodePos(edge.target);
+                            const t2 = Math.max(0, Math.min(1, (pulseProgress - 0.48) / 0.5));
+                            const px = s.x + (t.x - s.x) * t2;
+                            const py = s.y + (t.y - s.y) * t2;
+
+                            return (
+                              <g key={`pulse-t2-${idx}`}>
+                                <circle
+                                  cx={px}
+                                  cy={py}
+                                  r="6.5"
+                                  fill="#38bdf8"
+                                  stroke="#ffffff"
+                                  strokeWidth="1.8"
+                                />
+                                <circle
+                                  cx={px - (t.x - s.x) * 0.06}
+                                  cy={py - (t.y - s.y) * 0.06}
+                                  r="4"
+                                  fill="#38bdf8"
+                                  opacity="0.65"
+                                />
+                              </g>
+                            );
+                          })}
+                      </g>
+                    )}
+                  </g>
+                )}
+
                 {/* 2. Draw Nodes with Dark Pill Backdrops */}
                 {constellation.nodes.map((node) => {
                   const pos = getNodePos(node.id);
@@ -643,12 +842,25 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                       <g
                         key={node.id}
                         transform={`translate(${pos.x}, ${pos.y})`}
-                        onClick={() => setSelectedNode(node)}
+                        onClick={() => {
+                          hardwareSoundEngine.playKeyClick();
+                          setSelectedNode(node);
+                        }}
                         onMouseEnter={() => setHoveredNodeId(node.id)}
                         onMouseLeave={() => setHoveredNodeId(null)}
                         onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                         style={{ cursor: 'pointer' }}
                       >
+                        {/* Halo during impulse initiation */}
+                        {isPulsing && pulseProgress < 0.38 && (
+                          <circle
+                            r="50"
+                            fill="none"
+                            stroke="var(--dp-color-accent)"
+                            strokeWidth="3.2"
+                            opacity={0.9}
+                          />
+                        )}
                         <circle
                           r="44"
                           fill="#181e22"
@@ -713,12 +925,29 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                       <g
                         key={node.id}
                         transform={`translate(${pos.x}, ${pos.y})`}
-                        onClick={() => setSelectedNode(node)}
+                        onClick={() => {
+                          hardwareSoundEngine.playKeyClick();
+                          setSelectedNode(node);
+                        }}
                         onMouseEnter={() => setHoveredNodeId(node.id)}
                         onMouseLeave={() => setHoveredNodeId(null)}
                         onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                         style={{ cursor: 'pointer' }}
                       >
+                        {/* Halo during variants arrival */}
+                        {isPulsing && pulseProgress >= 0.35 && pulseProgress <= 0.78 && (
+                          <rect
+                            x={-boxW / 2 - 4}
+                            y="-23"
+                            width={boxW + 8}
+                            height="46"
+                            rx="8"
+                            fill="none"
+                            stroke="var(--dp-color-accent)"
+                            strokeWidth="2.5"
+                            opacity={0.95}
+                          />
+                        )}
                         <rect
                           x={-boxW / 2}
                           y="-19"
@@ -761,12 +990,29 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                       <g
                         key={node.id}
                         transform={`translate(${pos.x}, ${pos.y})`}
-                        onClick={() => setSelectedNode(node)}
+                        onClick={() => {
+                          hardwareSoundEngine.playKeyClick();
+                          setSelectedNode(node);
+                        }}
                         onMouseEnter={() => setHoveredNodeId(node.id)}
                         onMouseLeave={() => setHoveredNodeId(null)}
                         onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                         style={{ cursor: 'pointer' }}
                       >
+                        {/* Halo during outer substrate/region arrival */}
+                        {isPulsing && pulseProgress >= 0.65 && (
+                          <rect
+                            x="-58"
+                            y="-20"
+                            width="116"
+                            height="40"
+                            rx="8"
+                            fill="none"
+                            stroke="#ffffff"
+                            strokeWidth="2.4"
+                            opacity={0.95}
+                          />
+                        )}
                         <rect
                           x="-54"
                           y="-16"
@@ -796,12 +1042,29 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                       <g
                         key={node.id}
                         transform={`translate(${pos.x}, ${pos.y})`}
-                        onClick={() => setSelectedNode(node)}
+                        onClick={() => {
+                          hardwareSoundEngine.playKeyClick();
+                          setSelectedNode(node);
+                        }}
                         onMouseEnter={() => setHoveredNodeId(node.id)}
                         onMouseLeave={() => setHoveredNodeId(null)}
                         onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                         style={{ cursor: 'pointer' }}
                       >
+                        {/* Halo during substrate arrival */}
+                        {isPulsing && pulseProgress >= 0.65 && (
+                          <rect
+                            x="-56"
+                            y="-20"
+                            width="112"
+                            height="40"
+                            rx="8"
+                            fill="none"
+                            stroke="var(--dp-color-accent)"
+                            strokeWidth="2.4"
+                            opacity={0.95}
+                          />
+                        )}
                         <rect
                           x="-52"
                           y="-16"
@@ -832,12 +1095,29 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                     <g
                       key={node.id}
                       transform={`translate(${pos.x}, ${pos.y})`}
-                      onClick={() => setSelectedNode(node)}
+                      onClick={() => {
+                        hardwareSoundEngine.playKeyClick();
+                        setSelectedNode(node);
+                      }}
                       onMouseEnter={() => setHoveredNodeId(node.id)}
                       onMouseLeave={() => setHoveredNodeId(null)}
                       onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                       style={{ cursor: 'pointer' }}
                     >
+                      {/* Halo during cultural marker arrival */}
+                      {isPulsing && pulseProgress >= 0.65 && (
+                        <rect
+                          x="-60"
+                          y="-20"
+                          width="120"
+                          height="40"
+                          rx="8"
+                          fill="none"
+                          stroke="#38bdf8"
+                          strokeWidth="2.4"
+                          opacity={0.95}
+                        />
+                      )}
                       <rect
                         x="-56"
                         y="-16"

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   MapPin,
   Network,
@@ -7,8 +7,11 @@ import {
   RefreshCw,
   Compass,
   Layers,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { PlatformStatsResponse } from '../api/swararekheClient';
+import { hardwareSoundEngine } from '../utils/hardwareSoundEngine';
 
 export type WorkspaceTab = 'atlas' | 'graph' | 'acoustic' | 'archive' | 'all';
 
@@ -27,6 +30,17 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
   onRefreshStats,
   isLoadingStats,
 }) => {
+  const [isMuted, setIsMuted] = useState(hardwareSoundEngine.isMuted());
+
+  const handleToggleSound = () => {
+    const next = hardwareSoundEngine.toggleMuted();
+    setIsMuted(next);
+  };
+
+  const handleTabClick = (tab: WorkspaceTab) => {
+    hardwareSoundEngine.playKeyClick();
+    onTabChange(tab);
+  };
   return (
     <header
       style={{
@@ -156,7 +170,10 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
             <button
               type="button"
               className="raised-icon-key"
-              onClick={onRefreshStats}
+              onClick={() => {
+                hardwareSoundEngine.playKeyClick();
+                onRefreshStats();
+              }}
               disabled={isLoadingStats}
               aria-label="Sync live platform counts"
             >
@@ -168,6 +185,25 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
               />
             </button>
             <span className="tooltip-bubble">SYNC TELEMETRY COUNTS</span>
+          </div>
+
+          {/* Sound FX Mute/Unmute Key */}
+          <div className="tooltip-wrap">
+            <button
+              type="button"
+              className={`raised-icon-key ${!isMuted ? 'active' : ''}`}
+              onClick={handleToggleSound}
+              aria-label={isMuted ? 'Enable tactile sound FX' : 'Mute sound FX'}
+              style={{
+                width: '38px',
+                height: '38px',
+                color: !isMuted ? 'var(--dp-color-accent)' : 'var(--dp-color-label)',
+                borderColor: !isMuted ? 'var(--dp-color-accent)' : undefined,
+              }}
+            >
+              {isMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+            </button>
+            <span className="tooltip-bubble">SOUND FX: {isMuted ? 'OFF (MUTED)' : 'ON (TACTILE)'}</span>
           </div>
         </div>
       </div>
@@ -338,7 +374,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         <button
           type="button"
           className={`raised-key ${activeTab === 'atlas' ? 'active' : ''}`}
-          onClick={() => onTabChange('atlas')}
+          onClick={() => handleTabClick('atlas')}
           style={{
             fontWeight: activeTab === 'atlas' ? 700 : 500,
             padding: '12px 18px',
@@ -352,7 +388,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         <button
           type="button"
           className={`raised-key ${activeTab === 'graph' ? 'active' : ''}`}
-          onClick={() => onTabChange('graph')}
+          onClick={() => handleTabClick('graph')}
           style={{
             fontWeight: activeTab === 'graph' ? 700 : 500,
             padding: '12px 18px',
@@ -366,7 +402,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         <button
           type="button"
           className={`raised-key ${activeTab === 'acoustic' ? 'active' : ''}`}
-          onClick={() => onTabChange('acoustic')}
+          onClick={() => handleTabClick('acoustic')}
           style={{
             fontWeight: activeTab === 'acoustic' ? 700 : 500,
             padding: '12px 18px',
@@ -380,7 +416,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         <button
           type="button"
           className={`raised-key ${activeTab === 'archive' ? 'active' : ''}`}
-          onClick={() => onTabChange('archive')}
+          onClick={() => handleTabClick('archive')}
           style={{
             fontWeight: activeTab === 'archive' ? 700 : 500,
             padding: '12px 18px',
@@ -394,7 +430,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         <button
           type="button"
           className={`raised-key ${activeTab === 'all' ? 'active' : ''}`}
-          onClick={() => onTabChange('all')}
+          onClick={() => handleTabClick('all')}
           style={{
             fontWeight: activeTab === 'all' ? 700 : 500,
             padding: '12px 18px',

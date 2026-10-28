@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Activity,
   Play,
@@ -7,6 +7,7 @@ import {
   RotateCcw,
   Sparkles,
   ArrowRight,
+  Sliders,
 } from 'lucide-react';
 import {
   AcousticProfileResponse,
@@ -15,6 +16,7 @@ import {
   FALLBACK_ACOUSTIC_PROFILES,
   FALLBACK_ACOUSTIC_ANALYZE,
 } from '../api/swararekheClient';
+import { hardwareSoundEngine } from '../utils/hardwareSoundEngine';
 
 interface AcousticOscilloscopeBayProps {
   activeRegionCode?: string;
@@ -28,6 +30,89 @@ const REGION_KEYS = [
   { code: 'arebhashe_kodagu', label: 'AREBHASHE / KODAGU', kannada: 'ಅರೆಭಾಷೆ' },
   { code: 'bengaluru_mysuru', label: 'BENGALURU / MYSURU', kannada: 'ಹಳೆ ಮೈಸೂರು' },
 ];
+
+// SVG Dual-Trace Oscilloscope Dimensions
+const OSC_WIDTH = 760;
+const OSC_HEIGHT = 380;
+const MIN_HZ = 80;
+const MAX_HZ = 300;
+
+const hzToY = (hz: number): number => {
+  const clamped = Math.max(MIN_HZ, Math.min(MAX_HZ, hz));
+  return OSC_HEIGHT - 50 - ((clamped - MIN_HZ) / (MAX_HZ - MIN_HZ)) * (OSC_HEIGHT - 90);
+};
+
+const yToHz = (y: number): number => {
+  const normalized = (OSC_HEIGHT - 50 - y) / (OSC_HEIGHT - 90);
+  const hz = MIN_HZ + normalized * (MAX_HZ - MIN_HZ);
+  return Math.max(MIN_HZ, Math.min(MAX_HZ, Math.round(hz)));
+};
+
+const sample6Points = (curve: number[]): number[] => {
+  if (!curve || curve.length === 0) return [145, 155, 165, 175, 190, 215];
+  if (curve.length === 6) return [...curve];
+  const result: number[] = [];
+  for (let i = 0; i < 6; i++) {
+    const idx = Math.round((i / 5) * (curve.length - 1));
+    result.push(Math.round(curve[idx]));
+  }
+  return result;
+};
+
+const computeSculptMetrics = (points: number[], refProf: AcousticProfileResponse) => {
+  if (!points || points.length === 0) return null;
+  const mean = points.reduce((acc, v) => acc + v, 0) / points.length;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min;
+  const lastIdx = points.length - 1;
+  const slope = (points[lastIdx] - points[Math.max(0, lastIdx - 2)]) / 2;
+
+  const refMean = refProf.cadence_metrics.pitch_mean_hz;
+  const refRange = refProf.cadence_metrics.pitch_range_hz;
+  const refSlope = refProf.cadence_metrics.terminal_inflection_slope;
+
+  const meanError = Math.abs(mean - refMean);
+  const rangeError = Math.abs(range - refRange);
+  const slopeError = Math.abs(slope - refSlope);
+
+  const meanScore = Math.max(0, 100 - (meanError / Math.max(1, refMean)) * 140);
+  const rangeScore = Math.max(0, 100 - (rangeError / Math.max(20, refRange)) * 100);
+  const slopeScore = Math.max(0, 100 - (slopeError / (Math.abs(refSlope) + 1.2)) * 85);
+
+  const compositeScore = Math.min(100, Math.max(8, Math.round(meanScore * 0.4 + rangeScore * 0.3 + slopeScore * 0.3)));
+
+  const tips: string[] = [];
+  if (mean < refMean - 14) {
+    tips.push(`Pitch baseline is low (${mean.toFixed(1)} Hz). Drag nodes upward to calibrate with ${refProf.region_name} median.`);
+  } else if (mean > refMean + 14) {
+    tips.push(`Pitch baseline is elevated (${mean.toFixed(1)} Hz). Drag nodes downward toward target register.`);
+  } else {
+    tips.push(`Fundamental pitch baseline (${mean.toFixed(1)} Hz) aligns with target regional register.`);
+  }
+
+  if (refSlope > 0.4 && slope < 0.1) {
+    tips.push(`Cadence requires rising terminal question inflection (+${refSlope.toFixed(2)} Hz/f). Drag rightmost nodes upward.`);
+  } else if (refSlope < -0.4 && slope > -0.1) {
+    tips.push(`Cadence requires terminal decay inflection (${refSlope.toFixed(2)} Hz/f). Drag rightmost nodes downward.`);
+  } else {
+    tips.push(`Terminal inflection trajectory (${slope > 0 ? '+' : ''}${slope.toFixed(2)} Hz/f) matches dialect profile.`);
+  }
+
+  if (range < refRange * 0.65) {
+    tips.push(`Pitch modulation range is compressed (Δ${range.toFixed(1)} Hz). Expand peak-to-trough range for authentic cadence.`);
+  } else {
+    tips.push(`Expressive pitch modulation range (Δ${range.toFixed(1)} Hz) delivers authentic cadence dynamics.`);
+  }
+
+  return {
+    mean: Number(mean.toFixed(1)),
+    range: Number(range.toFixed(1)),
+    slope: Number(slope.toFixed(2)),
+    score: compositeScore,
+    tips,
+  };
+};
 
 export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = ({
   activeRegionCode = 'hubballi_dharwad',
@@ -44,9 +129,21 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
   const [analysisResult, setAnalysisResult] = useState<AcousticAnalyzeResponse | null>(null);
   const [audioStatusText, setAudioStatusText] = useState<string>('SYNTHESIZER IDLE // READY');
 
+  // Interactive Pitch Sculptor states
+  const [isSculptMode, setIsSculptMode] = useState<boolean>(true);
+  const [sculptedPoints, setSculptedPoints] = useState<number[]>(() =>
+    sample6Points(FALLBACK_ACOUSTIC_PROFILES[activeRegionCode]?.f0_pitch_curve || [])
+  );
+  const [draggingNodeIdx, setDraggingNodeIdx] = useState<number | null>(null);
+  const [hoveredNodeIdx, setHoveredNodeIdx] = useState<number | null>(null);
+
+  // Interactive Hover Scrubber State
+  const [scrubberPos, setScrubberPos] = useState<{ x: number; y: number; timeSec: number; pitchHz: number } | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Load regional profile when selectedRegion changes
   useEffect(() => {
@@ -58,6 +155,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
     try {
       const data = await swararekheApi.getAcousticProfile(code);
       setProfile(data);
+      setSculptedPoints(sample6Points(data.f0_pitch_curve));
       setAudioStatusText(`LOADED PROFILE // ${data.region_name.toUpperCase()}`);
     } catch (err) {
       console.error('Failed to load acoustic profile:', err);
@@ -67,27 +165,82 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
   };
 
   const handleRegionChange = (code: string) => {
+    hardwareSoundEngine.playKeyClick();
     setSelectedRegion(code);
     if (onSelectRegion) onSelectRegion(code);
     setAnalysisResult(null);
   };
 
-  // Real-time harmonic Web Audio synthesis driven by exact f0_pitch_curve array
+  const handleResetSculptToBenchmark = () => {
+    hardwareSoundEngine.playKeyClick();
+    setSculptedPoints(sample6Points(profile.f0_pitch_curve));
+    setAnalysisResult(null);
+    setAudioStatusText(`RESET SCULPT TO ${profile.region_name.toUpperCase()} BENCHMARK`);
+  };
+
+  // Real-time calculated telemetry metrics and coaching for sculpted contour
+  const sculptMetrics = useMemo(() => {
+    return computeSculptMetrics(sculptedPoints, profile);
+  }, [sculptedPoints, profile]);
+
+  // Window-level smooth pointer tracking for dragging pitch nodes at 60fps
+  useEffect(() => {
+    if (draggingNodeIdx === null) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!svgRef.current) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const scaleY = OSC_HEIGHT / rect.height;
+      const svgY = (e.clientY - rect.top) * scaleY;
+      const newHz = yToHz(svgY);
+
+      setSculptedPoints((prev) => {
+        const next = [...prev];
+        if (next[draggingNodeIdx] !== newHz) {
+          hardwareSoundEngine.playRotaryDetent();
+          next[draggingNodeIdx] = newHz;
+        }
+        return next;
+      });
+    };
+
+    const handlePointerUp = () => {
+      setDraggingNodeIdx(null);
+      hardwareSoundEngine.playRelayLatch();
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [draggingNodeIdx]);
+
+  // Real-time harmonic Web Audio synthesis driven by exact f0_pitch_curve or sculpted points
   const handlePlaySynthesizedF0 = () => {
     if (isPlayingAudio) return;
     setIsPlayingAudio(true);
-    setAudioStatusText(`PLAYING REAL-TIME F0 SYNTHESIS // ${profile.region_code.toUpperCase()}`);
+    hardwareSoundEngine.playKeyClick();
+
+    const activeCurve = isSculptMode && sculptedPoints.length > 0
+      ? sculptedPoints
+      : (profile.f0_pitch_curve && profile.f0_pitch_curve.length > 0
+        ? profile.f0_pitch_curve
+        : [150, 155, 160, 165, 175, 185, 200]);
+
+    setAudioStatusText(
+      isSculptMode
+        ? 'PLAYING SCULPTED F0 HARMONIC SYNTHESIS...'
+        : `PLAYING REAL-TIME F0 SYNTHESIS // ${profile.region_code.toUpperCase()}`
+    );
 
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContextClass();
 
-      const f0Curve = profile.f0_pitch_curve && profile.f0_pitch_curve.length > 0
-        ? profile.f0_pitch_curve
-        : [150, 155, 160, 165, 175, 185, 200];
-
       const duration = 1.4; // 1.4 seconds utterance
-      const stepDuration = duration / f0Curve.length;
+      const stepDuration = duration / activeCurve.length;
 
       // Primary harmonic oscillator (voiced fundamental)
       const osc1 = ctx.createOscillator();
@@ -100,22 +253,22 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
       // Gain Envelope
       const gainNode = ctx.createGain();
       gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.1);
+      gainNode.gain.linearRampToValueAtTime(0.24, ctx.currentTime + 0.1);
 
       // Low-pass filter simulating vocal tract resonance
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(1400, ctx.currentTime);
 
-      // Automate pitch sweep across exact F0 curve points
-      f0Curve.forEach((hz, idx) => {
+      // Automate pitch sweep across exact active curve points
+      activeCurve.forEach((hz, idx) => {
         const timeAt = ctx.currentTime + idx * stepDuration;
         osc1.frequency.setValueAtTime(hz, timeAt);
         osc2.frequency.setValueAtTime(hz * 2, timeAt); // 2nd harmonic
       });
 
       // Terminal fade-out
-      gainNode.gain.setValueAtTime(0.25, ctx.currentTime + duration - 0.15);
+      gainNode.gain.setValueAtTime(0.24, ctx.currentTime + duration - 0.15);
       gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
       osc1.connect(filter);
@@ -151,12 +304,14 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
 
   // Compare with pre-generated regional benchmark sample
   const handleCompareSample = async () => {
+    hardwareSoundEngine.playKeyClick();
     setIsAnalyzing(true);
     setAudioStatusText('ANALYZING REFERENCE AUDIO VIA LIBROSA DSP...');
     try {
       const result = await swararekheApi.analyzeCadence(selectedRegion, selectedRegion);
       setAnalysisResult(result);
       setAudioStatusText(`ANALYSIS COMPLETE // SCORE: ${Math.round(result.cadence_match_score)}%`);
+      hardwareSoundEngine.playRelayLatch();
     } catch (err) {
       console.error('Cadence analysis failed:', err);
       setAnalysisResult(FALLBACK_ACOUSTIC_ANALYZE);
@@ -168,6 +323,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
 
   // Microphone audio recording
   const handleToggleRecord = async () => {
+    hardwareSoundEngine.playKeyClick();
     if (isRecording) {
       // Stop recording
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -197,6 +353,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
             const result = await swararekheApi.analyzeCadence(selectedRegion, undefined, audioBlob);
             setAnalysisResult(result);
             setAudioStatusText(`MIC ANALYSIS COMPLETE // SCORE: ${Math.round(result.cadence_match_score)}%`);
+            hardwareSoundEngine.playRelayLatch();
           } catch (err) {
             console.error('Mic analysis failed:', err);
             setAnalysisResult(FALLBACK_ACOUSTIC_ANALYZE);
@@ -218,6 +375,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
 
   // Upload WAV file
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    hardwareSoundEngine.playKeyClick();
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -227,6 +385,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
       const result = await swararekheApi.analyzeCadence(selectedRegion, undefined, file);
       setAnalysisResult(result);
       setAudioStatusText(`FILE ANALYSIS COMPLETE // SCORE: ${Math.round(result.cadence_match_score)}%`);
+      hardwareSoundEngine.playRelayLatch();
     } catch (err) {
       console.error('File analysis failed:', err);
       setAnalysisResult(FALLBACK_ACOUSTIC_ANALYZE);
@@ -236,28 +395,23 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
   };
 
   const handleResetAnalysis = () => {
+    hardwareSoundEngine.playKeyClick();
     setAnalysisResult(null);
     setAudioStatusText('TELEMETRY RESET // READY');
   };
 
-  // Interactive Hover Scrubber State
-  const [scrubberPos, setScrubberPos] = useState<{ x: number; y: number; timeSec: number; pitchHz: number } | null>(null);
-
-  // SVG Dual-Trace Oscilloscope Dimensions
-  const OSC_WIDTH = 760;
-  const OSC_HEIGHT = 380;
-  const MIN_HZ = 80;
-  const MAX_HZ = 300;
-
-  const hzToY = (hz: number): number => {
-    const clamped = Math.max(MIN_HZ, Math.min(MAX_HZ, hz));
-    return OSC_HEIGHT - 50 - ((clamped - MIN_HZ) / (MAX_HZ - MIN_HZ)) * (OSC_HEIGHT - 90);
+  const handleHandlePointerDown = (e: React.PointerEvent, idx: number) => {
+    e.stopPropagation();
+    setDraggingNodeIdx(idx);
+    hardwareSoundEngine.playKeyClick();
   };
 
   const refPoints = profile.f0_pitch_curve || [150, 160, 170, 180, 200];
   const userPoints = analysisResult?.pitch_contour_comparison?.user_f0 || null;
+  const activeTraceB = isSculptMode ? sculptedPoints : userPoints;
 
   const handleOscilloscopeMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (draggingNodeIdx !== null) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const clientX = e.clientX - rect.left;
 
@@ -272,11 +426,12 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
     const normX = Math.max(0, Math.min(1, (svgX - 50) / (OSC_WIDTH - 75)));
     const timeSec = Math.max(0, Math.min(1.4, normX * 1.4));
 
-    const idxFloat = normX * (refPoints.length - 1);
+    const sourcePoints = isSculptMode && sculptedPoints.length > 0 ? sculptedPoints : refPoints;
+    const idxFloat = normX * (sourcePoints.length - 1);
     const lowIdx = Math.floor(idxFloat);
-    const highIdx = Math.min(refPoints.length - 1, Math.ceil(idxFloat));
+    const highIdx = Math.min(sourcePoints.length - 1, Math.ceil(idxFloat));
     const frac = idxFloat - lowIdx;
-    const pitchHz = refPoints[lowIdx] * (1 - frac) + (refPoints[highIdx] || refPoints[lowIdx]) * frac;
+    const pitchHz = sourcePoints[lowIdx] * (1 - frac) + (sourcePoints[highIdx] || sourcePoints[lowIdx]) * frac;
 
     setScrubberPos({
       x: svgX,
@@ -367,6 +522,41 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
             </button>
             <span className="tooltip-bubble">SYNTHESIZE / PLAY F0</span>
           </div>
+
+          {/* Pitch Sculptor Mode Toggle Key */}
+          <button
+            type="button"
+            className={`raised-key ${isSculptMode ? 'active' : ''}`}
+            onClick={() => {
+              hardwareSoundEngine.playKeyClick();
+              setIsSculptMode((prev) => !prev);
+              setAudioStatusText(!isSculptMode ? 'PITCH SCULPTOR ACTIVE // DRAG NODES ON SCREEN' : 'BENCHMARK DISPLAY MODE ACTIVE');
+            }}
+            style={{
+              fontSize: '13px',
+              padding: '8px 16px',
+              height: '40px',
+              fontWeight: 600,
+            }}
+            title="Toggle interactive pitch sculpting on the dual-trace oscilloscope"
+          >
+            <Sliders size={16} color="var(--dp-color-accent)" />
+            <span>PITCH SCULPTOR: {isSculptMode ? 'ON' : 'OFF'}</span>
+          </button>
+
+          {/* Reset Sculpt to Benchmark Key */}
+          {isSculptMode && (
+            <button
+              type="button"
+              className="raised-key"
+              onClick={handleResetSculptToBenchmark}
+              style={{ fontSize: '13px', padding: '8px 14px', height: '40px' }}
+              title="Reset sculpted pitch contour to current regional benchmark"
+            >
+              <RotateCcw size={15} />
+              <span>RESET SCULPT</span>
+            </button>
+          )}
 
           {/* Compare Reference Sample Key */}
           <button
@@ -489,7 +679,24 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
                 <span>TRACE A: REF {profile.region_code.toUpperCase()}</span>
               </span>
 
-              {userPoints && (
+              {isSculptMode ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    color: 'var(--dp-color-accent)',
+                    backgroundColor: 'rgba(241, 91, 34, 0.15)',
+                    padding: '4px 10px',
+                    borderRadius: 'var(--dp-radius-key)',
+                    border: '1px solid var(--dp-color-accent)',
+                    fontWeight: 700,
+                  }}
+                >
+                  <span style={{ width: '12px', height: '3px', backgroundColor: 'var(--dp-color-accent)', borderRadius: '1px' }} />
+                  <span>TRACE B: SCULPTED CONTOUR (DRAGGABLE)</span>
+                </span>
+              ) : userPoints ? (
                 <span
                   style={{
                     display: 'inline-flex',
@@ -505,7 +712,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
                   <span style={{ width: '12px', height: '3px', backgroundColor: 'var(--dp-color-accent)', borderRadius: '1px' }} />
                   <span>TRACE B: USER INGESTION</span>
                 </span>
-              )}
+              ) : null}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -518,6 +725,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
           {/* Dual-Trace SVG Oscilloscope Screen with Interactive Crosshair Scrubber */}
           <div style={{ position: 'relative', width: '100%', height: 'auto' }}>
             <svg
+              ref={svgRef}
               viewBox={`0 0 ${OSC_WIDTH} ${OSC_HEIGHT}`}
               onMouseMove={handleOscilloscopeMouseMove}
               onMouseLeave={handleOscilloscopeMouseLeave}
@@ -648,23 +856,105 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
                 </g>
               )}
 
-              {/* Trace B: Overlaid Comparison User/Analyzed F0 Trace */}
-              {userPoints && userPoints.length > 1 && (
-                <path
-                  d={userPoints
-                    .map((hz, idx) => {
-                      const x = 50 + (idx / Math.max(1, userPoints.length - 1)) * (OSC_WIDTH - 80);
+              {/* Trace B: Overlaid / Sculpted F0 Contour with Interactive Control Handles */}
+              {activeTraceB && activeTraceB.length > 1 && (
+                <g>
+                  {/* Trace B connecting line */}
+                  <path
+                    d={activeTraceB
+                      .map((hz, idx) => {
+                        const x = 50 + (idx / Math.max(1, activeTraceB.length - 1)) * (OSC_WIDTH - 80);
+                        const y = hzToY(hz);
+                        return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`;
+                      })
+                      .join(' ')}
+                    fill="none"
+                    stroke="var(--dp-color-accent)"
+                    strokeWidth={isSculptMode ? '3.0' : '2.5'}
+                    strokeDasharray={isSculptMode ? undefined : '4,2'}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* If Sculpt Mode is active, render the 6 draggable control handles */}
+                  {isSculptMode &&
+                    activeTraceB.map((hz, idx) => {
+                      const x = 50 + (idx / Math.max(1, activeTraceB.length - 1)) * (OSC_WIDTH - 80);
                       const y = hzToY(hz);
-                      return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`;
-                    })
-                    .join(' ')}
-                  fill="none"
-                  stroke="var(--dp-color-accent)"
-                  strokeWidth="2.5"
-                  strokeDasharray="4,2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+                      const isDragging = draggingNodeIdx === idx;
+                      const isHovered = hoveredNodeIdx === idx;
+
+                      return (
+                        <g
+                          key={`sculpt-handle-${idx}`}
+                          onPointerDown={(e) => handleHandlePointerDown(e, idx)}
+                          onMouseEnter={() => setHoveredNodeIdx(idx)}
+                          onMouseLeave={() => setHoveredNodeIdx(null)}
+                          style={{ cursor: 'ns-resize' }}
+                        >
+                          {/* Vertical guide line down to time axis */}
+                          <line
+                            x1={x}
+                            y1={y}
+                            x2={x}
+                            y2={OSC_HEIGHT - 45}
+                            stroke="var(--dp-color-accent)"
+                            strokeWidth="1"
+                            strokeDasharray="2,2"
+                            opacity={isDragging || isHovered ? 0.75 : 0.25}
+                          />
+
+                          {/* Outer glowing halo ring on drag/hover */}
+                          {(isDragging || isHovered) && (
+                            <circle
+                              cx={x}
+                              cy={y}
+                              r={isDragging ? '16' : '13'}
+                              fill="none"
+                              stroke="var(--dp-color-accent)"
+                              strokeWidth="1.5"
+                              opacity={isDragging ? 0.85 : 0.5}
+                            />
+                          )}
+
+                          {/* Control handle circular knob */}
+                          <circle
+                            cx={x}
+                            cy={y}
+                            r={isDragging ? '8' : isHovered ? '7.5' : '6'}
+                            fill="var(--dp-color-accent)"
+                            stroke="#ffffff"
+                            strokeWidth="2.2"
+                          />
+
+                          {/* Instant Frequency Readout Pill above handle */}
+                          <g transform={`translate(${x}, ${Math.max(22, y - 16)})`} pointerEvents="none">
+                            <rect
+                              x="-26"
+                              y="-13"
+                              width="52"
+                              height="17"
+                              rx="3"
+                              fill="#181e22"
+                              stroke="var(--dp-color-accent)"
+                              strokeWidth="1"
+                            />
+                            <text
+                              x="0"
+                              y="-1"
+                              textAnchor="middle"
+                              fill="#f2f4f4"
+                              fontSize="10"
+                              fontFamily="var(--dp-typography-mono)"
+                              fontWeight="700"
+                            >
+                              {Math.round(hz)}Hz
+                            </text>
+                          </g>
+                        </g>
+                      );
+                    })}
+                </g>
               )}
 
               {/* Interactive Hover Crosshair Scrubber */}
@@ -972,6 +1262,139 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
                     ))}
                   </div>
                 </div>
+              </div>
+            ) : isSculptMode && sculptMetrics ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Match Score Display */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-on-field-muted)' }}>
+                      LIVE SCULPT MATCH SCORE
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '36px',
+                        fontWeight: 800,
+                        color: 'var(--dp-color-accent)',
+                        lineHeight: '1.1',
+                      }}
+                    >
+                      {sculptMetrics.score}%
+                    </div>
+                  </div>
+
+                  {/* Segmented Meter Bar */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ height: '8px', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${sculptMetrics.score}%`,
+                          backgroundColor: 'var(--dp-color-accent)',
+                          borderRadius: '2px',
+                          transition: 'width 140ms ease',
+                        }}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginTop: '4px',
+                        fontFamily: 'var(--dp-typography-mono)',
+                        fontSize: '10px',
+                        color: 'var(--dp-color-on-field-muted)',
+                      }}
+                    >
+                      <span>0% (DEVIANT)</span>
+                      <span>50% (MODERATE)</span>
+                      <span>100% (CALIBRATED)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sculpt Telemetry Sub-Grid */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '8px',
+                    padding: '10px 12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: 'var(--dp-radius-key)',
+                    fontFamily: 'var(--dp-typography-mono)',
+                    fontSize: '11px',
+                  }}
+                >
+                  <div>
+                    <span style={{ color: 'var(--dp-color-on-field-muted)', display: 'block', fontSize: '9px' }}>SCULPT MEAN</span>
+                    <strong style={{ color: 'var(--dp-color-on-field)' }}>{sculptMetrics.mean} Hz</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--dp-color-on-field-muted)', display: 'block', fontSize: '9px' }}>RANGE (&Delta;)</span>
+                    <strong style={{ color: 'var(--dp-color-on-field)' }}>{sculptMetrics.range} Hz</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--dp-color-on-field-muted)', display: 'block', fontSize: '9px' }}>SLOPE</span>
+                    <strong style={{ color: 'var(--dp-color-accent)' }}>
+                      {sculptMetrics.slope > 0 ? '+' : ''}{sculptMetrics.slope} Hz/f
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Actionable Linguistic Coaching Tips */}
+                <div>
+                  <span
+                    style={{
+                      fontFamily: 'var(--dp-typography-mono)',
+                      fontSize: '11px',
+                      color: 'var(--dp-color-on-field-muted)',
+                      textTransform: 'uppercase',
+                      display: 'block',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    REAL-TIME SCULPT COACHING:
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {sculptMetrics.tips.map((tip, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '10px',
+                          fontSize: '13px',
+                          lineHeight: '1.55',
+                          color: 'var(--dp-color-on-field)',
+                        }}
+                      >
+                        <ArrowRight size={14} color="var(--dp-color-accent)" style={{ marginTop: '3px', flexShrink: 0 }} />
+                        <span>{tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Audition Button inside Card */}
+                <button
+                  type="button"
+                  className="raised-key"
+                  onClick={handlePlaySynthesizedF0}
+                  disabled={isPlayingAudio}
+                  style={{
+                    marginTop: '4px',
+                    height: '38px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    width: '100%',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Play size={14} color="var(--dp-color-accent)" />
+                  <span>AUDITION SCULPTED PITCH CONTOUR</span>
+                </button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--dp-color-on-field-muted)', fontSize: '13px', lineHeight: '1.55' }}>

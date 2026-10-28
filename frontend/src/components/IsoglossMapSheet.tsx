@@ -1,15 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   MapPin,
   Compass,
   Volume2,
   GitBranch,
   Layers,
+  Radio,
+  Navigation,
 } from 'lucide-react';
 import {
   GeoJSONFeatureCollection,
   IsoglossLocateResponse,
 } from '../api/swararekheClient';
+import { hardwareSoundEngine } from '../utils/hardwareSoundEngine';
 
 interface MapSheetProps {
   geoJson: GeoJSONFeatureCollection;
@@ -57,6 +60,146 @@ function yToLat(y: number): number {
   return MAX_LAT - (y / MAP_HEIGHT) * (MAX_LAT - MIN_LAT);
 }
 
+// 60FPS Client-Side IDW Engine (p = 2.0)
+interface EpicenterBenchmark {
+  code: string;
+  name: string;
+  lat: number;
+  lng: number;
+  basePitch: number;
+  greetingKannada: string;
+  greetingRoman: string;
+  substrates: string[];
+}
+
+const EPICENTERS: EpicenterBenchmark[] = [
+  {
+    code: 'hubballi_dharwad',
+    name: 'Uttara Karnataka / Dharwad-Belagavi',
+    lat: 15.4589,
+    lng: 75.0078,
+    basePitch: 185.0,
+    greetingKannada: 'ಆರಾಮ್ ಅದೀರೇನ್ರೀ ಪಾ?',
+    greetingRoman: 'Aaraam adeerenri pa?',
+    substrates: ['Marathi Contact', 'Sharana Vachana', 'Alveolar Flap'],
+  },
+  {
+    code: 'kundapura_mangaluru',
+    name: 'Karavali / Coastal Karnataka',
+    lat: 13.6288,
+    lng: 74.6920,
+    basePitch: 175.0,
+    greetingKannada: 'ಏನ್ ಮಾಣಿ, ಲಾಯ್ಕ್ ಅಂಡ್ ಪೋಯಿನಾ?',
+    greetingRoman: 'Yen maani, laayk aand poyina?',
+    substrates: ['Tulu Substrate', 'Halegannada Retention', 'Konkani Admixture'],
+  },
+  {
+    code: 'kalaburagi_bidar',
+    name: 'Kalyana Karnataka / North-East',
+    lat: 17.3297,
+    lng: 76.8343,
+    basePitch: 142.0,
+    greetingKannada: 'ಕುಶಲ್ ಅದೀರಾ ನೋಡ್ರಿ?',
+    greetingRoman: 'Kushal adeeraa nodri?',
+    substrates: ['Dakhni Urdu', 'Marathi Contact', 'Bahmani Persianate'],
+  },
+  {
+    code: 'arebhashe_kodagu',
+    name: 'Malnad / Arebhashe & Kodagu',
+    lat: 12.4244,
+    lng: 75.7382,
+    basePitch: 160.0,
+    greetingKannada: 'ಕೂಳು ತಿಂದ್ದಿರಾ, ಚೋಲೋ ಉಳ್ಳಿರ?',
+    greetingRoman: 'Koolu tindira, cholo ullira?',
+    substrates: ['Gowda Kannada', 'Kodava Takk Influence', 'Highland Accentuation'],
+  },
+  {
+    code: 'bengaluru_mysuru',
+    name: 'Old Mysuru / Southern Karnataka',
+    lat: 12.9716,
+    lng: 77.5946,
+    basePitch: 150.0,
+    greetingKannada: 'ಚೆನ್ನಾಗಿದ್ದೀರಾ ಸ್ವಾಮಿ?',
+    greetingRoman: 'Chennaagiddeeraa swami?',
+    substrates: ['Tamil Border Admixture', 'Courtly Hoysala Standard', 'Penultimate Stress'],
+  },
+];
+
+function calculateRealtimeIDW(lat: number, lng: number): IsoglossLocateResponse {
+  const items = EPICENTERS.map((epi) => {
+    const dLat = (epi.lat - lat) * 111.0;
+    const avgLatRad = ((epi.lat + lat) / 2) * (Math.PI / 180);
+    const dLng = (epi.lng - lng) * 111.0 * Math.cos(avgLatRad);
+    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+    const weight = 1.0 / Math.pow(Math.max(dist, 1.0), 2.0); // IDW p = 2.0
+    return {
+      epi,
+      dist: Math.round(dist * 10) / 10,
+      weight,
+    };
+  });
+
+  const totalWeight = items.reduce((acc, it) => acc + it.weight, 0);
+  const blends = items
+    .map((it) => ({
+      region_code: it.epi.code,
+      region_name: it.epi.name,
+      distance_km: it.dist,
+      blend_percentage: Math.round((it.weight / totalWeight) * 1000) / 10,
+    }))
+    .sort((a, b) => b.blend_percentage - a.blend_percentage);
+
+  const dominant = blends[0];
+  const secondary = blends[1];
+  const domEpi = EPICENTERS.find((e) => e.code === dominant.region_code)!;
+
+  const interpolatedPitch =
+    items.reduce((acc, it) => acc + it.weight * it.epi.basePitch, 0) / totalWeight;
+
+  let zone:
+    | 'Core Dialect Heartland'
+    | 'Bi-Dialectal Isogloss Transition Belt'
+    | 'Multi-Dialectal Convergence Zone';
+  if (dominant.blend_percentage >= 65) {
+    zone = 'Core Dialect Heartland';
+  } else if (dominant.blend_percentage >= 40) {
+    zone = 'Bi-Dialectal Isogloss Transition Belt';
+  } else {
+    zone = 'Multi-Dialectal Convergence Zone';
+  }
+
+  const secEpi = secondary ? EPICENTERS.find((e) => e.code === secondary.region_code) : null;
+  const substrates = Array.from(
+    new Set([
+      ...domEpi.substrates,
+      ...(secondary && secondary.blend_percentage > 18 && secEpi ? secEpi.substrates : []),
+    ])
+  );
+
+  return {
+    latitude: lat,
+    longitude: lng,
+    zone_classification: zone,
+    dominant_region_code: dominant.region_code,
+    secondary_region_code: secondary && secondary.blend_percentage > 18 ? secondary.region_code : undefined,
+    blend_weights: blends,
+    active_border_substrates: substrates,
+    interpolated_greeting_local: domEpi.greetingKannada,
+    interpolated_phrase_result: {
+      source_phrase: 'Chennagiddeera?',
+      morphed_dominant_roman: domEpi.greetingRoman,
+      morphed_dominant_script: domEpi.greetingKannada,
+      dominant_rules_applied: [`${domEpi.code}:primary_isogloss_centroid`],
+      syllable_stress: `${domEpi.code}:standard_stress`,
+      transition_notes:
+        zone === 'Core Dialect Heartland'
+          ? `Within the core linguistic hearth of ${domEpi.name}. High phonotactic consistency with minimal border interference.`
+          : `Active dialect transition zone between ${domEpi.name} and ${secondary ? secondary.region_name : 'adjacent zones'}. Morphological suffixes and lexical loanwords show dynamic isogloss gradient.`,
+    },
+    acoustic_interpolated_pitch_hz: Math.round(interpolatedPitch * 10) / 10,
+  };
+}
+
 export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
   geoJson,
   locationData,
@@ -66,9 +209,30 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
   onSelectRegion,
 }) => {
   const [hoveredPoint, setHoveredPoint] = useState<{ name: string; lat: number; lng: number } | null>(null);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const [liveCarrierActive, setLiveCarrierActive] = useState(false);
+  const [liveLocationData, setLiveLocationData] = useState<IsoglossLocateResponse | null>(null);
+  const [probeCoords, setProbeCoords] = useState<{ lat: number; lng: number } | null>(null);
 
-  // SVG Click Handler
-  const handleMapClick = (e: React.MouseEvent<SVGSVGElement>) => {
+  const isPointerDownRef = useRef(false);
+  const lastDetentRegionRef = useRef<string | null>(null);
+
+  // Sync probe coordinate when locationData arrives from server (if not scrubbing)
+  useEffect(() => {
+    if (!isPointerDownRef.current && locationData) {
+      setProbeCoords({ lat: locationData.latitude, lng: locationData.longitude });
+      setLiveLocationData(null);
+    }
+  }, [locationData]);
+
+  // Clean up audio carrier if unmounted
+  useEffect(() => {
+    return () => {
+      hardwareSoundEngine.stopCarrierTone();
+    };
+  }, []);
+
+  const getCoordinatesFromEvent = (e: React.PointerEvent<SVGSVGElement> | React.MouseEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
@@ -78,12 +242,98 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
     const svgX = clickX * scaleX;
     const svgY = clickY * scaleY;
 
-    const lat = yToLat(svgY);
-    const lng = xToLng(svgX);
+    let lat = yToLat(svgY);
+    let lng = xToLng(svgX);
 
-    if (lat >= 11.5 && lat <= 18.6 && lng >= 74.0 && lng <= 78.6) {
-      onSelectCoordinate(Math.round(lat * 10000) / 10000, Math.round(lng * 10000) / 10000);
+    lat = Math.max(11.5, Math.min(18.6, lat));
+    lng = Math.max(74.0, Math.min(78.6, lng));
+
+    return {
+      lat: Math.round(lat * 10000) / 10000,
+      lng: Math.round(lng * 10000) / 10000,
+    };
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    isPointerDownRef.current = true;
+    setIsScrubbing(true);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
     }
+
+    const { lat, lng } = getCoordinatesFromEvent(e);
+    setProbeCoords({ lat, lng });
+
+    const live = calculateRealtimeIDW(lat, lng);
+    setLiveLocationData(live);
+    lastDetentRegionRef.current = live.dominant_region_code;
+
+    if (liveCarrierActive) {
+      hardwareSoundEngine.startCarrierTone(live.acoustic_interpolated_pitch_hz);
+    } else {
+      hardwareSoundEngine.playRotaryDetent();
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!isPointerDownRef.current) return;
+    const { lat, lng } = getCoordinatesFromEvent(e);
+    setProbeCoords({ lat, lng });
+
+    const live = calculateRealtimeIDW(lat, lng);
+    setLiveLocationData(live);
+
+    // Play tick on region threshold transitions
+    if (live.dominant_region_code !== lastDetentRegionRef.current) {
+      lastDetentRegionRef.current = live.dominant_region_code;
+      hardwareSoundEngine.playRotaryDetent();
+    }
+
+    if (liveCarrierActive) {
+      hardwareSoundEngine.updateCarrierPitch(live.acoustic_interpolated_pitch_hz);
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
+    setIsScrubbing(false);
+
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+
+    if (liveCarrierActive) {
+      hardwareSoundEngine.stopCarrierTone();
+    }
+    hardwareSoundEngine.playKeyClick();
+
+    const { lat, lng } = getCoordinatesFromEvent(e);
+    onSelectCoordinate(lat, lng);
+  };
+
+  const handlePointerCancel = () => {
+    if (isPointerDownRef.current) {
+      isPointerDownRef.current = false;
+      setIsScrubbing(false);
+      if (liveCarrierActive) {
+        hardwareSoundEngine.stopCarrierTone();
+      }
+    }
+  };
+
+  const handleToggleLiveCarrier = () => {
+    const next = !liveCarrierActive;
+    setLiveCarrierActive(next);
+    if (!next) {
+      hardwareSoundEngine.stopCarrierTone();
+    }
+    hardwareSoundEngine.playKeyClick();
   };
 
   // Extract features
@@ -99,6 +349,9 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
     () => geoJson.features.filter((f) => f.geometry.type === 'LineString'),
     [geoJson]
   );
+
+  const activeData: IsoglossLocateResponse | null = liveLocationData || locationData;
+  const currentProbe = probeCoords || (locationData ? { lat: locationData.latitude, lng: locationData.longitude } : null);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -123,7 +376,60 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
       >
         {/* Left Column: Recessed Dark Display Well with SVG Telemetry Map (padding: 24px) */}
         <div className="recessed-well" style={{ padding: '24px' }}>
-          {/* Quick-Jump Dialect Survey Pins Bar (gap: 8px, margin-bottom: 16px, padding: 8px 14px) */}
+          {/* Hardware Transceiver & Carrier Control Strip */}
+          <div
+            style={{
+              marginBottom: '16px',
+              padding: '12px 16px',
+              backgroundColor: 'var(--dp-color-raised)',
+              border: '1px solid #9aa3a8',
+              borderRadius: 'var(--dp-radius-key)',
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Radio size={16} color="var(--dp-color-accent)" className={isScrubbing ? 'animate-pulse' : ''} />
+              <span
+                style={{
+                  fontFamily: 'var(--dp-typography-mono)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: 'var(--dp-color-ink)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                TRANSCEIVER PROBE: {isScrubbing ? 'SCRUBBING ISOGLOSS (60 FPS)' : 'READY // CLICK & DRAG MAP'}
+              </span>
+            </div>
+
+            {/* Toggleable Live Acoustic Carrier Switch */}
+            <div className="tooltip-wrap">
+              <button
+                type="button"
+                className={`raised-key ${liveCarrierActive ? 'active' : ''}`}
+                onClick={handleToggleLiveCarrier}
+                style={{
+                  fontSize: '12px',
+                  padding: '5px 12px',
+                  height: '32px',
+                  fontWeight: 600,
+                  color: liveCarrierActive ? '#ffffff' : 'inherit',
+                  backgroundColor: liveCarrierActive ? 'var(--dp-color-accent)' : undefined,
+                }}
+              >
+                <Volume2 size={14} color={liveCarrierActive ? '#ffffff' : 'var(--dp-color-accent)'} />
+                <span>CARRIER PITCH: {liveCarrierActive ? 'AUDIBLE (135–210 Hz)' : 'OFF'}</span>
+              </button>
+              <span className="tooltip-bubble">HEAR REGIONAL F0 RISE/FALL AS YOU DRAG</span>
+            </div>
+          </div>
+
+          {/* Quick-Jump Dialect Survey Pins Bar */}
           <div
             style={{
               marginBottom: '16px',
@@ -144,9 +450,9 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
             </span>
             {SURVEY_TOWNS.map((town) => {
               const isSelected =
-                locationData &&
-                Math.abs(locationData.latitude - town.lat) < 0.05 &&
-                Math.abs(locationData.longitude - town.lng) < 0.05;
+                activeData &&
+                Math.abs(activeData.latitude - town.lat) < 0.05 &&
+                Math.abs(activeData.longitude - town.lng) < 0.05;
 
               return (
                 <button
@@ -154,44 +460,53 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                   type="button"
                   className={`raised-key ${isSelected ? 'active' : ''}`}
                   onClick={() => {
+                    hardwareSoundEngine.playKeyClick();
+                    setProbeCoords({ lat: town.lat, lng: town.lng });
+                    const live = calculateRealtimeIDW(town.lat, town.lng);
+                    setLiveLocationData(live);
                     onSelectCoordinate(town.lat, town.lng);
                     if (town.type === 'hub') {
                       onSelectRegion(town.region);
                     }
                   }}
                   style={{
-                    fontSize: '13px',
-                    padding: '8px 14px',
-                    height: '34px',
+                    fontSize: '12px',
+                    padding: '6px 12px',
+                    height: '32px',
                   }}
                 >
-                  <MapPin size={13} color={isSelected ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)'} />
+                  <MapPin size={12} color={isSelected ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)'} />
                   <span>{town.name}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Interactive CRT/OLED Field Telemetry Screen with 24px Internal Padding */}
+          {/* Interactive CRT/OLED Field Telemetry Screen with Draggable Transceiver Probe */}
           <div
             className="recessed-field-screen"
             style={{
               overflow: 'hidden',
               padding: '24px',
               position: 'relative',
+              userSelect: 'none',
+              touchAction: 'none',
             }}
           >
             <svg
               viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
               style={{
                 width: '100%',
                 height: 'auto',
                 display: 'block',
                 backgroundColor: '#1b2125',
-                cursor: 'crosshair',
+                cursor: isScrubbing ? 'grabbing' : 'crosshair',
                 shapeRendering: 'geometricPrecision',
               }}
-              onClick={handleMapClick}
               role="img"
               aria-label="Karnataka Dialect Isogloss Survey Map"
             >
@@ -258,6 +573,10 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                     style={{ cursor: 'pointer' }}
                     onClick={(e) => {
                       e.stopPropagation();
+                      hardwareSoundEngine.playKeyClick();
+                      setProbeCoords({ lat, lng });
+                      const live = calculateRealtimeIDW(lat, lng);
+                      setLiveLocationData(live);
                       onSelectCoordinate(lat, lng);
                       onSelectRegion(pt.properties.region_code);
                     }}
@@ -284,7 +603,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                       strokeWidth="1.5"
                     />
 
-                    {/* Dark pill backdrop behind Kannada label so text never collides with borders or dots */}
+                    {/* Dark pill backdrop behind Kannada label */}
                     <rect
                       x={cx + 10}
                       y={cy - 12}
@@ -330,40 +649,95 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                 );
               })}
 
-              {/* Selected Location Crosshair */}
-              {locationData && (
-                <g>
+              {/* Tactile Draggable Transceiver Probe Crosshair */}
+              {currentProbe && (
+                <g pointerEvents="none">
+                  {/* Outer Pulsing Reticle Ring */}
                   <circle
-                    cx={lngToX(locationData.longitude)}
-                    cy={latToY(locationData.latitude)}
-                    r={14}
+                    cx={lngToX(currentProbe.lng)}
+                    cy={latToY(currentProbe.lat)}
+                    r={isScrubbing ? 22 : 18}
                     fill="none"
                     stroke="var(--dp-color-accent)"
-                    strokeWidth="2"
+                    strokeWidth="1.8"
                     strokeDasharray="4,2"
+                    style={{ transition: 'r 80ms ease' }}
                   />
-                  <line
-                    x1={lngToX(locationData.longitude) - 18}
-                    y1={latToY(locationData.latitude)}
-                    x2={lngToX(locationData.longitude) + 18}
-                    y2={latToY(locationData.latitude)}
-                    stroke="var(--dp-color-accent)"
-                    strokeWidth="1.5"
-                  />
-                  <line
-                    x1={lngToX(locationData.longitude)}
-                    y1={latToY(locationData.latitude) - 18}
-                    x2={lngToX(locationData.longitude)}
-                    y2={latToY(locationData.latitude) + 18}
-                    stroke="var(--dp-color-accent)"
-                    strokeWidth="1.5"
-                  />
+                  {/* Core Reticle Ring */}
                   <circle
-                    cx={lngToX(locationData.longitude)}
-                    cy={latToY(locationData.latitude)}
-                    r={3.5}
+                    cx={lngToX(currentProbe.lng)}
+                    cy={latToY(currentProbe.lat)}
+                    r={7}
                     fill="var(--dp-color-accent)"
+                    fillOpacity="0.3"
+                    stroke="var(--dp-color-accent)"
+                    strokeWidth="2"
                   />
+                  {/* Center Dot */}
+                  <circle
+                    cx={lngToX(currentProbe.lng)}
+                    cy={latToY(currentProbe.lat)}
+                    r={2.5}
+                    fill="#ffffff"
+                  />
+                  {/* Horizontal Crosshair Wires */}
+                  <line
+                    x1={lngToX(currentProbe.lng) - 26}
+                    y1={latToY(currentProbe.lat)}
+                    x2={lngToX(currentProbe.lng) - 9}
+                    y2={latToY(currentProbe.lat)}
+                    stroke="var(--dp-color-accent)"
+                    strokeWidth="1.8"
+                  />
+                  <line
+                    x1={lngToX(currentProbe.lng) + 9}
+                    y1={latToY(currentProbe.lat)}
+                    x2={lngToX(currentProbe.lng) + 26}
+                    y2={latToY(currentProbe.lat)}
+                    stroke="var(--dp-color-accent)"
+                    strokeWidth="1.8"
+                  />
+                  {/* Vertical Crosshair Wires */}
+                  <line
+                    x1={lngToX(currentProbe.lng)}
+                    y1={latToY(currentProbe.lat) - 26}
+                    x2={lngToX(currentProbe.lng)}
+                    y2={latToY(currentProbe.lat) - 9}
+                    stroke="var(--dp-color-accent)"
+                    strokeWidth="1.8"
+                  />
+                  <line
+                    x1={lngToX(currentProbe.lng)}
+                    y1={latToY(currentProbe.lat)}
+                    x2={lngToX(currentProbe.lng)}
+                    y2={latToY(currentProbe.lat) + 26}
+                    stroke="var(--dp-color-accent)"
+                    strokeWidth="1.8"
+                  />
+
+                  {/* Hardware Telemetry Badge next to Probe */}
+                  <g transform={`translate(${Math.min(lngToX(currentProbe.lng) + 14, MAP_WIDTH - 145)}, ${Math.max(latToY(currentProbe.lat) - 30, 20)})`}>
+                    <rect
+                      x="0"
+                      y="0"
+                      width="135"
+                      height="22"
+                      rx="3"
+                      fill="#181e22"
+                      stroke="var(--dp-color-accent)"
+                      strokeWidth="1"
+                    />
+                    <text
+                      x="8"
+                      y="15"
+                      fill="#f2f4f4"
+                      fontSize="9"
+                      fontFamily="var(--dp-typography-mono)"
+                      fontWeight="700"
+                    >
+                      PROBE // {currentProbe.lat.toFixed(2)}°N, {currentProbe.lng.toFixed(2)}°E
+                    </text>
+                  </g>
                 </g>
               )}
             </svg>
@@ -403,14 +777,14 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
               letterSpacing: '0.04em',
             }}
           >
-            <span>DASHED LINE // MAJOR ISOGLOSS CORRIDORS</span>
+            <span>DRAG CROSSHAIR // REAL-TIME IDW CONTINUUM (60 FPS)</span>
             <span>BOUNDS // 11.5°N–18.6°N, 74.0°E–78.6°E</span>
           </div>
         </div>
 
         {/* Right Column: Spatial Telemetry & IDW Blend Readout (3 Distinct Sub-Blocks, gap: 20px, padding: 20px) */}
         <div className="recessed-well" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {isLoadingLocation ? (
+          {isLoadingLocation && !activeData ? (
             <div
               className="recessed-field-screen"
               style={{
@@ -436,7 +810,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                 CALCULATING SPATIAL IDW BLEND ACROSS COORDINATES...
               </p>
             </div>
-          ) : locationData ? (
+          ) : activeData ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* SUB-BLOCK 1: Coordinate & Zone Header + Large Interpolated Local Greeting */}
               <div
@@ -451,9 +825,9 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <MapPin size={16} color="var(--dp-color-accent)" />
+                    <Navigation size={16} color="var(--dp-color-accent)" />
                     <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '13px', fontWeight: 600, letterSpacing: '0.04em' }}>
-                      LAT {locationData.latitude.toFixed(4)}°N, LNG {locationData.longitude.toFixed(4)}°E
+                      LAT {activeData.latitude.toFixed(4)}°N, LNG {activeData.longitude.toFixed(4)}°E
                     </span>
                   </div>
                   <span
@@ -469,7 +843,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                       letterSpacing: '0.04em',
                     }}
                   >
-                    {locationData.zone_classification}
+                    {activeData.zone_classification}
                   </span>
                 </div>
 
@@ -494,7 +868,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                       marginBottom: '6px',
                     }}
                   >
-                    {locationData.interpolated_greeting_local}
+                    {activeData.interpolated_greeting_local}
                   </div>
                   <div
                     style={{
@@ -503,7 +877,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                       color: 'var(--dp-color-on-field-muted)',
                     }}
                   >
-                    [{locationData.interpolated_phrase_result.morphed_dominant_roman}]
+                    [{activeData.interpolated_phrase_result.morphed_dominant_roman}]
                   </div>
                 </div>
               </div>
@@ -534,11 +908,16 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                     <Layers size={15} color="var(--dp-color-ink)" />
                     <span>IDW REGIONAL BLEND SHARES (P = 2.0)</span>
                   </span>
+                  {isScrubbing && (
+                    <span style={{ color: 'var(--dp-color-accent)', fontWeight: 700, fontSize: '10px' }}>
+                      [LIVE 60FPS IDW]
+                    </span>
+                  )}
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {locationData.blend_weights.map((blend) => {
-                    const isDominant = blend.region_code === locationData.dominant_region_code;
+                  {activeData.blend_weights.map((blend) => {
+                    const isDominant = blend.region_code === activeData.dominant_region_code;
                     return (
                       <div
                         key={blend.region_code}
@@ -582,7 +961,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                               width: `${blend.blend_percentage}%`,
                               backgroundColor: isDominant ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)',
                               borderRadius: '4px',
-                              transition: 'width var(--dp-motion-key) ease',
+                              transition: 'width 80ms ease',
                             }}
                           />
                         </div>
@@ -606,11 +985,16 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Volume2 size={14} color="var(--dp-color-accent)" />
-                    <span style={{ color: 'var(--dp-color-label)' }}>PITCH BASELINE: </span>
+                    <span style={{ color: 'var(--dp-color-label)' }}>INTERPOLATED F0 PITCH: </span>
                     <strong style={{ color: 'var(--dp-color-accent)' }}>
-                      {locationData.acoustic_interpolated_pitch_hz.toFixed(1)} Hz
+                      {activeData.acoustic_interpolated_pitch_hz.toFixed(1)} Hz
                     </strong>
                   </div>
+                  {liveCarrierActive && (
+                    <span style={{ color: 'var(--dp-color-accent)', fontSize: '10px', fontWeight: 700 }}>
+                      [CARRIER ACTIVE]
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -634,7 +1018,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
 
                 {/* Active Substrates as neat rounded pill tags */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {locationData.active_border_substrates.map((sub, sIdx) => (
+                  {activeData.active_border_substrates.map((sub, sIdx) => (
                     <span
                       key={sIdx}
                       style={{
@@ -661,7 +1045,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                     margin: 0,
                   }}
                 >
-                  {locationData.interpolated_phrase_result.transition_notes}
+                  {activeData.interpolated_phrase_result.transition_notes}
                 </p>
 
                 <div
@@ -682,10 +1066,10 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                     className="kannada-text"
                     style={{ fontSize: '18px', fontWeight: 700, color: 'var(--dp-color-ink)' }}
                   >
-                    {locationData.interpolated_phrase_result.morphed_dominant_script}
+                    {activeData.interpolated_phrase_result.morphed_dominant_script}
                   </span>
                   <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '13px', color: 'var(--dp-color-label)' }}>
-                    [{locationData.interpolated_phrase_result.morphed_dominant_roman}]
+                    [{activeData.interpolated_phrase_result.morphed_dominant_roman}]
                   </span>
                 </div>
               </div>
@@ -713,7 +1097,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                   letterSpacing: '0.04em',
                 }}
               >
-                SELECT TELEMETRY STATION PIN OR CLICK MAP TO INTERPOLATE
+                SELECT TELEMETRY STATION PIN OR CLICK/DRAG MAP TO INTERPOLATE
               </p>
             </div>
           )}
@@ -722,4 +1106,5 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
     </div>
   );
 };
+
 export default IsoglossMapSheet;
