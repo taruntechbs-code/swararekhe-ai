@@ -4,6 +4,7 @@ from typing import AsyncGenerator, List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,11 +34,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    # Startup cleanup hook: Purge test spam & seed authentic community field records
+    # Startup initialization: Upsert canonical seed data, purge spam & seed community field records
     async with AsyncSessionLocal() as session:
-        from backend.seed_data import purge_spam_submissions, seed_community_submissions
-        await purge_spam_submissions(session)
-        await seed_community_submissions(session)
+        from backend.seed_data import seed_database
+        await seed_database(session)
 
     # Pre-build knowledge graph
     async with AsyncSessionLocal() as session:
@@ -183,4 +183,41 @@ async def get_lexicon(
         return filtered_entries
 
     return list(entries)
+
+
+# ------------------------------------------------------------------------------
+# SPA Static Assets & Frontend Serving (Enabled when frontend/dist exists)
+# ------------------------------------------------------------------------------
+FRONTEND_DIST = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
+
+if os.path.isdir(FRONTEND_DIST):
+    assets_dir = os.path.join(FRONTEND_DIST, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend_assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa_frontend(full_path: str):
+        # Never intercept API, audio, docs, or health endpoints
+        if full_path.startswith(("api/", "static/", "docs", "redoc", "openapi.json", "health")):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+
+        file_path = os.path.join(FRONTEND_DIST, full_path)
+        if full_path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+
+        index_file = os.path.join(FRONTEND_DIST, "index.html")
+        if os.path.isfile(index_file):
+            return FileResponse(index_file)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Frontend index.html not found")
+else:
+    @app.get("/", include_in_schema=False)
+    async def root_api_info():
+        return {
+            "app": settings.APP_NAME,
+            "version": "1.0.0",
+            "status": "online",
+            "docs": "/docs",
+            "api_v1": settings.API_V1_PREFIX,
+        }
+
 

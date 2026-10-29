@@ -15,6 +15,7 @@ import {
   MorphTranslateResponse,
   MorphRulesResponse,
   swararekheApi,
+  getAudioSampleUrl,
 } from '../api/swararekheClient';
 import { hardwareSoundEngine } from '../utils/hardwareSoundEngine';
 
@@ -475,7 +476,7 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
     setPlayingAudioRegion(regionCode);
     setAudioFeedback(`Acoustic Cadence: ${regionCode.replace('_', ' ')}`);
 
-    const audioUrl = `/static/audio_samples/${regionCode}.wav`;
+    const audioUrl = getAudioSampleUrl(regionCode);
     const audio = new Audio(audioUrl);
 
     audio

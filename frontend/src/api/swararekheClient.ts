@@ -321,10 +321,18 @@ export const FALLBACK_GEOJSON: GeoJSONFeatureCollection = {
   ]
 };
 
+// Base URL for backend API (configured via VITE_API_BASE_URL for split Render / Vercel / Static deployments)
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+
+export function getAudioSampleUrl(filenameOrCode: string): string {
+  const filename = filenameOrCode.endsWith('.wav') ? filenameOrCode : `${filenameOrCode}.wav`;
+  return `${API_BASE}/static/audio_samples/${filename}`;
+}
+
 export const swararekheApi = {
   async getPlatformStats(): Promise<PlatformStatsResponse> {
     try {
-      const res = await fetch('/api/v1/explorer/stats');
+      const res = await fetch(`${API_BASE}/api/v1/explorer/stats`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
@@ -335,7 +343,7 @@ export const swararekheApi = {
 
   async getIsoglossMap(): Promise<GeoJSONFeatureCollection> {
     try {
-      const res = await fetch('/api/v1/explorer/isogloss-map');
+      const res = await fetch(`${API_BASE}/api/v1/explorer/isogloss-map`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
@@ -345,7 +353,8 @@ export const swararekheApi = {
   },
 
   async locateIsogloss(lat: number, lng: number, phrase?: string): Promise<IsoglossLocateResponse> {
-    const url = new URL('/api/v1/explorer/locate', window.location.origin);
+    const base = API_BASE || window.location.origin;
+    const url = new URL(`${API_BASE}/api/v1/explorer/locate`, base);
     url.searchParams.set('lat', lat.toString());
     url.searchParams.set('lng', lng.toString());
     if (phrase) url.searchParams.set('phrase', phrase);
@@ -385,7 +394,7 @@ export const swararekheApi = {
 
   async morphTranslate(text: string, sourceLang: 'en' | 'kn' = 'en', targetRegionCode: string = 'all'): Promise<MorphTranslateResponse> {
     try {
-      const res = await fetch('/api/v1/morph/translate', {
+      const res = await fetch(`${API_BASE}/api/v1/morph/translate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -490,7 +499,7 @@ export const swararekheApi = {
 
   async getMorphRules(): Promise<MorphRulesResponse | null> {
     try {
-      const res = await fetch('/api/v1/morph/rules');
+      const res = await fetch(`${API_BASE}/api/v1/morph/rules`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
@@ -501,7 +510,7 @@ export const swararekheApi = {
 
   async getConstellation(query: string): Promise<ConstellationResponse> {
     try {
-      const res = await fetch(`/api/v1/graph/constellation?query=${encodeURIComponent(query)}`);
+      const res = await fetch(`${API_BASE}/api/v1/graph/constellation?query=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
@@ -513,7 +522,7 @@ export const swararekheApi = {
   async getLinguisticBridge(source: string, target: string): Promise<LinguisticBridgeResponse> {
     try {
       const res = await fetch(
-        `/api/v1/graph/bridge?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}`
+        `${API_BASE}/api/v1/graph/bridge?source=${encodeURIComponent(source)}&target=${encodeURIComponent(target)}`
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
@@ -525,7 +534,7 @@ export const swararekheApi = {
 
   async getGraphTopology(): Promise<TopologyResponse> {
     try {
-      const res = await fetch('/api/v1/graph/topology');
+      const res = await fetch(`${API_BASE}/api/v1/graph/topology`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
@@ -536,7 +545,7 @@ export const swararekheApi = {
 
   async getAcousticProfile(regionCode: string): Promise<AcousticProfileResponse> {
     try {
-      const res = await fetch(`/api/v1/acoustic/profile/${encodeURIComponent(regionCode)}`);
+      const res = await fetch(`${API_BASE}/api/v1/acoustic/profile/${encodeURIComponent(regionCode)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
@@ -559,7 +568,7 @@ export const swararekheApi = {
       if (sampleCode) formData.append('sample_code', sampleCode);
       if (audioFile) formData.append('audio_file', audioFile);
 
-      const res = await fetch('/api/v1/acoustic/analyze', {
+      const res = await fetch(`${API_BASE}/api/v1/acoustic/analyze`, {
         method: 'POST',
         body: formData,
       });
@@ -573,7 +582,7 @@ export const swararekheApi = {
 
   async contributeSubmission(submission: CommunitySubmissionRequest): Promise<CommunitySubmissionResponse> {
     try {
-      const res = await fetch('/api/v1/explorer/contribute', {
+      const res = await fetch(`${API_BASE}/api/v1/explorer/contribute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submission),
@@ -596,7 +605,7 @@ export const swararekheApi = {
 
   async getSubmissions(limit: number = 20): Promise<CommunitySubmissionItemResponse[]> {
     try {
-      const res = await fetch(`/api/v1/explorer/submissions?limit=${limit}`);
+      const res = await fetch(`${API_BASE}/api/v1/explorer/submissions?limit=${limit}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {

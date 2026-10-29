@@ -13,6 +13,7 @@ import {
   AcousticProfileResponse,
   AcousticAnalyzeResponse,
   swararekheApi,
+  getAudioSampleUrl,
   FALLBACK_ACOUSTIC_PROFILES,
   FALLBACK_ACOUSTIC_ANALYZE,
 } from '../api/swararekheClient';
@@ -307,7 +308,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
     } catch (err) {
       console.warn('Web Audio synthesis error, fallback to audio file:', err);
       // Fallback to static .wav file
-      const audio = new Audio(`/static/audio_samples/${profile.region_code}.wav`);
+      const audio = new Audio(getAudioSampleUrl(profile.region_code));
       audio.play().then(() => {
         audio.onended = () => {
           setIsPlayingAudio(false);

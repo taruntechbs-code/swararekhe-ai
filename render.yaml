@@ -1,0 +1,25 @@
+# ==============================================================================
+# SWARAREKHE (Model SR-05) — Render Infrastructure Blueprint (render.yaml)
+# https://render.com/docs/blueprint-spec
+# ==============================================================================
+
+services:
+  # Option 1: Unified Full-Stack Web Service (Recommended for Render Free Tier)
+  # Serves both the FastAPI Spatio-Acoustic backend and compiled React UI on 1 domain
+  - type: web
+    name: swararekhe-app
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: APP_NAME
+        value: "SWARAREKHE (ಸ್ವರರೇಖೆ) — Model SR-05"
+      - key: DATABASE_URL
+        value: "sqlite+aiosqlite:///./namma_kannada.db"
+      # Optional: set your GEMINI_API_KEY in Render dashboard for neural morphing fallback
+      - key: GEMINI_API_KEY
+        sync: false
