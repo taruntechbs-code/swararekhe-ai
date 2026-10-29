@@ -119,6 +119,7 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
   const [presetIndex, setPresetIndex] = useState(0);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
   const [isFlashingInjection, setIsFlashingInjection] = useState(false);
+  const [hideRejectedSpam, setHideRejectedSpam] = useState(true);
 
   // Load submissions on mount
   useEffect(() => {
@@ -1001,7 +1002,33 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className={`raised-key ${hideRejectedSpam ? 'active' : ''}`}
+              onClick={() => {
+                hardwareSoundEngine.playKeyClick();
+                setHideRejectedSpam(!hideRejectedSpam);
+              }}
+              style={{
+                height: '34px',
+                padding: '0 12px',
+                fontSize: '11px',
+                fontFamily: 'var(--dp-typography-mono)',
+                fontWeight: 700,
+                color: hideRejectedSpam ? 'var(--dp-color-accent)' : 'var(--dp-color-label)',
+                backgroundColor: 'var(--dp-color-raised)',
+                border: hideRejectedSpam ? '1px solid var(--dp-color-accent)' : '1px solid #8e979d',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+              title="Toggle filtering out low-score/rejected spam entries from the live ledger"
+            >
+              <span className={`led-indicator ${hideRejectedSpam ? 'active' : ''}`} />
+              <span>HIDE REJECTED SPAM: {hideRejectedSpam ? 'ON' : 'OFF'}</span>
+            </button>
+
             <span
               style={{
                 fontFamily: 'var(--dp-typography-mono)',
@@ -1016,7 +1043,15 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
                 transition: 'border-color 150ms ease, color 150ms ease, box-shadow 150ms ease',
               }}
             >
-              RECORD COUNT: {submissions.length}
+              RECORD COUNT: {
+                submissions.filter((sub) => {
+                  if (!hideRejectedSpam) return true;
+                  const isSpam =
+                    sub.ai_triage_status === 'rejected_spam' ||
+                    (sub.phonotactic_validity_score !== undefined && sub.phonotactic_validity_score < 0.4);
+                  return !isSpam;
+                }).length
+              }
             </span>
 
             <button
@@ -1040,7 +1075,15 @@ export const LivingArchiveBay: React.FC<LivingArchiveBayProps> = ({ onContribute
 
         {/* Spacious Stack of Padded Ledger Cards (padding: 18px 24px, gap: 14px) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '560px', overflowY: 'auto', paddingRight: '4px' }}>
-          {submissions.map((sub, idx) => {
+          {submissions
+            .filter((sub) => {
+              if (!hideRejectedSpam) return true;
+              const isSpam =
+                sub.ai_triage_status === 'rejected_spam' ||
+                (sub.phonotactic_validity_score !== undefined && sub.phonotactic_validity_score < 0.4);
+              return !isSpam;
+            })
+            .map((sub, idx) => {
             const isSpam =
               sub.ai_triage_status === 'rejected_spam' ||
               (sub.phonotactic_validity_score !== undefined && sub.phonotactic_validity_score < 0.4);

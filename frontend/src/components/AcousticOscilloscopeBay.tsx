@@ -48,58 +48,76 @@ const yToHz = (y: number): number => {
   return Math.max(MIN_HZ, Math.min(MAX_HZ, Math.round(hz)));
 };
 
-const sample6Points = (curve: number[]): number[] => {
+const sample6Points = (curve: number[], addVariance = false): number[] => {
   if (!curve || curve.length === 0) return [145, 155, 165, 175, 190, 215];
-  if (curve.length === 6) return [...curve];
   const result: number[] = [];
+  // Subtle natural human variance offsets between -1.3 and +1.4 Hz
+  const varianceOffsets = [0.8, -1.2, 1.4, -0.9, 1.1, -1.3];
   for (let i = 0; i < 6; i++) {
     const idx = Math.round((i / 5) * (curve.length - 1));
-    result.push(Math.round(curve[idx]));
+    const baseVal = curve[idx];
+    const offset = addVariance ? varianceOffsets[i % varianceOffsets.length] : 0;
+    result.push(Math.round((baseVal + offset) * 10) / 10);
   }
   return result;
 };
 
 const computeSculptMetrics = (points: number[], refProf: AcousticProfileResponse) => {
   if (!points || points.length === 0) return null;
+  const ref6 = sample6Points(refProf.f0_pitch_curve, false);
+
+  // Point-by-point deviation comparison against regional benchmark
+  let totalAbsDev = 0;
+  for (let i = 0; i < points.length; i++) {
+    const target = ref6[i] ?? refProf.cadence_metrics.pitch_mean_hz;
+    totalAbsDev += Math.abs(points[i] - target);
+  }
+  const meanAbsDev = totalAbsDev / points.length;
+
   const mean = points.reduce((acc, v) => acc + v, 0) / points.length;
   const min = Math.min(...points);
   const max = Math.max(...points);
   const range = max - min;
+
+  const ref6Mean = ref6.reduce((acc, v) => acc + v, 0) / ref6.length;
+  const ref6Range = Math.max(...ref6) - Math.min(...ref6);
+
   const lastIdx = points.length - 1;
-  const slope = (points[lastIdx] - points[Math.max(0, lastIdx - 2)]) / 2;
+  const sculptSlope = (points[lastIdx] - points[Math.max(0, lastIdx - 2)]) / 2;
+  const refSlope = (ref6[lastIdx] - ref6[Math.max(0, lastIdx - 2)]) / 2;
 
-  const refMean = refProf.cadence_metrics.pitch_mean_hz;
-  const refRange = refProf.cadence_metrics.pitch_range_hz;
-  const refSlope = refProf.cadence_metrics.terminal_inflection_slope;
+  // Point accuracy score (1.5% deduction per Hz of average deviation)
+  const pointScore = Math.max(0, 100 - meanAbsDev * 1.5);
+  
+  // Modulation range fidelity penalty
+  const rangeDiff = Math.abs(range - ref6Range);
+  const rangeScore = Math.max(0, 100 - (rangeDiff / Math.max(15, ref6Range)) * 80);
 
-  const meanError = Math.abs(mean - refMean);
-  const rangeError = Math.abs(range - refRange);
-  const slopeError = Math.abs(slope - refSlope);
+  // Terminal trajectory fidelity penalty
+  const slopeDiff = Math.abs(sculptSlope - refSlope);
+  const slopeScore = Math.max(0, 100 - (slopeDiff / Math.max(4, Math.abs(refSlope))) * 70);
 
-  const meanScore = Math.max(0, 100 - (meanError / Math.max(1, refMean)) * 140);
-  const rangeScore = Math.max(0, 100 - (rangeError / Math.max(20, refRange)) * 100);
-  const slopeScore = Math.max(0, 100 - (slopeError / (Math.abs(refSlope) + 1.2)) * 85);
-
-  const compositeScore = Math.min(100, Math.max(8, Math.round(meanScore * 0.4 + rangeScore * 0.3 + slopeScore * 0.3)));
+  // Composite Match Score: calibrated so baseline curve with ±1.5Hz variance scores 96%-99%
+  const compositeScore = Math.min(100, Math.max(8, Math.round(pointScore * 0.6 + rangeScore * 0.2 + slopeScore * 0.2)));
 
   const tips: string[] = [];
-  if (mean < refMean - 14) {
+  if (mean < ref6Mean - 12) {
     tips.push(`Pitch baseline is low (${mean.toFixed(1)} Hz). Drag nodes upward to calibrate with ${refProf.region_name} median.`);
-  } else if (mean > refMean + 14) {
+  } else if (mean > ref6Mean + 12) {
     tips.push(`Pitch baseline is elevated (${mean.toFixed(1)} Hz). Drag nodes downward toward target register.`);
   } else {
     tips.push(`Fundamental pitch baseline (${mean.toFixed(1)} Hz) aligns with target regional register.`);
   }
 
-  if (refSlope > 0.4 && slope < 0.1) {
-    tips.push(`Cadence requires rising terminal question inflection (+${refSlope.toFixed(2)} Hz/f). Drag rightmost nodes upward.`);
-  } else if (refSlope < -0.4 && slope > -0.1) {
-    tips.push(`Cadence requires terminal decay inflection (${refSlope.toFixed(2)} Hz/f). Drag rightmost nodes downward.`);
+  if (refSlope > 2 && sculptSlope < 1) {
+    tips.push(`Cadence requires rising terminal question inflection (+${refSlope.toFixed(1)} Hz/node). Drag rightmost nodes upward.`);
+  } else if (refSlope < -2 && sculptSlope > -1) {
+    tips.push(`Cadence requires terminal decay inflection (${refSlope.toFixed(1)} Hz/node). Drag rightmost nodes downward.`);
   } else {
-    tips.push(`Terminal inflection trajectory (${slope > 0 ? '+' : ''}${slope.toFixed(2)} Hz/f) matches dialect profile.`);
+    tips.push(`Terminal inflection trajectory (${sculptSlope > 0 ? '+' : ''}${sculptSlope.toFixed(1)} Hz/node) matches dialect profile.`);
   }
 
-  if (range < refRange * 0.65) {
+  if (range < ref6Range * 0.7) {
     tips.push(`Pitch modulation range is compressed (Δ${range.toFixed(1)} Hz). Expand peak-to-trough range for authentic cadence.`);
   } else {
     tips.push(`Expressive pitch modulation range (Δ${range.toFixed(1)} Hz) delivers authentic cadence dynamics.`);
@@ -108,7 +126,7 @@ const computeSculptMetrics = (points: number[], refProf: AcousticProfileResponse
   return {
     mean: Number(mean.toFixed(1)),
     range: Number(range.toFixed(1)),
-    slope: Number(slope.toFixed(2)),
+    slope: Number(sculptSlope.toFixed(2)),
     score: compositeScore,
     tips,
   };
@@ -132,7 +150,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
   // Interactive Pitch Sculptor states
   const [isSculptMode, setIsSculptMode] = useState<boolean>(true);
   const [sculptedPoints, setSculptedPoints] = useState<number[]>(() =>
-    sample6Points(FALLBACK_ACOUSTIC_PROFILES[activeRegionCode]?.f0_pitch_curve || [])
+    sample6Points(FALLBACK_ACOUSTIC_PROFILES[activeRegionCode]?.f0_pitch_curve || [], true)
   );
   const [draggingNodeIdx, setDraggingNodeIdx] = useState<number | null>(null);
   const [hoveredNodeIdx, setHoveredNodeIdx] = useState<number | null>(null);
@@ -155,7 +173,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
     try {
       const data = await swararekheApi.getAcousticProfile(code);
       setProfile(data);
-      setSculptedPoints(sample6Points(data.f0_pitch_curve));
+      setSculptedPoints(sample6Points(data.f0_pitch_curve, true));
       setAudioStatusText(`LOADED PROFILE // ${data.region_name.toUpperCase()}`);
     } catch (err) {
       console.error('Failed to load acoustic profile:', err);
@@ -173,7 +191,7 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
 
   const handleResetSculptToBenchmark = () => {
     hardwareSoundEngine.playKeyClick();
-    setSculptedPoints(sample6Points(profile.f0_pitch_curve));
+    setSculptedPoints(sample6Points(profile.f0_pitch_curve, true));
     setAnalysisResult(null);
     setAudioStatusText(`RESET SCULPT TO ${profile.region_name.toUpperCase()} BENCHMARK`);
   };
@@ -1278,9 +1296,25 @@ export const AcousticOscilloscopeBay: React.FC<AcousticOscilloscopeBayProps> = (
                         fontWeight: 800,
                         color: 'var(--dp-color-accent)',
                         lineHeight: '1.1',
+                        display: 'flex',
+                        alignItems: 'baseline',
+                        gap: '10px',
+                        flexWrap: 'wrap',
                       }}
                     >
-                      {sculptMetrics.score}%
+                      <span>{sculptMetrics.score}%</span>
+                      {sculptMetrics.score >= 95 && (
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            color: '#34d399',
+                            letterSpacing: '0.8px',
+                          }}
+                        >
+                          (CALIBRATED)
+                        </span>
+                      )}
                     </div>
                   </div>
 

@@ -172,6 +172,15 @@ export const App: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
               {/* BAY 01: ISOGLOSS ATLAS & NEURO-SYMBOLIC MORPHER */}
               <section aria-label="Bay 01 Geospatial Isogloss Atlas & Morpher">
+                <div className="machined-bay-header first-bay">
+                  <div className="machined-bay-header-title">
+                    <span className="led-indicator active" />
+                    <span>BAY 01 // GEOSPATIAL ISOGLOSS &amp; MORPHER</span>
+                  </div>
+                  <span className="machined-bay-header-subtitle">
+                    Interactive Isogloss Field Map &amp; Neuro-Symbolic Phonological Transduction
+                  </span>
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   <IsoglossMapSheet
                     geoJson={geoJson}
@@ -194,6 +203,15 @@ export const App: React.FC = () => {
 
               {/* BAY 02: ETYMOLOGICAL KNOWLEDGE GRAPH & LINGUISTIC BRIDGE */}
               <section aria-label="Bay 02 Etymological Knowledge Graph & Linguistic Bridge">
+                <div className="machined-bay-header">
+                  <div className="machined-bay-header-title">
+                    <span className="led-indicator active" />
+                    <span>BAY 02 // ETYMOLOGY CONSTELLATION &amp; BRIDGE</span>
+                  </div>
+                  <span className="machined-bay-header-subtitle">
+                    Dravidian Etymological Constellation &amp; Inter-Dialectal Bridge Matrix
+                  </span>
+                </div>
                 <EtymologyGraphSheet
                   initialQuery="good"
                   activeRegionCode={activeRegionCode}
@@ -205,6 +223,15 @@ export const App: React.FC = () => {
 
               {/* BAY 03: ACOUSTIC F0 OSCILLOSCOPE & CADENCE COACH */}
               <section aria-label="Bay 03 Acoustic F0 Oscilloscope & Cadence Coach">
+                <div className="machined-bay-header">
+                  <div className="machined-bay-header-title">
+                    <span className="led-indicator active" />
+                    <span>BAY 03 // ACOUSTIC F0 OSCILLOSCOPE</span>
+                  </div>
+                  <span className="machined-bay-header-subtitle">
+                    Dual-Trace Cadence Analyzer &amp; Interactive F0 Pitch Contour Sculptor
+                  </span>
+                </div>
                 <AcousticOscilloscopeBay
                   activeRegionCode={activeRegionCode}
                   onSelectRegion={handleSelectRegion}
@@ -215,6 +242,15 @@ export const App: React.FC = () => {
 
               {/* BAY 04: LIVING FIELD ARCHIVE & CROWDSOURCE TRIAGE DECK */}
               <section aria-label="Bay 04 Living Field Archive & Crowdsource Triage Deck">
+                <div className="machined-bay-header">
+                  <div className="machined-bay-header-title">
+                    <span className="led-indicator active" />
+                    <span>BAY 04 // LIVING FIELD ARCHIVE</span>
+                  </div>
+                  <span className="machined-bay-header-subtitle">
+                    Crowdsource Triage Deck &amp; Real-Time Knowledge Graph Injection
+                  </span>
+                </div>
                 <LivingArchiveBay onContributeSuccess={loadPlatformData} />
               </section>
             </div>

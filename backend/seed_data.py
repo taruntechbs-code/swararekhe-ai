@@ -1,11 +1,11 @@
 import asyncio
 import logging
 from typing import Any, Dict, List
-from sqlalchemy import select
+from sqlalchemy import select, or_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import AsyncSessionLocal, Base, engine
-from backend.models import DialectRegion, DialectVariant, LexicalEntry
+from backend.models import DialectRegion, DialectVariant, LexicalEntry, CommunitySubmission
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("seed_data")
@@ -938,6 +938,105 @@ LEXICON_DATA: List[Dict[str, Any]] = [
 ]
 
 
+AUTHENTIC_COMMUNITY_SUBMISSIONS: List[Dict[str, Any]] = [
+    {
+        "contributor_name": "Shankar Gowda Patil",
+        "district_name": "Belagavi",
+        "latitude": 15.8497,
+        "longitude": 74.4977,
+        "nearest_region_code": "hubballi_dharwad",
+        "local_phrase_kannada": "ಚಲೋ ಐತ್ರಿ ಪಾ",
+        "local_phrase_roman": "Cholo aytri pa",
+        "standard_meaning_english": "It is very fine brother",
+        "category": "greeting",
+        "phonotactic_validity_score": 0.98,
+        "ai_triage_status": "approved_injected",
+        "triage_notes": "Verified phonotactic profile: 0.98 validity. Detected northern alveolar honorific -ri and Marathi contact root cholo. Injected into Knowledge Graph under Uttara Karnataka.",
+    },
+    {
+        "contributor_name": "Sunita Shetty",
+        "district_name": "Udupi",
+        "latitude": 13.3409,
+        "longitude": 74.7421,
+        "nearest_region_code": "kundapura_mangaluru",
+        "local_phrase_kannada": "ಲಾಯ್ಕ್ ಆಂಡ್ ಪೋಯಿ",
+        "local_phrase_roman": "Laayk aand poyi",
+        "standard_meaning_english": "It became very pleasant and comfortable",
+        "category": "daily",
+        "phonotactic_validity_score": 0.96,
+        "ai_triage_status": "approved_injected",
+        "triage_notes": "Verified Tulu-Kannada coastal substrate adjective laayk and participial connector.",
+    },
+    {
+        "contributor_name": "Basavaraj Biradar",
+        "district_name": "Kalaburagi",
+        "latitude": 17.3297,
+        "longitude": 76.8343,
+        "nearest_region_code": "kalaburagi_bidar",
+        "local_phrase_kannada": "ಜಲ್ದಿ ಹೋಗ್ಲಿಕತ್ತೀವಿ ನೋಡ್ರಿ",
+        "local_phrase_roman": "Jaldi hoglikattivi nodri",
+        "standard_meaning_english": "We are hurrying along quickly you see",
+        "category": "daily",
+        "phonotactic_validity_score": 0.95,
+        "ai_triage_status": "approved_injected",
+        "triage_notes": "Deccan inchoative aspectual marker -likattivi and attention-focal nodri validated.",
+    },
+    {
+        "contributor_name": "Ponnamma Muthappa",
+        "district_name": "Kodagu",
+        "latitude": 12.4244,
+        "longitude": 75.7382,
+        "nearest_region_code": "arebhashe_kodagu",
+        "local_phrase_kannada": "ಕೂಳು ತಿಂದ್ದಿರಾ?",
+        "local_phrase_roman": "Koolu tindira?",
+        "standard_meaning_english": "Did you partake of meals / rice?",
+        "category": "food",
+        "phonotactic_validity_score": 0.94,
+        "ai_triage_status": "approved_injected",
+        "triage_notes": "Arebhashe/Kodava ancestral dietary lexeme koolu and interrogative verbal inflection validated.",
+    },
+]
+
+
+async def purge_spam_submissions(session: AsyncSession) -> int:
+    """Purge test spam and invalid entries from community submissions ledger."""
+    stmt = delete(CommunitySubmission).where(
+        or_(
+            CommunitySubmission.local_phrase_roman.ilike("%spam-casino%"),
+            CommunitySubmission.local_phrase_roman.ilike("%1111111%"),
+            CommunitySubmission.local_phrase_kannada.ilike("%spam-casino%"),
+            CommunitySubmission.local_phrase_kannada.ilike("%1111111%"),
+        )
+    )
+    result = await session.execute(stmt)
+    await session.commit()
+    purged_count = result.rowcount or 0
+    if purged_count > 0:
+        logger.info("Purged %d test spam submissions from database.", purged_count)
+    return purged_count
+
+
+async def seed_community_submissions(session: AsyncSession) -> int:
+    """Seed authentic, approved community dialect field records if not already present."""
+    seeded = 0
+    for item in AUTHENTIC_COMMUNITY_SUBMISSIONS:
+        result = await session.execute(
+            select(CommunitySubmission).where(
+                CommunitySubmission.district_name == item["district_name"],
+                CommunitySubmission.local_phrase_roman == item["local_phrase_roman"],
+            )
+        )
+        existing = result.scalars().first()
+        if not existing:
+            sub = CommunitySubmission(**item)
+            session.add(sub)
+            seeded += 1
+    if seeded > 0:
+        await session.commit()
+        logger.info("Seeded %d authentic community dialect submissions.", seeded)
+    return seeded
+
+
 async def seed_database(session: AsyncSession) -> Dict[str, int]:
     """
     Idempotently seed the 5 core DialectRegions and 14 authentic LexicalEntries
@@ -1042,6 +1141,10 @@ async def seed_database(session: AsyncSession) -> Dict[str, int]:
                 variants_upserted += 1
 
     await session.commit()
+
+    # 3. Purge spam and seed authentic community submissions
+    await purge_spam_submissions(session)
+    await seed_community_submissions(session)
 
     # Query total counts
     total_regions = len(

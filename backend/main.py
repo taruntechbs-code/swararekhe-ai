@@ -33,6 +33,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+    # Startup cleanup hook: Purge test spam & seed authentic community field records
+    async with AsyncSessionLocal() as session:
+        from backend.seed_data import purge_spam_submissions, seed_community_submissions
+        await purge_spam_submissions(session)
+        await seed_community_submissions(session)
+
     # Pre-build knowledge graph
     async with AsyncSessionLocal() as session:
         await knowledge_graph_service.build_graph(session)

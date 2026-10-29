@@ -546,7 +546,12 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               hardwareSoundEngine.playKeyClick();
               loadConstellation(searchQuery);
             }}
-            style={{ display: 'flex', gap: '12px', alignItems: 'center' }}
+            style={{
+              display: 'flex',
+              gap: '14px',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
           >
             <input
               type="text"
@@ -554,14 +559,29 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search root concept, English gloss, or dialect variant (e.g., 'good', 'bhaal', 'avva', 'rain')..."
               className="industrial-input"
-              style={{ flex: 1, fontSize: '16px', padding: '10px 16px', height: '46px' }}
+              style={{
+                flex: '1 1 280px',
+                minWidth: '240px',
+                fontSize: '15px',
+                padding: '0 16px',
+                height: '44px',
+              }}
             />
 
             <button
               type="submit"
               disabled={isLoadingConstellation}
               className="raised-key"
-              style={{ minWidth: '150px', height: '46px', fontWeight: 700 }}
+              style={{
+                height: '44px',
+                padding: '0 18px',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
               title="Query NetworkX 2-hop ego-graph"
             >
               <Search size={16} color="var(--dp-color-accent)" />
@@ -574,9 +594,14 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               disabled={isPulsing || isLoadingConstellation}
               className={`raised-key ${isPulsing ? 'active' : ''}`}
               style={{
-                minWidth: '205px',
-                height: '46px',
+                height: '44px',
+                padding: '0 18px',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
                 fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
                 color: isPulsing ? 'var(--dp-color-accent)' : undefined,
               }}
               title="Propagate physical etymological impulse pulse from root concept through variant edges to substrate origins"

@@ -86,6 +86,16 @@ def test_community_submission_living_dictionary():
     assert updated_stats["community_submissions_total"] >= 1
     assert updated_stats["approved_living_entries"] >= 1
 
+    # Cleanup test created row to maintain idempotency
+    sub_id = data.get("submission_id")
+    if sub_id:
+        import sqlite3
+        conn = sqlite3.connect("namma_kannada.db")
+        c = conn.cursor()
+        c.execute("DELETE FROM community_submissions WHERE id = ?", (sub_id,))
+        conn.commit()
+        conn.close()
+
 
 def test_community_submission_spam_rejection():
     """Test 5: Spam text submitted -> Rejected as spam and not injected into graph."""
@@ -102,6 +112,16 @@ def test_community_submission_spam_rejection():
     data = response.json()
     assert data["ai_triage_status"] == "rejected_spam"
     assert data["graph_node_injected"] is False
+
+    # Cleanup test spam row immediately so it never pollutes the live database
+    sub_id = data.get("submission_id")
+    if sub_id:
+        import sqlite3
+        conn = sqlite3.connect("namma_kannada.db")
+        c = conn.cursor()
+        c.execute("DELETE FROM community_submissions WHERE id = ?", (sub_id,))
+        conn.commit()
+        conn.close()
 
 
 def test_list_submissions():
