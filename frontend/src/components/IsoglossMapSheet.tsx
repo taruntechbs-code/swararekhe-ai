@@ -425,10 +425,11 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
             style={{
               marginBottom: '16px',
               display: 'flex',
-              flexWrap: 'wrap',
-              gap: '6px',
+              flexWrap: 'nowrap',
+              overflowX: 'auto',
+              gap: '5px',
               alignItems: 'center',
-              padding: '10px 14px',
+              padding: '8px 12px',
               backgroundColor: 'var(--dp-color-raised)',
               border: '1px solid #b6bec2',
               borderRadius: 'var(--dp-radius-key)',
@@ -437,12 +438,13 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
             <span
               className="meta-label"
               style={{
-                marginRight: '6px',
+                marginRight: '4px',
                 marginBottom: 0,
                 fontSize: '11px',
                 fontWeight: 700,
                 color: 'var(--dp-color-label)',
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
             >
               SURVEY PINS:
@@ -469,10 +471,12 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                     }
                   }}
                   style={{
-                    fontSize: '12px',
-                    padding: '5px 10px',
-                    height: '28px',
+                    fontSize: '11px',
+                    padding: '4px 8px',
+                    height: '26px',
                     whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    gap: '4px',
                   }}
                 >
                   <MapPin size={11} color={isSelected ? 'var(--dp-color-accent)' : 'var(--dp-color-ink)'} />
@@ -715,28 +719,31 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                     strokeWidth="1.8"
                   />
 
-                  {/* Hardware Telemetry Badge next to Probe */}
-                  <g transform={`translate(${Math.min(lngToX(currentProbe.lng) + 14, MAP_WIDTH - 145)}, ${Math.max(latToY(currentProbe.lat) - 30, 20)})`}>
-                    <rect
-                      x="0"
-                      y="0"
-                      width="135"
-                      height="22"
-                      rx="3"
-                      fill="#181e22"
-                      stroke="var(--dp-color-accent)"
-                      strokeWidth="1"
-                    />
-                    <text
-                      x="8"
-                      y="15"
-                      fill="#f2f4f4"
-                      fontSize="9"
-                      fontFamily="var(--dp-typography-mono)"
-                      fontWeight="700"
-                    >
-                      PROBE // {currentProbe.lat.toFixed(2)}°N, {currentProbe.lng.toFixed(2)}°E
-                    </text>
+                  {/* Hardware Telemetry Badge positioned centered ABOVE the crosshair reticle */}
+                  <g transform={`translate(${Math.max(80, Math.min(MAP_WIDTH - 80, lngToX(currentProbe.lng)))}, ${Math.max(48, latToY(currentProbe.lat))})`}>
+                    <g transform="translate(-75, -42)">
+                      <rect
+                        x="0"
+                        y="0"
+                        width="150"
+                        height="22"
+                        rx="3"
+                        fill="#181e22"
+                        stroke="var(--dp-color-accent)"
+                        strokeWidth="1"
+                      />
+                      <text
+                        x="75"
+                        y="15"
+                        textAnchor="middle"
+                        fill="#f2f4f4"
+                        fontSize="9"
+                        fontFamily="var(--dp-typography-mono)"
+                        fontWeight="700"
+                      >
+                        PROBE // {currentProbe.lat.toFixed(2)}°N, {currentProbe.lng.toFixed(2)}°E
+                      </text>
+                    </g>
                   </g>
                 </g>
               )}

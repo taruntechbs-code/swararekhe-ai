@@ -360,86 +360,104 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Bank of Raised Hardware Navigation Keys with 12px gap & 12px 18px padding */}
+      {/* Bank of Raised Hardware Navigation Keys locked into single 5-column row */}
       <nav
         className="chassis-nav-bank"
         aria-label="Instrument Navigation Bays"
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '12px',
-          marginTop: '16px',
-        }}
       >
         <button
           type="button"
-          className={`raised-key ${activeTab === 'atlas' ? 'active' : ''}`}
+          className={`raised-key chassis-nav-btn ${activeTab === 'atlas' ? 'active' : ''}`}
           onClick={() => handleTabClick('atlas')}
           style={{
             fontWeight: activeTab === 'atlas' ? 700 : 500,
-            padding: '12px 18px',
+            padding: '10px 10px',
+            fontSize: '11px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
+          title="Bay 01: Isogloss Atlas & Morpher"
         >
-          <span className={`led-indicator ${activeTab === 'atlas' ? 'active' : ''}`} />
-          <MapPin size={16} color="var(--dp-color-ink)" />
-          <span>BAY 01 // ISOGLOSS ATLAS &amp; MORPHER</span>
+          <span className={`led-indicator ${activeTab === 'atlas' ? 'active' : ''}`} style={{ flexShrink: 0 }} />
+          <MapPin size={15} color="var(--dp-color-ink)" style={{ flexShrink: 0 }} />
+          <span>BAY 01 // ISOGLOSS &amp; MORPHER</span>
         </button>
 
         <button
           type="button"
-          className={`raised-key ${activeTab === 'graph' ? 'active' : ''}`}
+          className={`raised-key chassis-nav-btn ${activeTab === 'graph' ? 'active' : ''}`}
           onClick={() => handleTabClick('graph')}
           style={{
             fontWeight: activeTab === 'graph' ? 700 : 500,
-            padding: '12px 18px',
+            padding: '10px 10px',
+            fontSize: '11px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
+          title="Bay 02: Etymology Graph & Bridge"
         >
-          <span className={`led-indicator ${activeTab === 'graph' ? 'active' : ''}`} />
-          <Network size={16} color="var(--dp-color-ink)" />
-          <span>BAY 02 // ETYMOLOGY GRAPH &amp; BRIDGE</span>
+          <span className={`led-indicator ${activeTab === 'graph' ? 'active' : ''}`} style={{ flexShrink: 0 }} />
+          <Network size={15} color="var(--dp-color-ink)" style={{ flexShrink: 0 }} />
+          <span>BAY 02 // ETYMOLOGY GRAPH</span>
         </button>
 
         <button
           type="button"
-          className={`raised-key ${activeTab === 'acoustic' ? 'active' : ''}`}
+          className={`raised-key chassis-nav-btn ${activeTab === 'acoustic' ? 'active' : ''}`}
           onClick={() => handleTabClick('acoustic')}
           style={{
             fontWeight: activeTab === 'acoustic' ? 700 : 500,
-            padding: '12px 18px',
+            padding: '10px 10px',
+            fontSize: '11px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
+          title="Bay 03: Acoustic F0 Oscilloscope"
         >
-          <span className={`led-indicator ${activeTab === 'acoustic' ? 'active' : ''}`} />
-          <Activity size={16} color="var(--dp-color-ink)" />
-          <span>BAY 03 // ACOUSTIC F0 OSCILLOSCOPE</span>
+          <span className={`led-indicator ${activeTab === 'acoustic' ? 'active' : ''}`} style={{ flexShrink: 0 }} />
+          <Activity size={15} color="var(--dp-color-ink)" style={{ flexShrink: 0 }} />
+          <span>BAY 03 // F0 OSCILLOSCOPE</span>
         </button>
 
         <button
           type="button"
-          className={`raised-key ${activeTab === 'archive' ? 'active' : ''}`}
+          className={`raised-key chassis-nav-btn ${activeTab === 'archive' ? 'active' : ''}`}
           onClick={() => handleTabClick('archive')}
           style={{
             fontWeight: activeTab === 'archive' ? 700 : 500,
-            padding: '12px 18px',
+            padding: '10px 10px',
+            fontSize: '11px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
+          title="Bay 04: Living Field Archive"
         >
-          <span className={`led-indicator ${activeTab === 'archive' ? 'active' : ''}`} />
-          <BookOpenCheck size={16} color="var(--dp-color-ink)" />
-          <span>BAY 04 // LIVING FIELD ARCHIVE</span>
+          <span className={`led-indicator ${activeTab === 'archive' ? 'active' : ''}`} style={{ flexShrink: 0 }} />
+          <BookOpenCheck size={15} color="var(--dp-color-ink)" style={{ flexShrink: 0 }} />
+          <span>BAY 04 // LIVING ARCHIVE</span>
         </button>
 
         <button
           type="button"
-          className={`raised-key ${activeTab === 'all' ? 'active' : ''}`}
+          className={`raised-key chassis-nav-btn ${activeTab === 'all' ? 'active' : ''}`}
           onClick={() => handleTabClick('all')}
           style={{
             fontWeight: activeTab === 'all' ? 700 : 500,
-            padding: '12px 18px',
-            marginLeft: 'auto',
+            padding: '10px 10px',
+            fontSize: '11px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
+          title="All Bays (Full Chassis View)"
         >
-          <span className={`led-indicator ${activeTab === 'all' ? 'active' : ''}`} />
-          <Layers size={16} color="var(--dp-color-accent)" />
-          <span>ALL BAYS (FULL CHASSIS VIEW)</span>
+          <span className={`led-indicator ${activeTab === 'all' ? 'active' : ''}`} style={{ flexShrink: 0 }} />
+          <Layers size={15} color="var(--dp-color-accent)" style={{ flexShrink: 0 }} />
+          <span>ALL BAYS (FULL CHASSIS)</span>
         </button>
       </nav>
     </header>
