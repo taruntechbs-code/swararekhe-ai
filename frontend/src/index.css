@@ -535,6 +535,21 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 1;
 }
 
+/* Bay 02 Constellation Search Form Toolbar Grid */
+.constellation-search-form {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .constellation-search-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* =========================================================================
    Responsive Breakpoints
    ========================================================================= */

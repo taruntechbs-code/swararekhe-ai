@@ -541,16 +541,11 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
           }}
         >
           <form
+            className="constellation-search-form"
             onSubmit={(e) => {
               e.preventDefault();
               hardwareSoundEngine.playKeyClick();
               loadConstellation(searchQuery);
-            }}
-            style={{
-              display: 'flex',
-              gap: '14px',
-              flexWrap: 'wrap',
-              alignItems: 'center',
             }}
           >
             <input
@@ -560,8 +555,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               placeholder="Search root concept, English gloss, or dialect variant (e.g., 'good', 'bhaal', 'avva', 'rain')..."
               className="industrial-input"
               style={{
-                flex: '1 1 280px',
-                minWidth: '240px',
+                width: '100%',
                 fontSize: '15px',
                 padding: '0 16px',
                 height: '44px',
@@ -573,14 +567,18 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               disabled={isLoadingConstellation}
               className="raised-key"
               style={{
-                height: '44px',
-                padding: '0 18px',
-                flexShrink: 0,
+                position: 'static',
+                width: 'auto',
+                minWidth: 'max-content',
+                padding: '10px 20px',
+                margin: 0,
                 whiteSpace: 'nowrap',
-                fontWeight: 700,
                 display: 'inline-flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '8px',
+                height: '44px',
+                fontWeight: 700,
               }}
               title="Query NetworkX 2-hop ego-graph"
             >
@@ -594,14 +592,18 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
               disabled={isPulsing || isLoadingConstellation}
               className={`raised-key ${isPulsing ? 'active' : ''}`}
               style={{
-                height: '44px',
-                padding: '0 18px',
-                flexShrink: 0,
+                position: 'static',
+                width: 'auto',
+                minWidth: 'max-content',
+                padding: '10px 20px',
+                margin: 0,
                 whiteSpace: 'nowrap',
-                fontWeight: 700,
                 display: 'inline-flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '8px',
+                height: '44px',
+                fontWeight: 700,
                 color: isPulsing ? 'var(--dp-color-accent)' : undefined,
               }}
               title="Propagate physical etymological impulse pulse from root concept through variant edges to substrate origins"
@@ -678,11 +680,12 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 top: '14px',
                 right: '14px',
                 display: 'flex',
-                gap: '8px',
+                gap: '10px',
+                alignItems: 'center',
                 zIndex: 10,
               }}
             >
-              <div className="tooltip-wrap">
+              <div className="tooltip-wrap" style={{ position: 'relative' }}>
                 <button
                   type="button"
                   className="raised-icon-key"
@@ -695,7 +698,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 <span className="tooltip-bubble">ZOOM IN (+)</span>
               </div>
 
-              <div className="tooltip-wrap">
+              <div className="tooltip-wrap" style={{ position: 'relative' }}>
                 <button
                   type="button"
                   className="raised-icon-key"
@@ -708,7 +711,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 <span className="tooltip-bubble">ZOOM OUT (-)</span>
               </div>
 
-              <div className="tooltip-wrap">
+              <div className="tooltip-wrap" style={{ position: 'relative' }}>
                 <button
                   type="button"
                   className="raised-icon-key"
@@ -721,7 +724,7 @@ export const EtymologyGraphSheet: React.FC<EtymologyGraphSheetProps> = ({
                 <span className="tooltip-bubble">RESET VIEW</span>
               </div>
 
-              <div className="tooltip-wrap">
+              <div className="tooltip-wrap" style={{ position: 'relative' }}>
                 <button
                   type="button"
                   className={`raised-icon-key ${isPulsing ? 'active' : ''}`}
