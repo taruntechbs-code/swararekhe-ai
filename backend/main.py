@@ -195,10 +195,17 @@ if os.path.isdir(FRONTEND_DIST):
     if os.path.isdir(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend_assets")
 
+    @app.get("/", include_in_schema=False)
+    async def serve_root():
+        index_file = os.path.join(FRONTEND_DIST, "index.html")
+        if os.path.isfile(index_file):
+            return FileResponse(index_file)
+        return {"app": settings.APP_NAME, "status": "online", "docs": "/docs"}
+
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa_frontend(full_path: str):
         # Never intercept API, audio, docs, or health endpoints
-        if full_path.startswith(("api/", "static/", "docs", "redoc", "openapi.json", "health")):
+        if full_path.startswith(("api", "static", "docs", "redoc", "openapi.json", "health")):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
 
         file_path = os.path.join(FRONTEND_DIST, full_path)

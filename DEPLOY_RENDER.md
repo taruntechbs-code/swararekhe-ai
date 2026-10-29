@@ -106,3 +106,4 @@ Render supports Infrastructure-as-Code via [`render.yaml`](file:///Users/sunil/D
    - All 5 regions, 14 canonical concepts, 70 dialect variants, and 4 authentic field records are guaranteed to be present on every cold start.
 3. **Web Audio & Oscilloscope**:
    - Audio synthesis and microphone analysis run entirely in the browser using the Web Audio API. Synthesized WAV files are served from `/static/audio_samples/`.
+

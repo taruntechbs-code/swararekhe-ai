@@ -8,7 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+# dist is tracked so backend/main.py serves SPA bundle directly in production
+# dist
 dist-ssr
 *.local
 

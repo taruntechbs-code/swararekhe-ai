@@ -11,5 +11,6 @@ venv/
 .pytest_cache/
 .npm-cache/
 node_modules/
-dist/
+# dist is tracked so Render / production servers can serve the static frontend bundle without requiring Node in Python runtime
+!frontend/dist/**
 
