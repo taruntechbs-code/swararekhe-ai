@@ -425,11 +425,10 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
             style={{
               marginBottom: '16px',
               display: 'flex',
-              flexWrap: 'nowrap',
-              overflowX: 'auto',
-              gap: '5px',
+              flexWrap: 'wrap',
+              gap: '6px',
               alignItems: 'center',
-              padding: '8px 12px',
+              padding: '10px 14px',
               backgroundColor: 'var(--dp-color-raised)',
               border: '1px solid #b6bec2',
               borderRadius: 'var(--dp-radius-key)',
@@ -438,7 +437,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
             <span
               className="meta-label"
               style={{
-                marginRight: '4px',
+                marginRight: '6px',
                 marginBottom: 0,
                 fontSize: '11px',
                 fontWeight: 700,
@@ -472,7 +471,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                   }}
                   style={{
                     fontSize: '11px',
-                    padding: '4px 8px',
+                    padding: '4px 9px',
                     height: '26px',
                     whiteSpace: 'nowrap',
                     flexShrink: 0,

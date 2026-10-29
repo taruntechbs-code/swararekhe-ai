@@ -766,8 +766,8 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
           </div>
 
           {/* Target Region Switcher Keys */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)', fontWeight: 600 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)', fontWeight: 600, marginRight: '4px' }}>
               TARGET CONTINUUM:
             </span>
             {[
@@ -789,6 +789,7 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                   padding: '4px 10px',
                   height: '28px',
                   fontWeight: crossfadeRegion === reg.code ? 700 : 500,
+                  whiteSpace: 'nowrap',
                 }}
               >
                 <span>{reg.label}</span>
@@ -1129,13 +1130,23 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                   </div>
 
                   {/* Roman Phonetic (18px bold, #f15b22) + [IPA] (14px muted mono) */}
-                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'baseline',
+                      gap: '8px',
+                      wordBreak: 'break-word',
+                      maxWidth: '100%',
+                    }}
+                  >
                     <span
                       style={{
                         fontFamily: 'var(--dp-typography-sans)',
                         fontSize: '18px',
                         fontWeight: 700,
                         color: '#f15b22',
+                        wordBreak: 'break-word',
                       }}
                     >
                       {result.morphed_phonetic_roman}
@@ -1150,6 +1161,8 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
                         padding: '2px 8px',
                         borderRadius: 'var(--dp-radius-key)',
                         border: '1px solid rgba(255, 255, 255, 0.12)',
+                        wordBreak: 'break-all',
+                        maxWidth: '100%',
                       }}
                     >
                       {result.ipa_approximation}

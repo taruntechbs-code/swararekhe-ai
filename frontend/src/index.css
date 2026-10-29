@@ -571,15 +571,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .chassis-nav-btn {
-  padding: 10px 10px;
+  padding: 10px 8px;
   font-size: 11px;
+  letter-spacing: 0.03em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   box-sizing: border-box;
 }

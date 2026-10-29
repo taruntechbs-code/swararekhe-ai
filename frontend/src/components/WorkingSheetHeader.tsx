@@ -371,7 +371,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => handleTabClick('atlas')}
           style={{
             fontWeight: activeTab === 'atlas' ? 700 : 500,
-            padding: '10px 10px',
+            padding: '10px 8px',
             fontSize: '11px',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -381,7 +381,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         >
           <span className={`led-indicator ${activeTab === 'atlas' ? 'active' : ''}`} style={{ flexShrink: 0 }} />
           <MapPin size={15} color="var(--dp-color-ink)" style={{ flexShrink: 0 }} />
-          <span>BAY 01 // ISOGLOSS &amp; MORPHER</span>
+          <span>BAY 01 // ISOGLOSS ATLAS</span>
         </button>
 
         <button
@@ -390,7 +390,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => handleTabClick('graph')}
           style={{
             fontWeight: activeTab === 'graph' ? 700 : 500,
-            padding: '10px 10px',
+            padding: '10px 8px',
             fontSize: '11px',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -409,7 +409,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => handleTabClick('acoustic')}
           style={{
             fontWeight: activeTab === 'acoustic' ? 700 : 500,
-            padding: '10px 10px',
+            padding: '10px 8px',
             fontSize: '11px',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -428,7 +428,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => handleTabClick('archive')}
           style={{
             fontWeight: activeTab === 'archive' ? 700 : 500,
-            padding: '10px 10px',
+            padding: '10px 8px',
             fontSize: '11px',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -447,7 +447,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
           onClick={() => handleTabClick('all')}
           style={{
             fontWeight: activeTab === 'all' ? 700 : 500,
-            padding: '10px 10px',
+            padding: '10px 8px',
             fontSize: '11px',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -457,7 +457,7 @@ export const WorkingSheetHeader: React.FC<HeaderProps> = ({
         >
           <span className={`led-indicator ${activeTab === 'all' ? 'active' : ''}`} style={{ flexShrink: 0 }} />
           <Layers size={15} color="var(--dp-color-accent)" style={{ flexShrink: 0 }} />
-          <span>ALL BAYS (FULL CHASSIS)</span>
+          <span>ALL BAYS // FULL CHASSIS</span>
         </button>
       </nav>
     </header>
