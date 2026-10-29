@@ -766,7 +766,7 @@ export const DialectMorphSheet: React.FC<DialectMorphSheetProps> = ({
           </div>
 
           {/* Target Region Switcher Keys */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
             <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '11px', color: 'var(--dp-color-label)', fontWeight: 600, marginRight: '4px' }}>
               TARGET CONTINUUM:
             </span>

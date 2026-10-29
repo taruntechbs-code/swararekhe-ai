@@ -822,11 +822,11 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
               <div
                 className="recessed-field-screen"
                 style={{
-                  padding: '20px 22px',
+                  padding: '22px 26px',
                   borderLeft: '4px solid var(--dp-color-accent)',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '12px',
+                  gap: '14px',
                 }}
               >
                 {/* Header: Coordinates & Zone Classification */}
@@ -855,14 +855,14 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                 </div>
 
                 {/* Primary Morphed Phrasing & Greeting */}
-                <div style={{ paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
                   <div
                     style={{
                       fontFamily: 'var(--dp-typography-mono)',
                       fontSize: '11px',
                       color: 'var(--dp-color-on-field-muted)',
                       textTransform: 'uppercase',
-                      marginBottom: '6px',
+                      marginBottom: '8px',
                     }}
                   >
                     INTERPOLATED LOCAL PHRASING:
@@ -874,7 +874,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                       fontWeight: 700,
                       color: 'var(--dp-color-accent)',
                       lineHeight: 1.25,
-                      marginBottom: '4px',
+                      marginBottom: '12px',
                     }}
                   >
                     {activeData.interpolated_phrase_result.morphed_dominant_script || activeData.interpolated_greeting_local}
@@ -885,6 +885,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                       fontSize: '14px',
                       fontWeight: 600,
                       color: 'var(--dp-color-on-field)',
+                      marginBottom: '12px',
                     }}
                   >
                     {activeData.interpolated_phrase_result.morphed_dominant_roman}
@@ -892,7 +893,7 @@ export const IsoglossMapSheet: React.FC<MapSheetProps> = ({
                 </div>
 
                 {/* Active Substrates Pills Row */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', paddingTop: '4px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', paddingTop: '8px' }}>
                   <span style={{ fontFamily: 'var(--dp-typography-mono)', fontSize: '10px', color: 'var(--dp-color-on-field-muted)', textTransform: 'uppercase' }}>
                     SUBSTRATES:
                   </span>
